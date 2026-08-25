@@ -290,6 +290,13 @@ page is fetched, and the run fails if `X-Content-Type-Options`, `Referrer-Policy
 missing, or if `sw.js` is not served `no-cache`, or if what came back is not
 MoleBridge. A gate rather than a manual step handed over.
 
+**The production URL answers.** `https://molebridge.pages.dev` was opened by the
+owner on 2026-08-25 and works. That is the check no gate here can perform: this
+sandbox's proxy refuses `*.pages.dev`, and until this the deploy job's own
+assertions had only ever run against the immutable per-deploy host — a different
+address that had existed for nine seconds. The apex follows a push, so
+Cloudflare's production branch is correctly configured.
+
 **Still owed to a real device: the ViewBoard, and a Chromebook.** The board at
 the front of the room is further away and runs a Chromium nobody here can test
 against.
@@ -544,10 +551,20 @@ work a session can finish on its own.
 - **The deploy job takes the GATED build as an artifact** rather than rebuilding.
   Rebuilding would ship a near-identical build that nothing had checked, and
   near-identical is the word that does the damage.
-- **A required reviewer on `production` is worth adding, and is a GitHub step.**
-  The deploy job runs in a dedicated environment — `production` from `main`,
-  `preview` from anything else — so a protection rule can sit on production
-  alone without gating every preview. Nothing protects it today.
+- **A required reviewer on `production` is NOT owed, and this line is the
+  correction.** An earlier version of it said one was "worth adding", and it was
+  then carried on the owner's list for six turns as though it were an
+  obligation. Doctrine §16.5 does not ask for one: a required reviewer appears
+  there only inside the description of the BAD UI, and what §16.5 offers is a
+  protected environment, a typed confirmation, or both. No sibling repo has one.
+  On a single-maintainer repo it means approving your own deploy — a dialog, not
+  a second pair of eyes — and it would stall a promote waiting for a click. The
+  friction §16.5 wants is already present three times: the branch guard refuses
+  a commit on `main` without `MOLEBRIDGE_PROMOTE=1`, promotion is a deliberate
+  merge, and the deploy job cannot start until every gate is green.
+- **The environment split stays** — `production` from `main`, `preview` from
+  anything else. It came from a real zizmor `secrets-outside-env` finding, costs
+  nothing, and leaves a protection rule one click away if one is ever wanted.
 - **Branches are settled, and `staging` exists.** The owner made the call on
   2026-08-25. Work commits to `staging`; `main` is production, because `main` is
   the Cloudflare Pages production branch and a commit landing there is a commit
