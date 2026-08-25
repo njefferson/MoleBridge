@@ -716,7 +716,15 @@ export interface Classification {
   readonly why: string;
 }
 
-/** True where the entry is the correct value at the precision the student wrote. */
+/**
+ * True where the entry could be this candidate, judged at the precision the
+ * student themselves wrote.
+ *
+ * FOR DIAGNOSIS, NOT FOR GRADING. Matching a predicted wrong value should be
+ * generous: the point is to recognise the mistake, and a student who rounded
+ * their wrong answer still made that mistake. Grading uses
+ * {@link entryIsCorrect}, which is strict, and the two are separate on purpose.
+ */
 function entryMatches(quantity: Quantity, candidate: number): boolean {
   const readings =
     quantity.kind === 'exact'
@@ -726,6 +734,36 @@ function entryMatches(quantity: Quantity, candidate: number): boolean {
         : [quantity.low.sigFigs, quantity.high.sigFigs];
   if (readings.length === 0) return relativeClose(quantity.value, candidate, DISTINGUISHABLE_RELATIVE);
   return readings.some((sigFigs) => sameAtPrecision(quantity.value, candidate, sigFigs));
+}
+
+/**
+ * True where the entry IS the correct value, judged at no less than the
+ * precision the problem works to.
+ *
+ * WHY THE FLOOR. Judging only at the precision the student wrote accepts an
+ * answer of 2 for a value of 1.627, because at one significant figure they
+ * agree — and no intermediate stage grades figures, so nothing else was going
+ * to catch it. An answer 23% out was being marked correct at every stage but
+ * the last. Found by the remediation giveaway sweep, which flagged the `2` in a
+ * worked line and turned out to be right about it for a reason that had nothing
+ * to do with remediation.
+ *
+ * The floor is the problem's OWN stated precision rather than a fixed number,
+ * which is what makes it work at the graded final stage too: a problem that
+ * asks for two figures accepts two, and a ratio of exactly 2 still matches
+ * however few figures it is written to.
+ *
+ * PRECONDITION: `sigFigs` is the problem's `answerSigFigs`.
+ */
+function entryIsCorrect(quantity: Quantity, candidate: number, sigFigs: number): boolean {
+  const readings =
+    quantity.kind === 'exact'
+      ? []
+      : quantity.kind === 'measured'
+        ? [quantity.reading.sigFigs]
+        : [quantity.low.sigFigs, quantity.high.sigFigs];
+  if (readings.length === 0) return relativeClose(quantity.value, candidate, DISTINGUISHABLE_RELATIVE);
+  return readings.some((written) => sameAtPrecision(quantity.value, candidate, Math.max(written, sigFigs)));
 }
 
 /**
@@ -808,7 +846,7 @@ export function classify(
   const correct = predicted.correctValue as number;
   const unitWanted = stage.unit;
 
-  if (entryMatches(read.quantity, correct)) {
+  if (entryIsCorrect(read.quantity, correct, problem.answerSigFigs)) {
     if (unitWanted !== 'none' && (read.unit === null || read.unit !== unitWanted)) {
       return {
         ...base,
@@ -868,6 +906,21 @@ export function classify(
     // §6.2 forbids a tiebreak, so nothing is chosen. The step machine counts
     // this and the test suite fails the build on it.
     return { stage: stage.id, correct: false, errorClass: null, matched, collision: true, logError, why };
+  }
+
+  // Rounded so far that it agrees with the right answer only at the student's
+  // own coarse precision. That is not a wrong method and not a wrong number —
+  // it is too few figures to tell, and E-SIG-FIGS is what says so.
+  if (entryMatches(read.quantity, correct)) {
+    return {
+      stage: stage.id,
+      correct: false,
+      errorClass: 'E-SIG-FIGS',
+      matched: ['E-SIG-FIGS'],
+      collision: false,
+      logError,
+      why: `that is rounded too far to tell. Work to at least ${problem.answerSigFigs} significant figures and round once, at the end`,
+    };
   }
 
   const withinAnOrder = logError !== null && Math.abs(logError) < ORDER_OF_MAGNITUDE_LIMIT;
@@ -995,11 +1048,12 @@ function relationFor(problem: Problem, solution: Solution, stage: Stage): Relati
       const isSecond = stage.id === 'S4b';
       const from = isSecond ? (solution.molSecond as number) : solution.molGiven;
       const ratio = isSecond ? (solution.ratioSecond as number) : solution.ratio;
+      const source = isSecond ? (problem.species[problem.secondGivenIndex as number] as string) : given;
       return {
         fromValue: from,
-        fromUnit: `mol ${isSecond ? (problem.species[problem.secondGivenIndex as number] as string) : given}`,
+        fromUnit: `mol ${source}`,
         factorValue: ratio,
-        factorUnit: `mol ${wanted} / mol ${isSecond ? (problem.species[problem.secondGivenIndex as number] as string) : given}`,
+        factorUnit: `mol ${wanted} / mol ${source}`,
         factorName: 'the mole ratio from the balanced equation',
         toValue: from * ratio,
         toUnit: `mol ${wanted}`,
@@ -1070,11 +1124,23 @@ export function buildRemediation(
   solution: Solution,
   stage: Stage,
 ): Remediation {
+  // S4 asks for the mole ratio ITSELF, so the multiply-this-by-that framing
+  // every other stage uses is the wrong shape here — and the number it would
+  // print is the answer. This stage gets its own lines, which name the two
+  // coefficients by substance. The student already has both: S1 gated them.
+  if (stage.id === 'S4') return ratioRemediation(skill, problem, solution);
   const sf = REMEDIATION_SIG_FIGS;
   const relation = relationFor(problem, solution, stage);
   const from = round(relation.fromValue, sf);
   const factor = round(relation.factorValue, sf);
-  const to = round(relation.toValue, sf);
+  // The check question restates the relation with a DIFFERENT starting amount.
+  // Doubling it was the obvious choice and was wrong: where the factor is
+  // exactly 2 — which is most of a chemistry course — `from × 2` is the stage's
+  // own answer, so the question handed over the number it was checking. The
+  // multiplier is chosen to collide with neither the stage's answer nor its
+  // own, and 10 is first because it is the one a student can do in their head.
+  const checkFactor = pickCheckMultiplier(relation, problem.answerSigFigs);
+  const checkFrom = round(relation.fromValue * checkFactor, sf);
   const wanted = problem.species[problem.wantedIndex] as string;
 
   switch (skill) {
@@ -1102,10 +1168,11 @@ export function buildRemediation(
             lines: [
               `Start from what ${relation.factorName} MEANS: ${relation.fromUnit} = ${relation.toUnit} × ${factor}.`,
               `You have ${relation.fromUnit} and you want ${relation.toUnit}, so divide both sides by ${factor}.`,
-              `${relation.toUnit} = ${from} ÷ ${factor} = ${to}.`,
+              // The set-up, and NOT the result. Working it out is the stage.
+              `So ${relation.toUnit} = ${from} ÷ ${factor}. Work that out and enter it.`,
             ],
-            question: `By the same relation, what is ${round(relation.fromValue * 2, sf)} ${relation.fromUnit} in ${relation.toUnit}?`,
-            answer: (relation.fromValue * 2) / relation.factorValue,
+            question: `By the same relation, what is ${checkFrom} ${relation.fromUnit} in ${relation.toUnit}?`,
+            answer: (relation.fromValue * checkFactor) / relation.factorValue,
             answerSigFigs: sf,
           }
         : {
@@ -1114,10 +1181,11 @@ export function buildRemediation(
             lines: [
               `${capitalise(relation.factorName)} says: one ${relation.fromUnit} gives ${factor} ${relation.toUnit}.`,
               `You have ${from} of them, so multiply rather than divide.`,
-              `${relation.toUnit} = ${from} × ${factor} = ${to}.`,
+              // The set-up, and NOT the result. Working it out is the stage.
+              `So ${relation.toUnit} = ${from} × ${factor}. Work that out and enter it.`,
             ],
-            question: `By the same relation, what would ${round(relation.fromValue * 2, sf)} ${relation.fromUnit} give?`,
-            answer: relation.fromValue * 2 * relation.factorValue,
+            question: `By the same relation, what would ${checkFrom} ${relation.fromUnit} give?`,
+            answer: relation.fromValue * checkFactor * relation.factorValue,
             answerSigFigs: sf,
           };
     case 'A3':
@@ -1136,19 +1204,133 @@ export function buildRemediation(
         answerSigFigs: sf,
       };
     default:
+      // A4 teaches the SIZE of an answer, which is exactly the remediation most
+      // at risk of handing the answer over: a one-figure estimate typed back in
+      // would be marked correct at a stage that does not grade figures. So it
+      // names the DECADE in words and shows no number that could be entered.
       return {
         skill,
         title: ALGEBRA_SKILLS.A4,
         lines: [
-          `Before the arithmetic, ask how big the answer should be: about ${round(relation.fromValue, 2)} ${relation.operation === 'divide' ? '÷' : '×'} about ${round(relation.factorValue, 2)}.`,
-          `That is roughly ${round(relation.toValue, 2)}, so the answer starts with that digit and sits in that decimal place.`,
-          'An answer ten times too big or too small is a misplaced decimal point, not a wrong method.',
+          `Before the arithmetic, ask how big the answer should be: something ${decadeName(relation.fromValue)} ${relation.operation === 'divide' ? 'divided by' : 'times'} something ${decadeName(relation.factorValue)}.`,
+          `That lands ${decadeName(relation.toValue)} — so if what you typed is in a different decade, the method was right and a decimal point moved.`,
+          'Ten times too big or ten times too small is a misplaced decimal point, not a wrong method.',
         ],
-        question: `Roughly, without a calculator: ${round(relation.fromValue, 2)} ${relation.operation === 'divide' ? '÷' : '×'} ${round(relation.factorValue, 2)} is about what?`,
+        question: `Without working it out: should the answer be ${decadeName(relation.toValue)}, or ten times that?`,
         answer: relation.toValue,
-        answerSigFigs: 2,
+        answerSigFigs: 1,
       };
   }
+}
+
+/** Multipliers the check question may restate the relation with, easiest first. */
+const CHECK_MULTIPLIERS: readonly number[] = [10, 3, 7, 4, 100];
+
+/**
+ * Choose a multiplier for the check question that cannot print the stage's own
+ * answer, either as the amount it starts from or as the amount it produces.
+ *
+ * PRECONDITION: `relation` is the failing stage's, and `sigFigs` is the
+ * problem's `answerSigFigs` — the precision correctness is judged at.
+ */
+function pickCheckMultiplier(relation: Relation, sigFigs: number): number {
+  const answer = relation.toValue;
+  const collides = (value: number): boolean => sameAtPrecision(value, answer, sigFigs);
+  for (const multiplier of CHECK_MULTIPLIERS) {
+    const start = relation.fromValue * multiplier;
+    const result =
+      relation.operation === 'divide' ? start / relation.factorValue : start * relation.factorValue;
+    if (!collides(start) && !collides(result)) return multiplier;
+  }
+  return CHECK_MULTIPLIERS[CHECK_MULTIPLIERS.length - 1] as number;
+}
+
+/** The remediation for stage S4, where the answer is the ratio itself. */
+function ratioRemediation(skill: AlgebraSkill, problem: Problem, solution: Solution): Remediation {
+  const given = problem.species[problem.givenIndex] as string;
+  const wanted = problem.species[problem.wantedIndex] as string;
+  const bigger = solution.ratio > 1;
+
+  switch (skill) {
+    case 'A2':
+      return {
+        skill,
+        title: ALGEBRA_SKILLS.A2,
+        lines: [
+          `The mole ratio is not a fact about the substances. It is read straight off the coefficients you just balanced.`,
+          `The one you WANT goes on top. The one you were GIVEN goes underneath.`,
+          `So it is the coefficient in front of ${wanted}, divided by the coefficient in front of ${given}. Read both off your own equation.`,
+        ],
+        question: `If you wrote it the other way up instead, would the number come out bigger than one or smaller than one?`,
+        answer: 1 / solution.ratio,
+        answerSigFigs: REMEDIATION_SIG_FIGS,
+      };
+    case 'A3':
+      return {
+        skill,
+        title: ALGEBRA_SKILLS.A3,
+        lines: [
+          `Write the ratio with its units on: mol ${wanted} over mol ${given}.`,
+          `You are coming FROM moles of ${given}, so mol ${given} has to be on the bottom — that is the only way it cancels.`,
+          `Upside down, nothing cancels and the answer comes out in ${given} when the question asked for ${wanted}.`,
+        ],
+        question: `Which substance's unit has to be on the bottom of the fraction for it to cancel?`,
+        answer: solution.ratio,
+        answerSigFigs: REMEDIATION_SIG_FIGS,
+      };
+    case 'A1':
+      return {
+        skill,
+        title: ALGEBRA_SKILLS.A1,
+        lines: [
+          `A balanced equation is a proportion: so many ${given} always go with so many ${wanted}.`,
+          `Whatever multiplies one side multiplies the other, so the two coefficients keep their relationship however much you start with.`,
+          `The ratio is what that relationship is worth per mole — the wanted coefficient over the given one.`,
+        ],
+        question: `If you doubled the amount of ${given}, would the ratio change?`,
+        answer: solution.ratio,
+        answerSigFigs: REMEDIATION_SIG_FIGS,
+      };
+    default:
+      return {
+        skill,
+        title: ALGEBRA_SKILLS.A4,
+        lines: [
+          `A mole ratio comes from the small whole numbers in front of the formulas, so it is a small number.`,
+          `It is ${bigger ? 'bigger than one here, because more ' + wanted + ' comes out than ' + given + ' goes in' : 'smaller than one here, because it takes more ' + given + ' than the ' + wanted + ' it makes'} — but not by orders of magnitude.`,
+          `If what you typed is in the hundreds, a molar mass got into a step that only wanted coefficients.`,
+        ],
+        question: `Should a mole ratio ever be in the hundreds?`,
+        answer: solution.ratio,
+        answerSigFigs: REMEDIATION_SIG_FIGS,
+      };
+  }
+}
+
+/**
+ * The decade a value sits in, in words — "in the tens", "between one and ten".
+ *
+ * PRECONDITION: `value` is finite.
+ *
+ * The magnitude remediation is the one most at risk of handing the answer over:
+ * a value rounded to a single figure is still a number, and at a stage that
+ * does not grade significant figures it would be marked correct. Rounding to
+ * one figure was tried and a sweep found the case where it collided — a molar
+ * mass near thirty, a mass near nine hundred, and an answer of thirty. Words
+ * cannot be typed into the box, and the decade is what the lesson is about.
+ */
+export function decadeName(value: number): string {
+  if (value === 0) return 'at zero';
+  const magnitude = magnitudeOf(Math.abs(value));
+  if (magnitude >= 6) return `around ten to the ${magnitude}`;
+  if (magnitude === 0) return 'between one and ten';
+  if (magnitude === 1) return 'in the tens';
+  if (magnitude === 2) return 'in the hundreds';
+  if (magnitude === 3) return 'in the thousands';
+  if (magnitude === -1) return 'between a tenth and one';
+  if (magnitude === -2) return 'in the hundredths';
+  if (magnitude === -3) return 'in the thousandths';
+  return `around ten to the ${magnitude}`;
 }
 
 function capitalise(text: string): string {

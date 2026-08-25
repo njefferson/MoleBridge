@@ -23,8 +23,10 @@ import {
   ALGEBRA_SKILLS,
   ERROR_CLASSES,
   MAX_REMEDIATION_LINES,
+  REMEDIATION_SIG_FIGS,
   algebraFor,
   buildRemediation,
+  decadeName,
   classify,
   collisionsFor,
   predictionsFor,
@@ -333,18 +335,105 @@ test('a micro-remediation is three lines and a question, from the numbers just u
     // "drawn from the same numbers the student just used" — the given mass has
     // to appear somewhere in what they are shown.
     const shown = [...remediation.lines, remediation.question].join(' ');
-    const ownNumbers = [
-      problem.given.value,
-      solution.mmGiven,
-      solution.molGiven,
-      solution.ratio,
-      solution.molWanted,
-    ].map((value) => String(roundToSigFigs(value, problem.answerSigFigs)));
-    assert.ok(
-      ownNumbers.some((number) => shown.includes(number)),
-      `${skill} shows none of the student's own numbers: ${shown}`,
-    );
+    if (skill === 'A4') {
+      // A4 is the magnitude lesson and prints NO number — a rounded one would
+      // be typeable, and at a stage that does not grade figures it would be
+      // marked correct. What it owes instead is the decade of this problem's
+      // own answer, which is a tighter claim than "mentions a number".
+      assert.ok(
+        shown.includes(decadeName(solution.molGiven)),
+        `A4 does not state the decade of this problem's own answer: ${shown}`,
+      );
+    } else {
+      const ownNumbers = [
+        problem.given.value,
+        solution.mmGiven,
+        solution.molGiven,
+        solution.ratio,
+        solution.molWanted,
+      ].flatMap((value) => [problem.answerSigFigs, REMEDIATION_SIG_FIGS].map((f) => String(roundToSigFigs(value, f))));
+      assert.ok(
+        ownNumbers.some((number) => shown.includes(number)),
+        `${skill} shows none of the student's own numbers: ${shown}`,
+      );
+    }
   }
+});
+
+test('NO remediation shows a number that would be marked correct at its stage', () => {
+  // The gate exists because the first version of the worked lines ended
+  // `mol N2 = 878 ÷ 28.01 = 31.34`, which is the answer to the stage the
+  // student is stuck on — and A4 printed a rounded estimate that would have
+  // been accepted, because intermediate stages do not grade figures. A
+  // remediation that hands over the answer is not remediation, it is a
+  // solver with three lines of prose in front of it.
+  let linesChecked = 0;
+  let numbersChecked = 0;
+  const stagesWithNoBranch: string[] = [];
+
+  for (const tier of TIERS) {
+    for (let index = 0; index < 150; index += 1) {
+      const problem = generateProblem('NO-GIVEAWAY', tier, index);
+      const solution = solve(problem);
+      for (const s of stagesFor(problem)) {
+        if (s.kind !== 'NUMERIC') continue;
+        // ONLY the skills this stage can actually reach. Building A2 at S2 and
+        // asserting on it checks a screen that cannot exist: every class S2
+        // produces — a miscounted polyatomic, forgotten hydrate water, an
+        // addition slip — maps to no algebra branch at all, so the molar mass
+        // is never printed back at the stage that asks for it.
+        const reachable = new Set<'A1' | 'A2' | 'A3' | 'A4'>();
+        const classes = [
+          ...predictionsFor(problem, solution, s).predictions.map((p) => p.errorClass),
+          s.id === 'S2' ? ('E-MM-ARITH' as const) : ('E-ARITH' as const),
+        ];
+        for (const errorClass of classes) {
+          // The largest |log10| an E-ARITH can carry, so the A4 branch is
+          // included wherever it could fire.
+          for (const skill of algebraFor(errorClass, 0.99)) reachable.add(skill);
+        }
+        if (reachable.size === 0) {
+          stagesWithNoBranch.push(s.id);
+          continue;
+        }
+        for (const skill of reachable) {
+          const remediation = buildRemediation(skill, problem, solution, s);
+          const shown = [...remediation.lines, remediation.question].join(' ');
+          linesChecked += remediation.lines.length;
+          // Every number the student could TYPE BACK IN. A digit inside a
+          // formula is not one of those: the 2 of H2O is a subscript, and
+          // treating it as a printed value flagged every line that names a
+          // compound. So a number must not be flanked by letters or digits.
+          // A closing bracket counts as a letter here: the 2 of Ca(OH)2 is a
+          // subscript exactly as much as the 2 of H2O is.
+          const NUMBER = /(?<![A-Za-z0-9.)\]])\d+(?:\.\d+)?(?:e[+-]?\d+)?(?![A-Za-z0-9])/gi;
+          for (const token of shown.match(NUMBER) ?? []) {
+            const value = Number(token);
+            if (!Number.isFinite(value)) continue;
+            numbersChecked += 1;
+            const verdict = classify(problem, solution, s, {
+              kind: 'text',
+              text: s.unit === 'none' ? token : `${token} ${s.unit}`,
+            });
+            assert.equal(
+              verdict.correct,
+              false,
+              `tier ${tier} #${index} ${s.id} ${skill}: "${token}" would be accepted as the answer.\n  ${shown}`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  console.log(
+    `\n  REMEDIATION GIVEAWAY CHECK: ${numbersChecked} numbers across ${linesChecked} worked lines, `
+    + `none of them the answer. ${stagesWithNoBranch.length} stage visits reach no algebra branch at all.\n`,
+  );
+  assert.ok(numbersChecked > 1000, 'the sweep should have looked at a lot more numbers than this');
+  // S2 is the stage with no branch, and that is §7 working: its classes are
+  // about counting atoms, not about algebra.
+  assert.deepEqual([...new Set(stagesWithNoBranch)], ['S2']);
 });
 
 test('a wrong entry that triggers remediation gets it at the failing stage', () => {

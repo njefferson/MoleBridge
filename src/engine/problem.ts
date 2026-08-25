@@ -382,7 +382,8 @@ export type Guarantee =
   | 'YIELD_BELOW_THEORETICAL'
   | 'STABLE_ELEMENTS_ONLY'
   | 'MOLAR_MASSES_SEPARABLE'
-  | 'YIELD_SEPARABLE';
+  | 'YIELD_SEPARABLE'
+  | 'OPERANDS_NOT_THE_ANSWER';
 
 /**
  * Check a candidate problem against every §6.3 guarantee.
@@ -477,6 +478,53 @@ export function checkGuarantees(problem: Problem): Guarantee[] {
     failures.push('MOLAR_MASSES_SEPARABLE');
   }
 
+  // A STAGE MUST NOT BE SOLVABLE BY READING ONE OF ITS OWN OPERANDS. Where the
+  // mole ratio happens to equal the moles it produces at the stated precision,
+  // the worked lines for that step contain the step's answer — and so does the
+  // student's own scratch paper. It is rare, about one problem in a thousand,
+  // and refusing to pose it is a great deal cheaper than carving an exception
+  // into the rule that remediation never shows the answer.
+  const sf = problem.answerSigFigs;
+  const operandClashes =
+    !differsAt(solution.ratio, solution.molWanted, sf) ||
+    !differsAt(solution.mmGiven, solution.molGiven, sf) ||
+    !differsAt(problem.given.value, solution.molGiven, sf) ||
+    !differsAt(solution.convertFactor, solution.converted, sf) ||
+    !differsAt(solution.molWanted, solution.converted, sf) ||
+    (solution.percentYield !== null &&
+      (!differsAt(solution.theoretical as number, solution.percentYield, sf) ||
+        !differsAt((problem.actualYield as StatedQuantity).value, solution.percentYield, sf)));
+
+  // The second reactant's chain has the same requirement, and it is NOT covered
+  // by RATIO_NOT_ONE — that guarantee is about the given reactant's ratio only,
+  // so a second reactant sitting at 1:1 slipped through and S4b's own operand
+  // was its own answer.
+  const secondClashes =
+    solution.molSecond !== null &&
+    (!differsAt(solution.ratioSecond as number, 1, sf) ||
+      !differsAt(solution.molSecond, solution.molWantedFromSecond as number, sf) ||
+      !differsAt(solution.mmSecond as number, solution.molSecond, sf) ||
+      !differsAt((problem.secondGiven as StatedQuantity).value, solution.molSecond, sf) ||
+      !differsAt(solution.ratioSecond as number, solution.molWantedFromSecond as number, sf));
+
+  // AND NO STAGE ANSWER MAY BE 1. Every unit-fraction explanation the app can
+  // show is built on the literal `1` — "× (1 mol / 46.07 g)" — so a stage whose
+  // answer rounds to 1 has that answer printed in its own remediation, and no
+  // amount of care about computed values changes it. It is the ONLY bare
+  // literal in any of the remediation templates, which is what makes this a
+  // closed rule rather than the next round of the same game.
+  const stageAnswers = [
+    solution.molGiven,
+    solution.molWanted,
+    solution.converted,
+    solution.molSecond,
+    solution.molWantedFromSecond,
+    solution.percentYield,
+  ].filter((value): value is number => value !== null);
+  const anAnswerIsOne = stageAnswers.some((value) => !differsAt(value, 1, sf));
+
+  if (operandClashes || secondClashes || anAnswerIsOne) failures.push('OPERANDS_NOT_THE_ANSWER');
+
   if (problem.kind === 'LIMITING_REAGENT') {
     const fromFirst = solution.molGiven * solution.ratio;
     const fromSecond = solution.molWantedFromSecond as number;
@@ -519,6 +567,17 @@ export function checkGuarantees(problem: Problem): Guarantee[] {
 /* ------------------------------------------------------------------ */
 /* Generation                                                          */
 /* ------------------------------------------------------------------ */
+
+/**
+ * True where two values are simply DIFFERENT numbers at this precision — no
+ * margin, unlike {@link separable}. Used where the requirement is only that a
+ * student could not read one off in place of the other.
+ *
+ * PRECONDITION: `sigFigs` is a positive integer.
+ */
+function differsAt(a: number, b: number, sigFigs: number): boolean {
+  return roundToSigFigs(a, sigFigs) !== roundToSigFigs(b, sigFigs);
+}
 
 /**
  * True where two values are far enough apart that a student writing
