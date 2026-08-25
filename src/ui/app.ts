@@ -67,6 +67,38 @@ function boot(): void {
 
   let session: Session | null = null;
 
+  /*
+    ---- THE WAY BACK TO A PROBLEM IN PROGRESS ----
+
+    Every screen change goes through here, so the strip cannot be forgotten by
+    whoever adds the next route off the work screen. That is the whole reason it
+    is one wrapper rather than a button on the two screens that happened to
+    strand somebody: following "the lesson on this" from a wrong answer left a
+    live session, still holding everything typed into it, with no control
+    anywhere that led back.
+  */
+  const resumeStrip = need('#resume-strip');
+  const resumeMessage = need('#resume-message');
+
+  const go = (screen: HTMLElement): void => {
+    showOnly(screens, screen);
+    const running = session !== null && !session.finished;
+    resumeStrip.hidden = !running || screen === work;
+    if (!resumeStrip.hidden && session !== null) {
+      // NAMED, so it is obvious which thing is waiting. "You have a problem
+      // open" beside a lesson about the same topic is ambiguous about whether
+      // the app means this lesson's practice or the set you walked away from.
+      resumeMessage.textContent =
+        session.config.mode === 'assignment'
+          ? `Your assignment ${session.config.assignmentKey} is still open, with your answers in it.`
+          : `Your practice set ${session.config.assignmentKey} is still open, with your answers in it.`;
+    }
+  };
+
+  need<HTMLButtonElement>('#resume-go').addEventListener('click', () => {
+    go(work);
+  });
+
   const periodicTable = mountTable();
   need<HTMLButtonElement>('#table-open').addEventListener('click', () => {
     periodicTable.open();
@@ -91,7 +123,7 @@ function boot(): void {
   const doneScreen = mountDone(systemClock, {
     onRestart(): void {
       session = null;
-      showOnly(screens, setup);
+      go(setup);
       need<HTMLInputElement>('#setup-roster').focus();
     },
   });
@@ -116,13 +148,13 @@ function boot(): void {
       // half-finished set, and pretending otherwise by keeping it would make
       // the next `begin` ambiguous about which session it is starting.
       session = null;
-      showOnly(screens, home);
+      go(home);
       need<HTMLButtonElement>(FIRST_DOOR).focus();
     },
     onFinished(finished: Session): void {
       session = finished;
       doneScreen.show(finished);
-      showOnly(screens, done);
+      go(done);
       need('#done-code').focus();
     },
   });
@@ -133,7 +165,7 @@ function boot(): void {
   // call site is a second place for the mode to be got wrong.
   const begin = (config: SessionConfig): void => {
     session = startSession(config, systemClock);
-    showOnly(screens, work);
+    go(work);
     workScreen.begin(session);
   };
 
@@ -141,33 +173,33 @@ function boot(): void {
   mountPractice({
     onStart: begin,
     onBack(): void {
-      showOnly(screens, home);
+      go(home);
     },
   });
 
   learnScreens = mountLearn(
     {
       onBack(): void {
-        showOnly(screens, home);
+        go(home);
       },
       onReference(): void {
         reference.open();
       },
     },
     (screen) => {
-      showOnly(screens, screen);
+      go(screen);
     },
   );
 
   need<HTMLButtonElement>('#door-learn').addEventListener('click', () => {
-    showOnly(screens, learn);
+    go(learn);
   });
   need<HTMLButtonElement>('#door-practice').addEventListener('click', () => {
-    showOnly(screens, practice);
+    go(practice);
     need<HTMLInputElement>('#practice-seed').focus();
   });
   need<HTMLButtonElement>('#door-assignment').addEventListener('click', () => {
-    showOnly(screens, setup);
+    go(setup);
     need<HTMLInputElement>('#setup-roster').focus();
   });
 
@@ -186,7 +218,7 @@ function boot(): void {
   // The app opens on SETUP either way, with the orientation laid over it on a
   // first run. Behind a modal there is still an app to see, which answers "what
   // is this" better than a page of prose in front of it does.
-  showOnly(screens, home);
+  go(home);
   if (info.hasBeenSeen()) {
     info.adoptOrientation();
   } else {

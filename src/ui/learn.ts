@@ -11,6 +11,7 @@ import { clear, el, fill, need } from './dom.ts';
 import { BUILD_SECRET } from '../code/secret.ts';
 import { LESSONS, drillIsRight, type Drill, type Lesson } from '../learn/lessons.ts';
 import { decodeProgress, encodeProgress, addsNothing } from '../learn/progress.ts';
+import { progressReadout } from '../report/readout.ts';
 import { adoptProgress, loadProgress, markLessonDone, storageWorks } from '../learn/store.ts';
 
 export interface LearnHost {
@@ -50,8 +51,39 @@ export function mountLearn(host: LearnHost, show: (screen: HTMLElement) => void)
   const restore = need<HTMLInputElement>('#learn-restore');
   const restoreStatus = need('#learn-restore-status');
 
+  const readout = need('#learn-readout');
+  const notIn = need('#learn-not-in');
+
   const paintCode = (): void => {
-    codeNode.textContent = encodeProgress(loadProgress(), BUILD_SECRET);
+    const code = encodeProgress(loadProgress(), BUILD_SECRET);
+    codeNode.textContent = code;
+
+    /*
+      DECODED, like the completion code's readout, and for the same reason: a
+      code somebody is asked to write down and type in somewhere else is a code
+      they are owed a reading of. This one is never handed to a teacher, which
+      makes the question "what is in it" easier to ask and no less worth
+      answering.
+    */
+    const verdict = decodeProgress(code, BUILD_SECRET);
+    if (verdict.kind !== 'VALID') {
+      fill(readout, [
+        el('p', {
+          className: 'hint',
+          text: 'This code could not be read back, which should not happen — please report it with the ⚑ button.',
+        }),
+      ]);
+      clear(notIn);
+      return;
+    }
+    const said = progressReadout(verdict.progress, LESSONS.map((lesson) => lesson.title));
+    const rows: HTMLElement[] = [];
+    for (const line of said.lines) {
+      rows.push(el('dt', { text: line.says }));
+      rows.push(el('dd', { text: line.value }));
+    }
+    fill(readout, rows);
+    fill(notIn, said.notIn.map((item) => el('li', { text: item })));
   };
 
   const paintList = (): void => {

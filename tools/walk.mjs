@@ -242,6 +242,39 @@ try {
   check(decoded.fields?.firstTryCorrect === COUNT - 1, 'and one problem lost its first-try, from the deliberate mistake');
   check((decoded.fields?.errS3 ?? 0) === 1, 'the error is counted against the stage it happened at');
 
+  /* ---- nothing invisible is handed in ---- */
+  //
+  // A student types a short string into Canvas. The screen used to carry a
+  // SENTENCE about it — counts only, no answers, no name — which was true and
+  // was written by whoever built the thing making the claim. What is checked
+  // here is that the app shows the code DECODED, and that what it shows matches
+  // what this file gets by decoding the same string independently.
+  const saysVisible = await page.locator('#done-says').isVisible();
+  check(saysVisible, 'the finished screen shows what the code says');
+
+  const readoutText = (await page.locator('#done-readout').textContent()) ?? '';
+  check(readoutText.includes(String(ROSTER)), `the readout names the roster number it carries (${ROSTER})`);
+  check(readoutText.includes(String(COUNT)), `and how many problems were finished (${COUNT})`);
+
+  // THE SAME NUMBERS THE TEACHER WILL SEE. `decoded` above came from decoding
+  // the code this walk read off the screen, so this compares the app's own
+  // reading against an independent one of the same string.
+  for (const [what, value] of [
+    ['problems finished', decoded.fields?.attempted],
+    ['right first time', decoded.fields?.firstTryCorrect],
+    ['roster number', decoded.fields?.rosterId],
+  ]) {
+    check(
+      readoutText.includes(String(value)),
+      `the readout agrees with the decoder on ${what} (${value})`,
+    );
+  }
+
+  const notInText = (await page.locator('#done-not-in').textContent()) ?? '';
+  for (const owed of ['name', 'answer', 'working']) {
+    check(notInText.toLowerCase().includes(owed), `and says your ${owed} is not in it`);
+  }
+
   /* ---- the information surface ---- */
   await page.locator('#info-open').click();
   check(await page.locator('#info-panel').isVisible(), 'the information control opens the panel');
@@ -689,6 +722,61 @@ try {
     check(
       !(await page.locator('#reference-panel[open]').isVisible()),
       'closing the reference behind it rather than leaving it stacked',
+    );
+  }
+
+  /* ---- work is never stranded ---- */
+  //
+  // THE EXACT PATH THAT STRANDED SOMEBODY: get a step wrong, follow the
+  // reference to the lesson that teaches it, and try to get back. The session
+  // was alive and holding everything typed into it, and no control anywhere led
+  // to it. What a student would call losing their work.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-start').click();
+
+  const typed = ['7', '8', '9', '6'];
+  {
+    const boxes = page.locator('#work-inputs input');
+    const count = await boxes.count();
+    for (let at = 0; at < count; at += 1) await boxes.nth(at).fill(typed[at] ?? '5');
+  }
+  const readBack = async () =>
+    page.evaluate(() => [...document.querySelectorAll('#work-inputs input')].map((box) => box.value).join(','));
+  const before = await readBack();
+
+  // Every tool a student might open mid-step, and back again.
+  for (const [what, open, close] of [
+    ['the calculator', '#calc-open', '#calc-close'],
+    ['the periodic table', '#table-open', '#table-close'],
+    ['the information panel', '#info-open', '#info-close'],
+    ['the report panel', '#report-open', '#report-close'],
+  ]) {
+    await page.locator(open).click();
+    await page.locator(close).click();
+    const after = await readBack();
+    check(after === before, `what is typed survives opening ${what} (${after || '(empty)'})`);
+  }
+
+  // And the route that leaves the screen entirely.
+  await page.locator('#work-form button[type="submit"]').click();
+  await page.locator('#work-feedback .note-wrong').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  await page.locator('#work-feedback [data-explain]').click();
+  const lessonLink = page.locator('#reference-detail [data-goto-lesson]');
+  if ((await lessonLink.count()) > 0) {
+    await lessonLink.first().click();
+    check(await page.locator('#screen-lesson').isVisible(), 'a wrong answer can be followed to its lesson');
+    check(
+      await page.locator('#resume-strip').isVisible(),
+      'and the way back to the problem is on screen there',
+    );
+    const said = (await page.locator('#resume-message').textContent()) ?? '';
+    check(/still open/i.test(said), `which says what is waiting (${said.trim()})`);
+    await page.locator('#resume-go').click();
+    check(await page.locator('#screen-work').isVisible(), 'and it goes back to the problem');
+    check(
+      !(await page.locator('#resume-strip').isVisible()),
+      'and stops offering once you are there',
     );
   }
 

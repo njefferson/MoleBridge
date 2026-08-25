@@ -4,6 +4,38 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.1.1 — ITERATION
+
+You can always get back to a problem you walked away from.
+
+If you got a step wrong and followed **What does this mean?** through to the
+lesson that teaches it, there was no way back to the problem. Everything you had
+typed was still there — you just could not reach it. A strip now appears
+wherever you are, saying which set is still open, with a button back to it.
+
+**What you have typed stays put** while you open the calculator, the periodic
+table, the ⓘ or the ⚑, and go back. That already worked, and it is now checked
+on every build so it keeps working.
+
+## 1.1.0 — CAPABILITY
+
+You can see exactly what your code says about you.
+
+Under the code on the finished screen there is now **What this code says about
+you** — the code above, decoded, line by line. Your roster number, how many
+problems you finished, how many you got right first time, how many wrong answers
+there were and which step each was at, how long you had it open, which day. And
+underneath, what is *not* in it: your name, anything you typed as an answer, any
+of your working, anything about your device.
+
+**It is the code itself, read back.** Not a description of it written by whoever
+built the app — the app decodes the string you are about to hand in, using the
+same operation your teacher's page uses, and shows you what comes out. What you
+read is what they will read.
+
+The progress code under "Moving to another device" says what it carries too, and
+that it stays on your device.
+
 ## 1.0.0 — VERSION
 
 Version 1. Everything MoleBridge was for is in it.
