@@ -220,6 +220,40 @@ it reports fields for a code that verifies but contradicts itself, and reports
 nothing at all for a code whose MAC failed — the teacher-facing wording has to
 keep those apart.
 
+## Waiting on the owner — a candidate is deployed
+
+**Version 0.1.0 is live on a preview URL**, from commit `e1a29ac`:
+
+    https://claude-molebridge-engine-cod.molebridge.pages.dev
+
+That is the branch alias and it moves with each push to the working branch. The
+immutable per-deploy URL for this exact build is
+`https://8d621a6a.molebridge.pages.dev`. Both were read out of the deploy log
+rather than assembled from a branch name.
+
+**Production is empty, and that is correct.** `main` is the Pages production
+branch and the code is not on `main`, so `molebridge.pages.dev` answers with
+nothing until somebody merges.
+
+**What the run actually did**, from the log rather than from its exit code: the
+Pages project was created, the token verified, 36 files uploaded including
+`_headers`, and Cloudflare answered with the URLs above. The deploy job took the
+build the gates passed as an artifact, so the bytes that went out are the bytes
+the journey walk drove and the accessibility gate measured.
+
+**What has NOT been verified, and cannot be from here.** The live page has not
+been fetched. This sandbox's proxy denies `*.molebridge.pages.dev` at the CONNECT
+stage — its own relay log records `connect_rejected, gateway answered 403` for
+that host, while `github.com` answers normally, so the network is fine and the
+host is refused by policy. That leaves three things owed to a real device:
+
+- **Does the page load and work**, on a Chromebook, an iPad and the ViewBoard.
+- **Are the security headers actually applied at the edge.** `_headers` uploaded,
+  but Doctrine §16.8 says headers are checked by fetching the deployed page, and
+  that fetch has not happened.
+- **The on-device feel** — a 44px target is measured, not felt, and no gate has
+  an opinion about a software keyboard covering the answer box.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
