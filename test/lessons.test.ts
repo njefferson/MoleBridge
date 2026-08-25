@@ -14,6 +14,7 @@ import { LESSONS, drillIsRight } from '../src/learn/lessons.ts';
 import { LESSON_COUNT } from '../src/learn/progress.ts';
 import { ERROR_CLASSES } from '../src/engine/taxonomy.ts';
 import { molarMass } from '../src/chem/molarmass.ts';
+import { parseEquation, solveBalance } from '../src/chem/balance.ts';
 
 test('there are exactly as many lessons as the progress code has bits for', () => {
   // The progress code carries one bit per lesson. An eighth lesson added here
@@ -117,4 +118,68 @@ test('the seven lessons cover the chain in dependency order', () => {
     LESSONS.map((l) => l.id),
     ['formulas', 'molar-mass', 'the-mole', 'balancing', 'mole-ratio', 'limiting', 'percent-yield'],
   );
+});
+
+test('the balancing drills are the unique lowest-terms answer, checked by the solver', () => {
+  /*
+    THE SOLVER IS IMPORTED HERE AND NOWHERE NEAR THE SHIPPED CODE. `solveBalance`
+    must not be reachable from a student-facing path, and `lessons.ts` ships to
+    the browser — so the coefficients are declared there and verified here,
+    where a test file never reaches a student.
+
+    This closes the gap the owner asked about: a drill answer that is merely a
+    literal is only as right as whoever typed it, and the "its own checker
+    accepts it" test is CIRCULAR for those — 13 oxygens would have passed it.
+  */
+  const equations: Record<string, string> = {
+    'Balance: __ N₂ + __ H₂ → __ NH₃. Give the three coefficients separated by spaces.':
+      'N2 + H2 -> NH3',
+    'Balance: __ CH₄ + __ O₂ → __ CO₂ + __ H₂O. Four coefficients, separated by spaces.':
+      'CH4 + O2 -> CO2 + H2O',
+  };
+
+  const balancing = LESSONS.find((l) => l.id === 'balancing');
+  assert.ok(balancing !== undefined);
+  assert.equal(balancing.drills.length, Object.keys(equations).length, 'a drill here has no equation to check it against');
+
+  for (const drill of balancing.drills) {
+    const source = equations[drill.ask];
+    assert.ok(source !== undefined, `no equation recorded for "${drill.ask}"`);
+    const solved = solveBalance(parseEquation(source));
+    assert.equal(solved.ok, true, `${source} did not balance`);
+    if (!solved.ok) continue;
+    assert.deepEqual(
+      drill.answer.split(/\s+/).map(Number),
+      [...solved.coefficients],
+      `the drill for ${source} declares ${drill.answer}`,
+    );
+  }
+});
+
+test('the limiting-reactant drills agree with moles over coefficient', () => {
+  // Worked here rather than in the shipped file because the arithmetic is the
+  // thing being taught: a student divides moles by coefficient and takes the
+  // smallest. If that rule and these answers ever disagree, one of them is
+  // teaching the wrong thing.
+  const cases: Record<string, { readonly moles: readonly number[]; readonly coefficients: readonly number[]; readonly names: readonly string[] }> = {
+    'For 2H₂ + O₂ → 2H₂O with 4.0 mol H₂ and 4.0 mol O₂, which is limiting? Answer H2 or O2.':
+      { moles: [4.0, 4.0], coefficients: [2, 1], names: ['H2', 'O2'] },
+    'For N₂ + 3H₂ → 2NH₃ with 2.0 mol N₂ and 3.0 mol H₂, which is limiting? Answer N2 or H2.':
+      { moles: [2.0, 3.0], coefficients: [1, 3], names: ['N2', 'H2'] },
+  };
+
+  const limiting = LESSONS.find((l) => l.id === 'limiting');
+  assert.ok(limiting !== undefined);
+  assert.equal(limiting.drills.length, Object.keys(cases).length);
+
+  for (const drill of limiting.drills) {
+    const setup = cases[drill.ask];
+    assert.ok(setup !== undefined, `no setup recorded for "${drill.ask}"`);
+    const ratios = setup.moles.map((mol, i) => mol / (setup.coefficients[i] as number));
+    let smallest = 0;
+    for (let i = 1; i < ratios.length; i += 1) {
+      if ((ratios[i] as number) < (ratios[smallest] as number)) smallest = i;
+    }
+    assert.equal(drill.answer, setup.names[smallest], `the drill for "${drill.ask}" declares ${drill.answer}`);
+  }
 });

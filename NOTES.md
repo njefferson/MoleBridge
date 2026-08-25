@@ -301,6 +301,47 @@ Cloudflare's production branch is correctly configured.
 the front of the room is further away and runs a Chromium nobody here can test
 against.
 
+## The lessons, and the circular test that would have shipped
+
+The seven lessons compute their numbers from the engine rather than typing them:
+a worked example with a hand-typed molar mass can disagree with what the app
+grades, silently and forever, in the one place a student is being told how it
+works.
+
+**The first version of that was only half true, and the owner asked the question
+that found it.** Eleven drill answers were bare literals — atom counts, balancing
+coefficients, mole ratios, limiting reactants, percent yields. And the test that
+looked like it covered them, *every drill's own stated answer passes its own
+checker*, is CIRCULAR for a literal: had the oxygen count been typed as 13, the
+checker would have accepted 13 and the test would have gone green.
+
+What each of them became:
+
+- **Atom counts, ratios and percent yields** are computed from `parseFormula`
+  and from the arithmetic being taught.
+- **Balancing coefficients stay declared, because of a rule.** `solveBalance`
+  must not be reachable from any student-facing path and `lessons.ts` ships to
+  the browser, so importing the solver to generate an answer would put a working
+  balancer in the bundle. They are verified in `lessons.test.ts` instead, which
+  never reaches a student. The constraint pushed this from deriving to checking,
+  and checking is the stronger of the two anyway.
+- **Limiting reactants** are checked in the test against moles ÷ coefficient —
+  the rule the lesson teaches — so the answers and the rule cannot disagree
+  without something failing.
+
+Two plants confirmed the new checks fail: a wrong coefficient and a wrong
+limiting reactant were both caught by name.
+
+**A third plant passed, and that is the part worth keeping.** Swapping the atom
+count's symbol from O to S made the answer self-consistently 3 while the
+question still read "How many oxygen atoms" — every test green, content wrong.
+Computing an ANSWER does not protect the PROSE around it. The fix is
+structural rather than another check: the element's name is looked up from the
+same symbol the count is taken with and the sentence is generated, so the
+question moves with the arithmetic. Swapping the symbol now reads "How many
+sulfur atoms in Al₂(SO₄)₃? → 3", which is wrong-but-honest rather than
+right-looking-and-false.
+
 ## Three doors, and the code wall is one of them
 
 The owner's shape: practice is the main destination, learning easy to get to, a

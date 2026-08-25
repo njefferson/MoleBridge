@@ -31,6 +31,8 @@
  */
 
 import { molarMass } from '../chem/molarmass.ts';
+import { parseFormula } from '../chem/formula.ts';
+import { elementBySymbol } from '../chem/elements.ts';
 import { formatSigFigs, parseQuantity } from '../chem/sigfig.ts';
 import { DISTINGUISHABLE_RELATIVE } from '../engine/tolerance.ts';
 import type { ErrorClass } from '../engine/taxonomy.ts';
@@ -81,6 +83,34 @@ const mm = (formula: string): string => {
 
 /** Grams per mole to the figures the grader would use, as a bare number. */
 const mmValue = (formula: string): number => molarMass(formula).value;
+
+/**
+ * "How many oxygen atoms in Al₂(SO₄)₃?" and its answer, from ONE source.
+ *
+ * Computing the answer alone is not enough, and a planted fault proved it:
+ * swapping the symbol from O to S made the count self-consistently 3 while the
+ * question still said oxygen, and every test passed. The prose and the
+ * arithmetic have to come from the same place or one of them can drift while
+ * the other stays honest — so the element's NAME is looked up from the same
+ * symbol the count is taken with, and the sentence is generated.
+ */
+const atomCountDrill = (formula: string, written: string, symbol: string, because: string): Drill => {
+  const element = elementBySymbol(symbol);
+  if (element === undefined) throw new Error(`no element ${symbol}`);
+  return {
+    ask: `How many ${element.name.toLowerCase()} atoms in ${written}?`,
+    answer: String(parseFormula(formula).counts.get(symbol) ?? 0),
+    because,
+  };
+};
+
+/** Every atom a formula names, of any element. */
+const allAtoms = (formula: string): number =>
+  [...parseFormula(formula).counts.values()].reduce((sum, n) => sum + n, 0);
+
+/** Round for display without pretending to significant figures. */
+const to = (value: number, places: number): string =>
+  String(Math.round(value * 10 ** places) / 10 ** places);
 
 /* ------------------------------------------------------------------ */
 /* Checking                                                            */
@@ -157,9 +187,9 @@ export const LESSONS: readonly Lesson[] = [
       },
     ],
     drills: [
-      { ask: 'How many oxygen atoms in Al₂(SO₄)₃?', answer: '12', because: 'Three SO₄ groups, four oxygen each.' },
-      { ask: 'How many atoms in total in Ca(NO₃)₂?', answer: '9', because: '1 calcium + 2 nitrogen + 6 oxygen.' },
-      { ask: 'How many hydrogen atoms in CuSO₄·5H₂O?', answer: '10', because: 'Five waters, two hydrogen each.' },
+      atomCountDrill('Al2(SO4)3', 'Al₂(SO₄)₃', 'O', 'Three SO₄ groups, four oxygen each.'),
+      { ask: 'How many atoms in total in Ca(NO₃)₂?', answer: String(allAtoms('Ca(NO3)2')), because: '1 calcium + 2 nitrogen + 6 oxygen.' },
+      atomCountDrill('CuSO4*5H2O', 'CuSO₄·5H₂O', 'H', 'Five waters, two hydrogen each.'),
     ],
   },
 
@@ -262,6 +292,18 @@ export const LESSONS: readonly Lesson[] = [
         ],
       },
     ],
+    /*
+      THESE COEFFICIENTS ARE DECLARED RATHER THAN SOLVED, and that is a rule
+      rather than laziness: `solveBalance` must not be reachable from any
+      student-facing path, and this file ships to the browser. Importing the
+      solver to generate a lesson answer would put a working balancer in the
+      bundle — the exact thing the header of `balance.ts` forbids.
+
+      So they are data here and VERIFIED IN THE TEST, which does not ship:
+      `lessons.test.ts` runs the solver over each equation and asserts these are
+      the unique lowest-terms answer. The constraint pushed this from deriving
+      to checking, and checking is the stronger of the two anyway.
+    */
     drills: [
       {
         ask: 'Balance: __ N₂ + __ H₂ → __ NH₃. Give the three coefficients separated by spaces.',
@@ -304,13 +346,13 @@ export const LESSONS: readonly Lesson[] = [
     drills: [
       {
         ask: 'For 2H₂ + O₂ → 2H₂O: how many moles of H₂O from 5.00 mol of O₂?',
-        answer: '10',
+        answer: to(5.0 * (2 / 1), 3),
         unit: 'mol',
         because: 'Two H₂O per one O₂.',
       },
       {
         ask: 'For N₂ + 3H₂ → 2NH₃: how many moles of NH₃ from 6.00 mol of H₂?',
-        answer: '4',
+        answer: to(6.0 * (2 / 3), 3),
         unit: 'mol',
         because: 'Two NH₃ per three H₂, so 6.00 × 2/3.',
       },
@@ -382,13 +424,13 @@ export const LESSONS: readonly Lesson[] = [
     drills: [
       {
         ask: 'Theoretical yield 40.0 g, actual yield 32.0 g. Percent yield?',
-        answer: '80',
+        answer: to((32.0 / 40.0) * 100, 3),
         unit: '%',
         because: '32.0 ÷ 40.0 = 0.800.',
       },
       {
         ask: 'Theoretical yield 12.5 g, actual yield 9.00 g. Percent yield, to three figures?',
-        answer: '72',
+        answer: to((9.0 / 12.5) * 100, 3),
         unit: '%',
         because: '9.00 ÷ 12.5 = 0.720.',
       },
