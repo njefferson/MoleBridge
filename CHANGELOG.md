@@ -4,6 +4,28 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.0.0 — VERSION
+
+Version 1. Everything MoleBridge was for is in it.
+
+**Learn** takes you from reading a formula to percent yield in eight lessons.
+Nothing is locked; open any of them in any order, and your place is kept on the
+device. **Practice** gives you problems whenever you want them, shows the answer
+if you ask, and tells you what went wrong when you get one wrong. **Class
+assignment** is the graded route, with a code for Canvas at the end.
+
+A **reference** with a page for every mistake MoleBridge can recognise, opening
+straight from the wrong answer that produced it. A **calculator** that does
+arithmetic and refuses to do the chemistry. A **periodic table** with atomic
+weights. A **flag** in the top bar to report a problem in two taps, with nothing
+in the report about you.
+
+Three colour themes, light, dark or matching your device. It installs to a home
+screen and works with no connection.
+
+**What is still missing.** There is no way to review a problem you have already
+finished, and no running total across sessions.
+
 ## 0.14.0 — CAPABILITY
 
 Revealed answers have the right number of significant figures now.

@@ -1141,6 +1141,47 @@ constant rather than an id, because the order moved once and a hard-coded
 `#door-practice` in two handlers is two chances to leave focus in the middle of
 the menu next time. The walk asserts the order.
 
+## What "sure about the chemistry" was made to mean, before V1
+
+The owner asked for certainty about the maths, the significant figures and the
+chemistry before promoting. `npm test` was already green, and green there was
+not the same as sure.
+
+**`npm test` asks the engine whether the engine agrees with itself.** `solve()`
+produces the answer, the test submits it, `submit()` accepts it. All three could
+share one mistake and the suite would stay green — which is exactly the shape of
+the circular drill test this repository was already caught by once.
+
+`tools/verify-chemistry.mjs` recomputes the chemistry from OUTSIDE:
+
+- **Twenty molar masses against values typed by hand** from published tables.
+  This is the only check in the repository that can see a wrong atomic weight,
+  because everything else derives from `elements.ts`. Worst disagreement:
+  Al₂(SO₄)₃, 0.019 g/mol.
+- **960 generated equations balanced by counting atoms here**, from the formulas
+  and the coefficients, and checked for lowest terms with a gcd written here.
+- **960 answers worked out by hand** — grams to moles, mole ratio, the smaller
+  of the two routes where a reactant limits, moles to grams or litres or
+  particles, percent yield — and compared with what the app claims. All matched.
+- **4560 revealed values** checked to WRITE the figures they CLAIM, and to be
+  the true value rounded to them.
+
+Planted red four times before it was believed: oxygen's atomic weight moved by
+one, the answer comparison scaled by 1%, the reveal's figure count raised by
+one, and the balancer's lowest-terms reduction doubled. Every one fired.
+
+### The check committed the error the app exists to diagnose
+
+Its first version compared each revealed value against the CARRIED value
+re-rounded. That is double rounding: 0.0148497 carried at five figures is
+0.01485, and rounding THAT to three gives 0.0149 where the true value gives
+0.0148. **It reported eleven defects and every one was the check's own mistake**
+— the same mistake `E-ROUND-EARLY` exists to catch, made by the thing auditing
+the catcher. Round from the truth, once.
+
+Worth keeping in mind next time a verification script disagrees with the code it
+is auditing: the script is newer, and newer code is likelier to be wrong.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
