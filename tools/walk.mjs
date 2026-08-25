@@ -25,6 +25,9 @@ import { decodeCompletionCode, encodeCompletionCode } from '../src/code/codec.ts
 import { assignmentKeyIdFor } from '../src/engine/assignment.ts';
 import { BUILD_SECRET } from '../src/code/secret.ts';
 import { formatUnambiguous } from '../src/chem/sigfig.ts';
+import { LESSONS } from '../src/learn/lessons.ts';
+import { REFERENCE } from '../src/learn/reference.ts';
+import { ERROR_CLASSES } from '../src/engine/taxonomy.ts';
 
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 const KEY = 'WALK-A';
@@ -367,8 +370,12 @@ try {
   /* ---- the learn door, and the progress code's round trip ---- */
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });
   await page.locator('#door-learn').click();
+  // COUNTED AGAINST THE SOURCE, not against a literal. This read `=== 7` and
+  // went red the moment an eighth lesson was added — which is a check reporting
+  // a deliberate change as a defect, and the kind of red that teaches people to
+  // edit the number without reading why.
   const lessonCount = await page.locator('.lesson-row').count();
-  check(lessonCount === 7, `all seven lessons are listed (${lessonCount})`);
+  check(lessonCount === LESSONS.length, `all ${LESSONS.length} lessons are listed (${lessonCount})`);
 
   // NOTHING IS LOCKED, and this is the assertion that says so. Every row must
   // be a live control on a first run — a disabled one would be a promise that
@@ -470,6 +477,71 @@ try {
     !(await page.locator('#work-reveal').isVisible()),
     'and there is no such offer in a class assignment',
   );
+
+  /* ---- the reference, and the route into it from a wrong answer ---- */
+  //
+  // THE POINT OF THE WHOLE SURFACE is that a diagnosis is not the last word. A
+  // student who reads "the ratio is upside down" and does not know what the
+  // ratio is has been told the name of their problem and nothing else, so the
+  // route from the sentence to the explanation is walked rather than assumed.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-start').click();
+
+  // Get the first step wrong on purpose, the same way the journey above does.
+  {
+    const inputs = page.locator('#work-inputs input');
+    const count = await inputs.count();
+    for (let at = 0; at < count; at += 1) await inputs.nth(at).fill('9');
+    await page.locator('#work-form button[type="submit"]').click();
+    await page.locator('#work-feedback .note-wrong').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  }
+
+  const explain = page.locator('#work-feedback [data-explain]');
+  const attributed = await explain.count();
+  check(attributed === 1, `a diagnosed wrong answer offers a way to read more (${attributed})`);
+  if (attributed === 1) {
+    const which = await explain.getAttribute('data-explain');
+    await explain.click();
+    check(await page.locator('#reference-panel[open]').isVisible(), 'and it opens the reference');
+    // AT THE ENTRY, not at a list of twenty. Making somebody find their own
+    // mistake in a contents page asks them to diagnose themselves before they
+    // can read the diagnosis.
+    check(
+      await page.locator('#reference-detail').isVisible(),
+      'at the page for the mistake, not at the contents',
+    );
+    const shown = (await page.locator('#reference-title').textContent()) ?? '';
+    const expected = REFERENCE.find((entry) => entry.id === which)?.called ?? '(none)';
+    check(shown.trim() === expected, `showing "${expected}" (${shown.trim()})`);
+
+    // The problem is STILL THERE underneath. A screen would have had to unmount
+    // it; a dialog does not, and that is the reason it is a dialog.
+    await page.locator('#reference-close').click();
+    check(await page.locator('#work-inputs').isVisible(), 'and closing it leaves the problem where it was');
+  }
+
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-learn').click();
+  await page.locator('#learn-reference').click();
+  const pages = await page.locator('#reference-list .reference-row').count();
+  check(
+    pages === ERROR_CLASSES.length,
+    `every class the engine can attribute has a page (${pages} of ${ERROR_CLASSES.length})`,
+  );
+
+  // The lesson link goes somewhere. Followed rather than counted, because a
+  // button that opens nothing looks identical to one that works.
+  await page.locator('#reference-list .reference-row').first().click();
+  const toLesson = page.locator('#reference-detail [data-goto-lesson]');
+  if ((await toLesson.count()) > 0) {
+    await toLesson.first().click();
+    check(await page.locator('#screen-lesson').isVisible(), 'and its lesson link opens that lesson');
+    check(
+      !(await page.locator('#reference-panel[open]').isVisible()),
+      'closing the reference behind it rather than leaving it stacked',
+    );
+  }
 
   /* ---- reporting a problem ---- */
   //

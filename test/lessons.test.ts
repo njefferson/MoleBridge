@@ -109,14 +109,14 @@ test('the molar masses quoted in the lessons are the ones the grader computes', 
   );
 });
 
-test('the seven lessons cover the chain in dependency order', () => {
+test('the lessons cover the chain in dependency order', () => {
   // Order is load-bearing: the mole ratio cannot be taught before balancing,
   // and limiting reactant cannot be taught before the ratio. Asserting the ids
   // in order is blunt, and blunt is right — a reordering should have to be
   // deliberate enough to edit a test.
   assert.deepEqual(
     LESSONS.map((l) => l.id),
-    ['formulas', 'molar-mass', 'the-mole', 'balancing', 'mole-ratio', 'limiting', 'percent-yield'],
+    ['formulas', 'molar-mass', 'the-mole', 'balancing', 'mole-ratio', 'limiting', 'other-units', 'percent-yield'],
   );
 });
 

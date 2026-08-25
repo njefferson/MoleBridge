@@ -747,6 +747,35 @@ textarea {
 .lesson-state { display: block; margin-top: calc(var(--step) * 0.5); color: var(--text-3); font-size: 0.9rem; }
 .lesson-done { background: var(--accent-soft); }
 
+/*
+  ---- the reference ----
+
+  The same row shape as a lesson, because it is the same act: a list of things
+  to open. A second visual language for a second list would say the two are
+  different kinds of thing, and they are not.
+*/
+.reference { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(var(--step) * 0.75); }
+.reference-row {
+  width: 100%;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  text-align: left;
+  padding: calc(var(--step) * 1.25);
+  color: var(--text-1);
+  background: var(--surface-1);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font: inherit;
+}
+.reference-row:hover { background: var(--surface-2); }
+.reference-lessons { list-style: none; margin: var(--step) 0 0; padding: 0; display: grid; gap: var(--step); }
+
+/* The route out of a diagnosis, so it reads as an offer rather than as the
+   next thing to press instead of answering. */
+.explain { margin-top: var(--step); }
+
 /* Worked lines align on purpose — the units sit under each other, and that
    alignment is part of the explanation rather than decoration. */
 .worked {

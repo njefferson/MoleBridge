@@ -15,6 +15,7 @@ import { need, showOnly } from './dom.ts';
 import { mountSetup } from './setup.ts';
 import { mountPractice } from './practice.ts';
 import { mountLearn } from './learn.ts';
+import { mountReference } from './reference.ts';
 import { mountReport } from './report.ts';
 import { factsFrom } from './diagnostic.ts';
 import { mountWork } from './work.ts';
@@ -73,7 +74,21 @@ function boot(): void {
     },
   });
 
+  // Declared before the work screen, which needs to be able to open it, and
+  // after nothing — it holds no reference to a session. `learnScreens` is
+  // assigned below; the lesson link is only ever followed by a click, which
+  // cannot happen before boot finishes.
+  let learnScreens: ReturnType<typeof mountLearn> | null = null;
+  const reference = mountReference({
+    openLesson(index: number): void {
+      learnScreens?.openByIndex(index);
+    },
+  });
+
   const workScreen = mountWork(systemClock, {
+    onExplain(errorClass): void {
+      reference.open(errorClass);
+    },
     onFinished(finished: Session): void {
       session = finished;
       doneScreen.show(finished);
@@ -100,10 +115,13 @@ function boot(): void {
     },
   });
 
-  mountLearn(
+  learnScreens = mountLearn(
     {
       onBack(): void {
         showOnly(screens, home);
+      },
+      onReference(): void {
+        reference.open();
       },
     },
     (screen) => {

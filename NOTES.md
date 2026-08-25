@@ -713,6 +713,83 @@ Neither is visible in source review: both files read as though the floor is
 declared. The gate measured resolved pixels, which is the whole reason it
 measures rather than reads.
 
+## The reference, and the two gaps it found by existing
+
+Attribution is the thesis: MoleBridge does not mark an answer wrong, it says
+which mistake produced that exact number. **That is worth nothing if the sentence
+is the last word.** A student who reads "the ratio is upside down" and does not
+already know what the ratio is has been told the name of their problem and
+nothing else — which is the failure this app was built to fix, reappearing one
+level up.
+
+So every class the engine can attribute has a page: what happened, how to spot it
+in your own working, what to do instead, and the lessons that teach it. A wrong
+answer carries a **What does this mean?** button straight to the right page, and
+the Learn screen has a door into the list for somebody who came to look something
+up rather than because they got something wrong.
+
+**A DIALOG, NOT A SCREEN.** It opens mid-step with a half-finished problem
+underneath. A screen would have to unmount the problem, remember where the
+student was and put them back — three chances to lose their place, in the one
+moment they are already stuck. The walk asserts the problem is still there after
+the panel closes, because that is the reason it is a panel.
+
+**It opens AT the entry.** Landing somebody on a contents page of twenty asks
+them to diagnose themselves before they can read the diagnosis, and the app
+already knows which one they need.
+
+**Both directions are gated.** `reference.test.ts` holds the entry list to
+`ERROR_CLASSES` in both directions: a class with no page is a dead end, an
+orphan page is one nobody can reach, and neither shows up by reading either file.
+
+### The lesson link is derived, and the first version of it was a coin toss
+
+`Lesson.answers` already declares which classes each lesson answers. Writing the
+reverse edge by hand would be the same fact in two places, so `lessonsForClass`
+reads it off `LESSONS`.
+
+It returned the FIRST match to begin with. That is a lie the moment two lessons
+legitimately claim the same class — a conversion applied upside down is taught by
+the units lesson AND by percent yield, and which one a particular student needs
+depends on the step they were on, which the reference cannot know. It returns all
+of them now and the page offers every route. **Picking one by array order is a
+coin toss wearing a suit.**
+
+### The eighth lesson, found by a class with nowhere to point
+
+Requiring every class to have a lesson made `E-CONV-FACTOR` fail immediately: no
+lesson claimed it. Following that back, **MoleBridge has always set problems that
+ask for litres of a gas at STP or a number of particles, and nothing taught those
+conversions.** The lesson set went grams, moles, ratio, limiting, percent yield
+and stopped.
+
+"Litres, particles and other units" is the eighth lesson. Its numbers come from
+`STP_MOLAR_VOLUME_L` and `AVOGADRO` — the same constants the grader uses — rather
+than being typed, which is the rule the circular-test finding left behind.
+
+**It cost a progress-code version bump.** The lesson field was seven bits with
+twelve reserved; the eighth came out of reserved, which is what reserved was for.
+But the lesson bits sit ahead of everything else, so widening the field shifts
+every field after it, and a version 1 code read under the new layout would report
+the wrong practice count rather than failing — the worse of the two outcomes.
+`PROGRESS_VERSION` is 2 and a version 1 code is refused by name. Nothing was
+deployed carrying one, so this cost nobody anything; six months from now it would
+have.
+
+### A prose defect in the percent-yield lesson, found while reading it
+
+It said percent yield is "the first divided by the second — actual over
+theoretical", where the first thing named was the theoretical yield. The two
+halves of one sentence gave opposite instructions. Every test passed, because
+nothing tests a lesson's prose against its own arithmetic. Fixed to name the
+quantities rather than their positions.
+
+### The walk was asserting a literal
+
+`check(lessonCount === 7)` went red the moment an eighth lesson landed — a check
+reporting a deliberate change as a defect, which teaches whoever hits it to edit
+the number without reading why. It counts `LESSONS.length` now.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

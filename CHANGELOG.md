@@ -4,6 +4,36 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.10.0 — CAPABILITY
+
+Somewhere to go when MoleBridge tells you what you did wrong.
+
+Every wrong answer already got a sentence saying which mistake produced that
+exact number. Now that sentence has a **What does this mean?** button under it,
+and it opens a page on that specific mistake: what happened, how to catch it in
+your own working next time, what to do instead, and which lesson teaches it.
+
+**There are twenty pages, one for every mistake MoleBridge can recognise** — and
+you can browse them all from **Look up a mistake** on the Learn screen, without
+having to get something wrong first.
+
+It opens **over** the problem you are in the middle of. Close it and you are back
+exactly where you were, with nothing lost.
+
+**A new lesson: Litres, particles and other units.** MoleBridge has always set
+problems that ask for litres of a gas at STP or a number of particles, and no
+lesson taught the conversion. That was a gap, and the reference is what found it
+— every mistake needs a lesson behind it, and one had nowhere to point.
+
+**Progress codes from before this release will not be accepted.** The code had
+room for seven lessons and there are now eight, which changes its shape. If you
+have one written down, it will say it came from a different version — open your
+lessons again and take a new code.
+
+**What is still missing.** No calculator and no periodic table yet. And the same
+gaps as before: no way to review a problem you have already finished, and no
+running total across sessions.
+
 ## 0.9.0 — CAPABILITY
 
 Telling someone it is broken, in two taps.

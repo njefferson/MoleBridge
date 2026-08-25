@@ -249,6 +249,21 @@ const STATES = [
     },
   },
   {
+    name: 'the reference, at one page',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-learn').click();
+      await page.locator('#learn-reference').click();
+      // The detail view rather than the list: it is the one with headings,
+      // prose and the lesson links in it, so it is the one with something to
+      // measure. The list is twenty instances of a row shape already measured
+      // on the lesson list.
+      await page.locator('#reference-list .reference-row').first().click();
+      await page.locator('#reference-detail').waitFor({ state: 'visible' });
+    },
+  },
+  {
     // ONE STATE, NOT TWO. The panel before a symptom is chosen and the panel
     // after it differ by a checked radio and one line of generated text —
     // nothing this gate measures moves between them, and each state costs six

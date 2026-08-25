@@ -15,6 +15,8 @@ import { adoptProgress, loadProgress, markLessonDone, storageWorks } from '../le
 
 export interface LearnHost {
   onBack(): void;
+  /** Open the reference at the list, for somebody looking something up. */
+  onReference(): void;
 }
 
 export interface LearnScreens {
@@ -23,6 +25,14 @@ export interface LearnScreens {
   /** Which element to show for the lesson list. */
   readonly list: HTMLElement;
   readonly lesson: HTMLElement;
+  /**
+   * Open one lesson by index and show it.
+   *
+   * For the reference's "the lesson on this" links, which arrive from a wrong
+   * answer rather than from the list — so the same route has to work without a
+   * click on a row that may not be on screen.
+   */
+  openByIndex(index: number): void;
 }
 
 /**
@@ -123,6 +133,9 @@ export function mountLearn(host: LearnHost, show: (screen: HTMLElement) => void)
   need<HTMLButtonElement>('#learn-back').addEventListener('click', () => {
     host.onBack();
   });
+  need<HTMLButtonElement>('#learn-reference').addEventListener('click', () => {
+    host.onReference();
+  });
 
   /* ---- the progress code ---- */
 
@@ -172,7 +185,17 @@ export function mountLearn(host: LearnHost, show: (screen: HTMLElement) => void)
 
   paintList();
 
-  return { refresh: paintList, list, lesson: lessonScreen };
+  return {
+    refresh: paintList,
+    list,
+    lesson: lessonScreen,
+    openByIndex(index: number): void {
+      const lesson = LESSONS[index];
+      if (lesson === undefined) return;
+      openLesson(lesson, index);
+      show(lessonScreen);
+    },
+  };
 }
 
 /** One drill: a question, a box, and a verdict that arrives only after a try. */

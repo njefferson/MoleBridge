@@ -35,6 +35,7 @@ import { parseFormula } from '../chem/formula.ts';
 import { elementBySymbol } from '../chem/elements.ts';
 import { formatSigFigs, parseQuantity } from '../chem/sigfig.ts';
 import { DISTINGUISHABLE_RELATIVE } from '../engine/tolerance.ts';
+import { AVOGADRO, STP_MOLAR_VOLUME_L } from '../chem/constants.ts';
 import type { ErrorClass } from '../engine/taxonomy.ts';
 
 /** One thing a student types, and what counts as right. */
@@ -398,6 +399,73 @@ export const LESSONS: readonly Lesson[] = [
   },
 
   {
+    id: 'other-units',
+    title: 'Litres, particles and other units',
+    promise: 'Turn moles of something into whatever unit the question actually asked for.',
+    answers: ['E-CONV-FACTOR', 'E-CONV-INVERTED'],
+    blocks: [
+      {
+        paragraphs: [
+          'Every stoichiometry problem runs through moles in the middle, and then has to come back out into whatever unit was asked for. Grams is the common one. It is not the only one.',
+          'Each of these is the same move: multiply the moles by a factor with the wanted unit on top and moles underneath, so the moles cancel and the wanted unit is what is left.',
+        ],
+        worked: [
+          `moles \u00d7 (grams per mole)          \u2192 grams`,
+          `moles \u00d7 (${to(STP_MOLAR_VOLUME_L, 1)} L per mole, at STP)  \u2192 litres of gas`,
+          `moles \u00d7 (${AVOGADRO.toExponential(3)} per mole)   \u2192 particles`,
+        ],
+      },
+      {
+        heading: 'Litres of a gas, at STP',
+        paragraphs: [
+          `One mole of ANY gas takes up about ${to(STP_MOLAR_VOLUME_L, 1)} litres at standard temperature and pressure. It does not matter which gas — that is the useful part, and it is why the number is worth remembering.`,
+          'It only holds for a GAS, and only at STP. A question that does not say STP is not asking for this factor.',
+        ],
+      },
+      {
+        heading: 'Particles',
+        paragraphs: [
+          `A mole is a count. It is ${AVOGADRO.toExponential(3)} of whatever you are counting — atoms, molecules, formula units — in the same way a dozen is twelve of whatever you are counting.`,
+          'Answers here are enormous, and they should be. If your answer to a particle question is a small number, the factor went the wrong way round.',
+        ],
+      },
+      {
+        heading: 'Which way up',
+        paragraphs: [
+          'Going FROM moles you multiply. Going TO moles you divide. If you cannot remember which, write the factor as a fraction with its units and see which arrangement cancels.',
+          'Then check the size before you write it down. Moles to litres makes the number much bigger; litres to moles makes it much smaller. An answer that moved the wrong way is the factor upside down.',
+        ],
+      },
+      {
+        heading: 'Percentages are the same move',
+        paragraphs: [
+          'A fraction times 100 is a percentage. It is the smallest conversion factor in the course and it is the one most often left off — an answer of 0.85 where the question asked for a percent is not a different mistake from forgetting to multiply by the molar mass.',
+        ],
+      },
+    ],
+    drills: [
+      {
+        ask: 'How many litres does 2.00 mol of oxygen gas occupy at STP?',
+        answer: to(2 * STP_MOLAR_VOLUME_L, 1),
+        unit: 'L',
+        because: `one mole is ${to(STP_MOLAR_VOLUME_L, 1)} L at STP, so two moles is twice that. The gas being oxygen makes no difference.`,
+      },
+      {
+        ask: `You have ${to(STP_MOLAR_VOLUME_L * 3, 1)} L of a gas at STP. How many moles is that?`,
+        answer: '3',
+        unit: 'mol',
+        because: `going TO moles you divide: ${to(STP_MOLAR_VOLUME_L * 3, 1)} \u00f7 ${to(STP_MOLAR_VOLUME_L, 1)} = 3.`,
+      },
+      {
+        ask: 'A reaction could have made 4.00 g and made 3.00 g. What is the percent yield?',
+        answer: to((3 / 4) * 100, 0),
+        unit: '%',
+        because: 'actual over theoretical is 3.00 \u00f7 4.00 = 0.750, and a fraction is not a percentage until it is multiplied by 100.',
+      },
+    ],
+  },
+
+  {
     id: 'percent-yield',
     title: 'Percent yield',
     promise: 'Compare what you actually got with what the equation said you could get.',
@@ -405,7 +473,7 @@ export const LESSONS: readonly Lesson[] = [
     blocks: [
       {
         paragraphs: [
-          'The theoretical yield is what the equation promises if nothing goes wrong. The actual yield is what came out of the flask. Percent yield is the first divided by the second — actual over theoretical, times a hundred.',
+          'The theoretical yield is what the equation promises if nothing goes wrong. The actual yield is what came out of the flask. Percent yield is the actual divided by the theoretical, times a hundred.',
           'Actual on top. It is the number you measured, and a percent yield over 100 means something is wrong with the measurement rather than with the chemistry.',
         ],
         worked: [

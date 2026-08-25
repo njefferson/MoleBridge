@@ -139,6 +139,11 @@
       <p class="hint" id="learn-restore-status" role="status"></p>
     </details>
 
+    <!--
+      The other door into the reference. A student who came here to look
+      something up should not have to get an answer wrong first to find it.
+    -->
+    <button type="button" class="button-small" id="learn-reference">Look up a mistake</button>
     <button type="button" class="button-small" id="learn-back">Back</button>
   </section>
 
@@ -366,6 +371,33 @@
   entirely from things the app already knows, which means the assurance
   underneath it is CHECKABLE — and `report.test.ts` checks it.
 -->
+<!--
+  ============ the reference ============
+
+  A PANEL RATHER THAN A SCREEN. This opens from a wrong answer, mid-step, with a
+  half-finished problem underneath — a screen would have to unmount the problem
+  and put the student back afterwards, which is three chances to lose their
+  place in the one moment they are already stuck.
+
+  It opens AT the entry the app just attributed, not at a contents page. Making
+  somebody find their own mistake in a list of twenty is asking them to diagnose
+  themselves before they can read the diagnosis.
+-->
+<dialog class="info" id="reference-panel" aria-labelledby="reference-title">
+  <div class="info-head">
+    <h2 id="reference-title">What can go wrong</h2>
+    <button type="button" class="icon-button" id="reference-close">
+      <span aria-hidden="true">✕</span>
+      <span class="visually-hidden">Close</span>
+    </button>
+  </div>
+  <div class="info-body">
+    <button type="button" class="button-small" id="reference-back" hidden>All of them</button>
+    <ul class="reference" id="reference-list"></ul>
+    <div id="reference-detail" hidden></div>
+  </div>
+</dialog>
+
 <dialog class="info" id="report-panel" aria-labelledby="report-title">
   <div class="info-head">
     <h2 id="report-title">Report a problem</h2>

@@ -43,25 +43,32 @@ import { hmacSha256, utf8Bytes } from '../code/sha256.ts';
 import { ERROR_CLASSES, type ErrorClass } from '../engine/taxonomy.ts';
 
 /** Bumped when the layout below changes. An older code is refused, not guessed at. */
-export const PROGRESS_VERSION = 1;
+export const PROGRESS_VERSION = 2;
 
 /** How many lessons there are. One bit each. */
-export const LESSON_COUNT = 7;
+export const LESSON_COUNT = 8;
 
 /**
  * Layout, in bits. Kept small on purpose: this gets written on the back of an
  * exercise book and typed in one-handed.
  *
  *   version   3   room for seven layouts before anything has to be renamed
- *   lessons   7   one bit per lesson, finished or not
+ *   lessons   8   one bit per lesson, finished or not
  *   practice 14   problems practised, saturating at 16383
  *   weak     20   one bit per error class, set once it has happened twice
- *   reserved 12   MUST be zero; room to grow, and a second corruption check
+ *   reserved 11   MUST be zero; room to grow, and a second corruption check
  *   ----
  *            56   payload, which is seven whole bytes
  *   mac      24   three whole bytes; ~1 in 16 million for a typo
  *   ----
  *            80   sixteen Crockford characters, four groups of four
+ *
+ * THE EIGHTH LESSON CAME OUT OF RESERVED, which is what reserved was for. It
+ * cost a version bump, because the lesson field sits ahead of everything else
+ * and widening it shifts every field after it — a version 1 code read under
+ * this layout would report the wrong practice count rather than failing, which
+ * is the worst of the two outcomes. `PROGRESS_VERSION` is 2 and a version 1
+ * code is refused by name. Nothing was deployed carrying one.
  *
  * TWO CONSTRAINTS HAVE TO HOLD AT ONCE and the first attempt satisfied only
  * one: the total must divide by 5 for base32, AND the payload and the MAC must
@@ -73,7 +80,7 @@ const VERSION_BITS = 3;
 const LESSON_BITS = LESSON_COUNT;
 const PRACTICE_BITS = 14;
 const WEAK_BITS = 20;
-const RESERVED_BITS = 12;
+const RESERVED_BITS = 11;
 export const PROGRESS_PAYLOAD_BITS =
   VERSION_BITS + LESSON_BITS + PRACTICE_BITS + WEAK_BITS + RESERVED_BITS;
 export const PROGRESS_MAC_BITS = 24;
