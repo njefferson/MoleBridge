@@ -54,8 +54,8 @@ jobs:
       - name: Install
         run: npm ci
 
-      # The engine's own gates first: a type error or a failed test says more
-      # about this repository than anything below it.
+      # ---- the engine's own checks ----
+
       - name: Type check
         run: npm run typecheck
 
@@ -65,50 +65,29 @@ jobs:
       - name: The release triplet is written once
         run: npm run version:check
 
-      - name: Build the browser bundle
-        run: npm run build
+      # ---- the doctrine gates ----
+      #
+      # AHEAD OF THE BROWSER WORK, deliberately. A step that fails stops the job,
+      # so anything after it is skipped — and the first version of this file put
+      # the privacy gate last, behind a browser install and two browser-driven
+      # gates. A Chromium that would not download meant §9b's HARD gate silently
+      # did not run. The order is now cheapest-and-most-important first.
 
-      - name: The palette clears every hard floor
-        run: node .hub/palette-check.mjs palettes/molebridge.json
-
-      # The browser gates need a Chromium. The session sandbox ships one at a
-      # fixed path and `tools/serve.mjs` finds it; a runner has no such path, so
-      # playwright downloads its own and the tools fall through to it.
-      - name: Install a browser for the walk and the accessibility gate
-        run: npx playwright-core install --with-deps chromium
-
-      # Doctrine §6: walk the primary journey from the start screen. It gets one
-      # step wrong on purpose, and it drops the network to prove the offline
-      # claim rather than asserting it.
-      - name: The primary journey
-        run: node tools/walk.mjs
-
-      # Doctrine §4, and it exits non-zero. Every state, both themes, measured
-      # from the pixels the browser resolved rather than from the declarations.
-      - name: Accessibility
-        run: node tools/a11y.mjs
-
-      # Doctrine §9b — the FAIL state. Design statements are repo material; the
-      # owner's person is not. Canonical in the hub, run from there.
       - name: The owner's person is not repo material
         run: node .hub/privacy-check.mjs --repo .
 
-      # The privacy rule's second half: never in what words.
       - name: Every set-apart quotation says whose words it is
         run: node .hub/quote-check.mjs --repo .
 
-      # Doctrine §2 — markdown tables are LOST on an iPad, not merely ugly.
       - name: No grids in anything the owner reads
         run: node .hub/docs-check.mjs .
 
       - name: npm hygiene
         run: node .hub/pin-check.mjs --repo .
 
-      # zizmor is maintained and off-the-shelf, and is itself pinned by version
-      # AND hash in the hub's requirements file — canonical there so every
-      # repository installs the same build. `--require-hashes` rejects a swapped
-      # artefact; `--only-binary` stops a silent fall back to building from
-      # source next to whatever else runs on this runner.
+      - name: The palette clears every hard floor
+        run: node .hub/palette-check.mjs palettes/molebridge.json
+
       - name: Install zizmor (version- and hash-pinned by the hub)
         run: |
           python3 -m venv "$RUNNER_TEMP/zizmor"
@@ -122,3 +101,30 @@ jobs:
         run: |
           "$RUNNER_TEMP/zizmor/bin/zizmor" --offline --strict-collection \
             .github/workflows/
+
+      # ---- the browser gates ----
+      #
+      # The BROWSER COMES FIRST, before the build. `npm run build` renders the
+      # icon PNGs by driving a real browser, so a build with no Chromium fails
+      # at the icons — which is exactly what happened when the install step sat
+      # after it.
+      #
+      # The session sandbox ships a Chromium at a fixed path and `serve.mjs`
+      # finds it; a runner has none, so playwright downloads its own and the
+      # tools fall through to it.
+      - name: Install a browser for the build and the gates
+        run: npx playwright-core install --with-deps chromium
+
+      - name: Build the browser bundle
+        run: npm run build
+
+      # Doctrine §6: walk the primary journey from the start screen. It gets one
+      # step wrong on purpose, and it drops the network to prove the offline
+      # claim rather than asserting it.
+      - name: The primary journey
+        run: node tools/walk.mjs
+
+      # Doctrine §4, and it exits non-zero. Every state, both themes, measured
+      # from the pixels the browser resolved rather than from the declarations.
+      - name: Accessibility
+        run: node tools/a11y.mjs
