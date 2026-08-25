@@ -139,6 +139,26 @@
   <button type="button" class="button button-small button-quiet" id="update-later">Not yet</button>
 </div>
 
+<!--
+  ============ back to a problem in progress ============
+
+  THE SESSION WAS REACHABLE AND UNREACHABLE AT THE SAME TIME. Following "the
+  lesson on this" from a wrong answer takes a student off the work screen, and
+  the lesson screen's only exits went to the lesson list and then home — so the
+  problem they were in the middle of was still there, still holding what they
+  had typed, with no route back to it. Their work was not lost; it was stranded,
+  which to the student is the same thing.
+
+  ONE STRIP RATHER THAN A BUTTON ON EACH SCREEN. Patching the two exits that
+  happened to be wrong would leave the next screen to get it wrong again. This
+  appears wherever a student is NOT on the work screen while a set is running,
+  so a route out that forgets to come back cannot exist.
+-->
+<div class="resume-strip" id="resume-strip" role="status" hidden>
+  <span id="resume-message">You have a problem open.</span>
+  <button type="button" class="button button-small" id="resume-go">Back to it</button>
+</div>
+
 <main id="main">
 
   <!-- ============ home ============ -->

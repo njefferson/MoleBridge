@@ -725,6 +725,61 @@ try {
     );
   }
 
+  /* ---- work is never stranded ---- */
+  //
+  // THE EXACT PATH THAT STRANDED SOMEBODY: get a step wrong, follow the
+  // reference to the lesson that teaches it, and try to get back. The session
+  // was alive and holding everything typed into it, and no control anywhere led
+  // to it. What a student would call losing their work.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-start').click();
+
+  const typed = ['7', '8', '9', '6'];
+  {
+    const boxes = page.locator('#work-inputs input');
+    const count = await boxes.count();
+    for (let at = 0; at < count; at += 1) await boxes.nth(at).fill(typed[at] ?? '5');
+  }
+  const readBack = async () =>
+    page.evaluate(() => [...document.querySelectorAll('#work-inputs input')].map((box) => box.value).join(','));
+  const before = await readBack();
+
+  // Every tool a student might open mid-step, and back again.
+  for (const [what, open, close] of [
+    ['the calculator', '#calc-open', '#calc-close'],
+    ['the periodic table', '#table-open', '#table-close'],
+    ['the information panel', '#info-open', '#info-close'],
+    ['the report panel', '#report-open', '#report-close'],
+  ]) {
+    await page.locator(open).click();
+    await page.locator(close).click();
+    const after = await readBack();
+    check(after === before, `what is typed survives opening ${what} (${after || '(empty)'})`);
+  }
+
+  // And the route that leaves the screen entirely.
+  await page.locator('#work-form button[type="submit"]').click();
+  await page.locator('#work-feedback .note-wrong').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  await page.locator('#work-feedback [data-explain]').click();
+  const lessonLink = page.locator('#reference-detail [data-goto-lesson]');
+  if ((await lessonLink.count()) > 0) {
+    await lessonLink.first().click();
+    check(await page.locator('#screen-lesson').isVisible(), 'a wrong answer can be followed to its lesson');
+    check(
+      await page.locator('#resume-strip').isVisible(),
+      'and the way back to the problem is on screen there',
+    );
+    const said = (await page.locator('#resume-message').textContent()) ?? '';
+    check(/still open/i.test(said), `which says what is waiting (${said.trim()})`);
+    await page.locator('#resume-go').click();
+    check(await page.locator('#screen-work').isVisible(), 'and it goes back to the problem');
+    check(
+      !(await page.locator('#resume-strip').isVisible()),
+      'and stops offering once you are there',
+    );
+  }
+
   /* ---- reporting a problem ---- */
   //
   // THE ASSURANCE UNDER THE REPORT HAS TO BE TRUE ON A REAL SCREEN, not just in

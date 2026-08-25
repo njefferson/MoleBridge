@@ -1230,6 +1230,41 @@ the code` — and the panel sits under the code on the same screen, so the reach
 was extended by one line instead. A second way to do a hard thing is a second
 thing to go stale, and this one did not even survive being written.
 
+## A session that was alive and unreachable at the same time
+
+The owner asked that what a student has typed survives navigating away to use a
+tool. Checked rather than assumed, and the answer split in two.
+
+**The four panels were already safe.** The calculator, the periodic table, the ⓘ
+and the ⚑ are dialogs laid over the work screen, which is never unmounted, so
+everything typed survives. Now asserted on every build so it keeps being true —
+it was true by a property of `<dialog>` that nobody had written down.
+
+**One route was not.** Following "the lesson on this" from a wrong answer leaves
+the work screen, and the lesson screen's only exits went to the lesson list and
+then home. The session was still alive, still holding every value typed into it,
+**and no control anywhere led back to it.** Not lost — stranded, which to a
+student is the same thing.
+
+**ONE STRIP, NOT TWO PATCHED BUTTONS.** Fixing the two exits that happened to be
+wrong would leave the next route off the work screen free to be wrong again. Every
+screen change in `app.ts` goes through one function that shows the strip whenever
+a set is running and the work screen is not the one showing, so a route that
+forgets to come back cannot exist. It names the set, because "you have a problem
+open" beside a lesson on the same topic is ambiguous about which thing is
+waiting.
+
+The walk drives the exact path that stranded somebody — wrong step, reference,
+lesson, back — rather than testing the strip in isolation.
+
+### What this does NOT cover, and it is the bigger one
+
+**A reload still loses everything.** Nothing about a session is persisted, so a
+refresh, a restored tab, or a Chromebook that sleeps and comes back to a
+reloaded page starts from nothing. For the students this app is now being aimed
+at — where taking a break mid-task is an accommodation rather than a
+distraction — that is the more valuable fix, and it is not this one.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

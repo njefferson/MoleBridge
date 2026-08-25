@@ -309,6 +309,27 @@ const STATES = [
     },
   },
   {
+    // The strip that gets a student back to a problem they walked away from.
+    // Measured because it is coloured chrome that appears over the top of a
+    // screen — the one shape most likely to be a contrast surprise.
+    name: 'a lesson, with a problem still open behind it',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+      await page.locator('#practice-start').click();
+      const boxes = page.locator('#work-inputs input');
+      const count = await boxes.count();
+      for (let at = 0; at < count; at += 1) await boxes.nth(at).fill('9');
+      await page.locator('#work-submit').click();
+      await page.locator('#work-feedback [data-explain]').click();
+      const link = page.locator('#reference-detail [data-goto-lesson]');
+      if ((await link.count()) > 0) await link.first().click();
+      else await page.locator('#reference-close').click();
+      await page.locator('#resume-strip').waitFor({ state: 'visible' });
+    },
+  },
+  {
     name: 'the reference, at one page',
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });

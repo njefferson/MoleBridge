@@ -256,6 +256,23 @@ body {
   color: var(--text-1);
 }
 
+/*
+  The way back to a problem in progress. Deliberately the same shape as the
+  stale-version strip: both are the app saying "there is something you should
+  know about" from outside whatever screen you are on, and a second visual
+  language for that would make the two read as different kinds of thing.
+*/
+.resume-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--accent-soft);
+  border-bottom: 1px solid var(--rail);
+  color: var(--text-1);
+}
+
 /* ---------------- layout ---------------- */
 
 main { padding: 1.25rem 1rem 0; }
