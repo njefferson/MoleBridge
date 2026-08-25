@@ -454,6 +454,27 @@ input[type="text"] {
    that takes focus — a container with tabindex="-1" gets none by default. */
 .feedback:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: var(--radius); }
 
+/*
+  ---- what a code says ----
+
+  A description list, because that is what it is: a thing the code carries, and
+  what it says. Not a table — this is read on a phone, where columns are lost
+  silently while the prose around them looks fine.
+*/
+.readout { margin: var(--step) 0 0; }
+.readout dt {
+  margin-top: calc(var(--step) * 1.25);
+  color: var(--text-2);
+  font-size: 0.9375rem;
+}
+.readout dd {
+  margin: calc(var(--step) * 0.25) 0 0;
+  color: var(--text-1);
+  font-weight: 650;
+}
+.readout-not { margin: var(--step) 0 0; padding-left: 1.25rem; color: var(--text-2); }
+.readout-not li { margin-bottom: calc(var(--step) * 0.5); }
+
 /* ---------------- feedback ---------------- */
 
 .feedback { max-width: var(--measure); margin: 0 auto 2rem; }

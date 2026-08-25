@@ -4,6 +4,25 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.1.0 — CAPABILITY
+
+You can see exactly what your code says about you.
+
+Under the code on the finished screen there is now **What this code says about
+you** — the code above, decoded, line by line. Your roster number, how many
+problems you finished, how many you got right first time, how many wrong answers
+there were and which step each was at, how long you had it open, which day. And
+underneath, what is *not* in it: your name, anything you typed as an answer, any
+of your working, anything about your device.
+
+**It is the code itself, read back.** Not a description of it written by whoever
+built the app — the app decodes the string you are about to hand in, using the
+same operation your teacher's page uses, and shows you what comes out. What you
+read is what they will read.
+
+The progress code under "Moving to another device" says what it carries too, and
+that it stays on your device.
+
 ## 1.0.0 — VERSION
 
 Version 1. Everything MoleBridge was for is in it.

@@ -242,6 +242,39 @@ try {
   check(decoded.fields?.firstTryCorrect === COUNT - 1, 'and one problem lost its first-try, from the deliberate mistake');
   check((decoded.fields?.errS3 ?? 0) === 1, 'the error is counted against the stage it happened at');
 
+  /* ---- nothing invisible is handed in ---- */
+  //
+  // A student types a short string into Canvas. The screen used to carry a
+  // SENTENCE about it — counts only, no answers, no name — which was true and
+  // was written by whoever built the thing making the claim. What is checked
+  // here is that the app shows the code DECODED, and that what it shows matches
+  // what this file gets by decoding the same string independently.
+  const saysVisible = await page.locator('#done-says').isVisible();
+  check(saysVisible, 'the finished screen shows what the code says');
+
+  const readoutText = (await page.locator('#done-readout').textContent()) ?? '';
+  check(readoutText.includes(String(ROSTER)), `the readout names the roster number it carries (${ROSTER})`);
+  check(readoutText.includes(String(COUNT)), `and how many problems were finished (${COUNT})`);
+
+  // THE SAME NUMBERS THE TEACHER WILL SEE. `decoded` above came from decoding
+  // the code this walk read off the screen, so this compares the app's own
+  // reading against an independent one of the same string.
+  for (const [what, value] of [
+    ['problems finished', decoded.fields?.attempted],
+    ['right first time', decoded.fields?.firstTryCorrect],
+    ['roster number', decoded.fields?.rosterId],
+  ]) {
+    check(
+      readoutText.includes(String(value)),
+      `the readout agrees with the decoder on ${what} (${value})`,
+    );
+  }
+
+  const notInText = (await page.locator('#done-not-in').textContent()) ?? '';
+  for (const owed of ['name', 'answer', 'working']) {
+    check(notInText.toLowerCase().includes(owed), `and says your ${owed} is not in it`);
+  }
+
   /* ---- the information surface ---- */
   await page.locator('#info-open').click();
   check(await page.locator('#info-panel').isVisible(), 'the information control opens the panel');

@@ -13,7 +13,13 @@
  */
 
 import { clear, el, fill, need } from './dom.ts';
-import { encodeCompletionCode, totalStageErrors, type CompletionPayload } from '../code/codec.ts';
+import {
+  decodeCompletionCode,
+  encodeCompletionCode,
+  totalStageErrors,
+  type CompletionPayload,
+} from '../code/codec.ts';
+import { completionReadout, type Readout } from '../report/readout.ts';
 import { BUILD_SECRET } from '../code/secret.ts';
 import { completionPayload, type Clock, type Session } from '../engine/steps.ts';
 
@@ -41,6 +47,42 @@ export function mountDone(clock: Clock, host: DoneHost): DoneScreen {
   const copyStatus = need('#done-copy-status');
   const restart = need<HTMLButtonElement>('#done-restart');
   const practiceNote = need('#done-practice');
+  const says = need('#done-says');
+  const readout = need('#done-readout');
+  const notIn = need('#done-not-in');
+
+  /**
+   * Paint what the code says, FROM THE CODE.
+   *
+   * Decoded rather than read off the session that made it. That is the whole
+   * guarantee: what the student reads here is the output of the same operation
+   * their teacher's page runs, so it cannot be a flattering summary of what was
+   * meant to go in. If the code and the session ever disagreed, this would show
+   * the code — which is the one a teacher acts on.
+   */
+  const paintReadout = (code: string, assignmentKey: string): void => {
+    const decoded = decodeCompletionCode(code, BUILD_SECRET);
+    if (decoded.verdict !== 'VALID' || decoded.fields === null) {
+      // Never invent a reading. A code that will not decode is a fault worth
+      // reporting, not a blank to fill with the session's own numbers.
+      fill(readout, [
+        el('p', {
+          className: 'hint',
+          text: 'This code could not be read back, which should not happen — please report it with the ⚑ button.',
+        }),
+      ]);
+      clear(notIn);
+      return;
+    }
+    const said: Readout = completionReadout(decoded.fields, assignmentKey);
+    const rows: HTMLElement[] = [];
+    for (const line of said.lines) {
+      rows.push(el('dt', { text: line.says }));
+      rows.push(el('dd', { text: line.value }));
+    }
+    fill(readout, rows);
+    fill(notIn, said.notIn.map((item) => el('li', { text: item })));
+  };
 
   let shown = '';
 
@@ -77,6 +119,7 @@ export function mountDone(clock: Clock, host: DoneHost): DoneScreen {
           `set ${session.config.assignmentKey}. Nothing is handed in and nothing was recorded. ` +
           `Type that set name in again to get the same problems back.`;
         clear(summary);
+        says.hidden = true;
         return '';
       }
       codeNode.hidden = false;
@@ -87,6 +130,8 @@ export function mountDone(clock: Clock, host: DoneHost): DoneScreen {
       codeNode.textContent = shown;
       copyStatus.textContent = '';
       fill(summary, summaryLines(payload).map((line) => el('li', { text: line })));
+      says.hidden = false;
+      paintReadout(shown, session.config.assignmentKey);
       return shown;
     },
   };

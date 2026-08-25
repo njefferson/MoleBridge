@@ -202,6 +202,15 @@
       <button type="button" class="button-small" id="learn-copy">Copy it</button>
       <p class="hint" id="learn-copy-status" role="status"></p>
 
+      <!-- Same rule as the completion code: a code you are asked to keep is a
+           code you are owed a reading of. -->
+      <details class="card">
+        <summary>What this code says</summary>
+        <dl class="readout" id="learn-readout"></dl>
+        <h3>What is not in it</h3>
+        <ul class="readout-not" id="learn-not-in"></ul>
+      </details>
+
       <label class="field">
         <span class="field-label">Or type one in</span>
         <input type="text" id="learn-restore" inputmode="latin" autocomplete="off" spellcheck="false">
@@ -378,11 +387,26 @@
     <h2>How it went</h2>
     <ul class="summary" id="done-summary"></ul>
 
-    <p class="hint">
-      The code carries counts only — how many problems you attempted, how many
-      you got right first time, and which steps went wrong. It does not carry
-      your answers, and it does not carry your name.
-    </p>
+    <!--
+      NOTHING INVISIBLE IS HANDED IN. This used to be a sentence ABOUT the code —
+      "counts only, no answers, no name" — which was true and was written by
+      whoever built it, and is exactly as trustworthy to a fifteen-year-old as
+      any other thing software says about itself.
+
+      What is below is the code DECODED, in front of them, by the same operation
+      their teacher's page performs. It cannot drift from the truth because it is
+      not a description of the truth.
+    -->
+    <details class="card" id="done-says" open>
+      <summary>What this code says about you</summary>
+      <p class="hint">
+        This is the code above, decoded — the same thing your teacher sees when
+        they paste it in. Nothing else is in it.
+      </p>
+      <dl class="readout" id="done-readout"></dl>
+      <h3>What is not in it</h3>
+      <ul class="readout-not" id="done-not-in"></ul>
+    </details>
 
     <button type="button" class="button" id="done-restart">Start another session</button>
   </section>

@@ -389,6 +389,12 @@ const STATES = [
         }
       }
       await page.locator('#screen-done').waitFor({ state: 'visible' });
+      // THE READOUT IS PART OF THIS STATE, not a state of its own. Getting to
+      // the finished screen means driving three whole problems, and a second
+      // routine that did it again was a second thing to go stale — mine did,
+      // immediately, timing out in both modes on its first run. The panel is
+      // open by default and sits under the code, so measuring here measures it.
+      await page.locator('#done-readout dd').first().waitFor({ state: 'visible' });
     },
   },
 ];

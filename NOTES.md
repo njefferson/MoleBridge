@@ -1182,6 +1182,54 @@ the catcher. Round from the truth, once.
 Worth keeping in mind next time a verification script disagrees with the code it
 is auditing: the script is newer, and newer code is likelier to be wrong.
 
+## Nothing invisible is handed in
+
+The owner's ask: any time a student is holding a code to give a teacher, they can
+see exactly what it conveys — to remove the stress of an invisible submission.
+
+**The screen already carried a sentence about it**: "the code carries counts
+only — how many problems you attempted, how many you got right first time, and
+which steps went wrong. It does not carry your answers, and it does not carry
+your name." That sentence was TRUE. It was also written by whoever built the
+thing making the claim, and to a fifteen-year-old handing something opaque to a
+teacher it is worth exactly what any other software's reassurance about itself is
+worth.
+
+**So the readout DECODES THE CODE THE STUDENT IS HOLDING.** Not what the session
+put in — what a decoder gets back out, by the same operation the teacher's page
+performs. It cannot drift from the truth, because it is not a description of the
+truth. If the code and the session ever disagreed, this would show the code,
+which is the one a teacher acts on.
+
+The walk checks that specifically: it reads the code off the screen, decodes it
+itself, and requires the app's readout to agree with its own reading.
+
+### The gate that keeps it honest
+
+A field added to the codec and not described here would be something handed over
+unseen — the original problem, back silently. `readout.test.ts` walks `FIELDS`
+and requires every one to be either a line in the readout or named in
+`NOT_SHOWN` with a reason. Only `version` is declared not-shown, because it is
+about the code's format rather than about the student.
+
+**And the test caught a real gap on its first run.** The fixture had zeros in
+several step counters, so the readout named only the steps that went wrong, and
+`errS2` — the molar-mass step — had no words anywhere. A student could not tell
+whether the code even had a slot for it, which is the same not-knowing the
+readout exists to remove. Two fixes: the line now says a count is carried for all
+six steps whatever the numbers are, and the fixture makes every counter nonzero,
+because **a fixture with zeros in it cannot tell "shown as none" from "never
+described"**.
+
+### A second session-walker went stale the moment it was written
+
+The accessibility state for this panel started as its own entry with its own
+routine for driving a session to the finished screen. It timed out in both modes
+on its first run. There was already a state that gets there — `finished, showing
+the code` — and the panel sits under the code on the same screen, so the reach
+was extended by one line instead. A second way to do a hard thing is a second
+thing to go stale, and this one did not even survive being written.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
