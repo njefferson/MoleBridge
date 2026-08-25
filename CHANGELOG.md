@@ -4,6 +4,28 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.4.0 — CAPABILITY
+
+MoleBridge has a mole on it. The icon is a mole crossing a bridge, left to
+right, on a green tile.
+
+**Why it changed.** The old icon was meant to be a bridge carrying three
+particles. At the size a browser tab and a bookmark actually use it, it read as
+a frowning face — the particles became eyes and a brow, and the arch under them
+became a downturned mouth. On an app whose job is telling you which step went
+wrong, that was the worst possible thing for it to look like, and it had been
+that way since the first release.
+
+**Two icons now, not one.** A browser tab draws its icon at sixteen pixels
+across, where an animal is a smudge. So the tab gets its own simpler drawing —
+the arch alone — and the home-screen tile gets the mole. They are the same green
+and read as the same app.
+
+**What is still missing.** The tile is green whichever colour you choose in the
+app; a home-screen icon cannot follow a setting. And the same gaps as before: no
+way to review a problem you have already finished, and no running total across
+sessions.
+
 ## 0.3.0 — CAPABILITY
 
 You can choose how MoleBridge looks. Open the ⓘ and there are two settings:
