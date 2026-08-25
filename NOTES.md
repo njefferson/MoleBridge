@@ -294,6 +294,50 @@ MoleBridge. A gate rather than a manual step handed over.
 the front of the room is further away and runs a Chromium nobody here can test
 against.
 
+## The icon, three drawings later — and a gate that lied about it
+
+**The first icon read as a frowning face**, and shipped that way for three
+releases. Recorded in full further down; the rule it taught is that small shapes
+above a curve inside a rounded square IS a face schema, so the fix is to remove
+the row of shapes rather than rearrange it.
+
+**The second did not read as an animal.** It was drawn from a supplied mole SVG
+placed onto the arch, and it was an animal-shaped lump: no leg separation, a
+snout that was a bump rather than a point, the shovel forepaw buried inside the
+body outline, and — the part nothing in a source file would show — the white
+animal merging into the white arch the moment they touched, so it read as one
+blob on another.
+
+**What fixed it was silhouette, not detail**, which is worth writing down
+because the instinct is to add features. The nose projects past everything else;
+the back humps; the tail is short and clear of the body; one foreleg descends to
+the bridge and ends in the broad digging paw a mole is actually known for. The
+tile-coloured outline round the whole animal is load-bearing rather than
+decorative: without it there is no edge between the mole and the thing it is
+standing on.
+
+Three rounds, each rendered at 260, 128, 96 and 48 and looked at. The foreleg
+was boxy in round two and read as a satchel.
+
+**0.4.0's lump reached staging and a preview URL and never reached production.**
+That is the branch model doing exactly what it is for, on its first real test.
+
+### The version gate was reporting a fact about a different release
+
+Writing `## 0.4.1 — FIX` should have failed: the three permitted kinds are
+VERSION, CAPABILITY and ITERATION, and FIX is not one of them. The gate printed
+**ok — it is a CAPABILITY release** and passed.
+
+The check was `/^## \S+ — (VERSION|CAPABILITY|ITERATION)\b/m`, and with the `m`
+flag that finds the first valid kind ANYWHERE in the file. It had read the kind
+off `## 0.4.0 — CAPABILITY`, further down, and reported it as though it were the
+release being made. It is anchored to the top entry now, prints the heading it
+actually read when it fails, and was planted with a bogus kind to confirm.
+
+It was caught only because the printed line disagreed with what had just been
+typed. **A gate whose output nobody reads is merely useless; one that is read
+and believed is worse when it lies.**
+
 ## Themes: two axes, six palettes, and a gate holding three files together
 
 The owner asked for green as the default and for selectable light, dark and auto

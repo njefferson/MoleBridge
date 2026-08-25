@@ -51,9 +51,29 @@ if (topEntry !== declared) {
 
 // Every release states its KIND, because "which slot moved" is not recoverable
 // from the number alone once two of them have moved.
-const topLine = /^## \S+ — (VERSION|CAPABILITY|ITERATION)\b/m.exec(changelog);
+//
+// ANCHORED TO THE TOP ENTRY, not searched for. The first version of this was
+//
+//     /^## \S+ — (VERSION|CAPABILITY|ITERATION)\b/m
+//
+// which with the `m` flag finds the first VALID kind ANYWHERE in the file. So a
+// top entry headed `## 0.4.1 — FIX` — a word that is not one of the three —
+// passed, and the gate printed "ok  it is a CAPABILITY release", having read
+// that off an older entry further down. It reported a fact about a release
+// nobody was making.
+//
+// It went green on exactly that, once, and was caught by the printed line
+// disagreeing with what had just been typed. A gate whose output is not read is
+// a gate; a gate whose output is read and believed is worse when it lies.
+const firstHeading = changelog.indexOf('\n## ');
+const topBlock = firstHeading < 0 ? changelog : changelog.slice(firstHeading + 1);
+const topLine = /^## \S+ — (VERSION|CAPABILITY|ITERATION)\b/.exec(topBlock);
 if (topLine === null) {
-  failures.push("CHANGELOG.md's top entry does not say whether it is a VERSION, CAPABILITY or ITERATION release");
+  const asWritten = /^## .*/.exec(topBlock)?.[0] ?? '(no heading)';
+  failures.push(
+    `CHANGELOG.md's top entry does not say whether it is a VERSION, CAPABILITY ` +
+      `or ITERATION release — it reads "${asWritten.trim()}"`,
+  );
 } else {
   checked.push(`it is a ${topLine[1]} release`);
 }

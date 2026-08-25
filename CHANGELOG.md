@@ -4,7 +4,7 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
-## 0.4.1 — FIX
+## 0.4.1 — ITERATION
 
 The mole on the icon actually looks like a mole now.
 
