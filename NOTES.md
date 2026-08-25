@@ -338,13 +338,21 @@ its own, and a tab showing a different mark defeats that more thoroughly than a
 soft one. The owner made the call; the file is gone and both `rel="icon"` links
 point at `icon.svg`.
 
-**The shovel paw is missing, and it was dropped rather than solved.** A mole's
-defining feature is the outsized digging hand, and 0.4.2's commit message
-described removing the claw notch as cutting detail that only ever cost
-something. What actually happened is that the notch read as a slot cut into the
-foot, and rather than redraw the paw it was deleted — a tidy sentence over a
-thing given up on. Written down here because the drawing looks finished and is
-not, and the next session would otherwise have no way to tell the difference.
+**The claws were deleted before they were drawn, and that is the whole lesson.**
+0.4.2 cut a claw notch out of the foot; it read as a slot, and the response was
+to remove it and describe that in the commit message as cutting detail that only
+ever cost something — a tidy sentence over a thing given up on, leaving a mole
+without the one feature a mole is known for. It was caught by the owner, not by
+any gate, and no gate could have caught it.
+
+**What fixed it was where the claws live, not how they are shaped.** A knockout
+is a mark ON a shape and dissolves as the shape shrinks; a point on the
+SILHOUETTE survives. The claws are three points fanning forward off the front
+foot, part of the same closed path as the legs, and they still read at 96
+pixels. Three treatments were drawn and compared — a forward fan, a downward
+rake, and an outsized hand. The rake read as saw teeth. The outsized hand pushed
+the claws past the snout, which gives the animal two things competing to be its
+front, so the fan is deliberately short of the nose.
 
 **The hind leg sits about a third back rather than at the tail, and that is not
 anatomy.** It was placed where the belly curve was flattest. Moving it rearward

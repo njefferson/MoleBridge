@@ -4,6 +4,24 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.4.4 — ITERATION
+
+The mole has claws now.
+
+Its big digging hand was the one thing missing — it is the feature a mole is
+actually known for — and the last release admitted it had been deleted rather
+than drawn. It is drawn: three claws fanning forward off the front foot, part of
+the animal's outline rather than a mark on top of it, so they are still there at
+small sizes instead of dissolving.
+
+They stop short of the nose deliberately. Drawn any longer they reach past it
+and the animal ends up with two things competing to be its front.
+
+**What is still missing.** The tile is green whichever colour you choose in the
+app; a home-screen icon cannot follow a setting. And the same gaps as before: no
+way to review a problem you have already finished, and no running total across
+sessions.
+
 ## 0.4.3 — ITERATION
 
 The browser tab shows the mole now, same as everywhere else.

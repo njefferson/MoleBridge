@@ -114,48 +114,55 @@
     lettering is overlaid afterwards in real type where it is needed, never
     drawn into the artwork.
 
-    THREE THINGS THIS DRAWING HAS ALREADY BEEN WRONG ABOUT, in order, because
-    each was invisible in the source and obvious the moment it was rendered:
+    FOUR THINGS THIS DRAWING HAS BEEN WRONG ABOUT, each invisible in the source
+    and obvious the moment it was rendered:
 
     1. It read as a FROWNING FACE — three particles above an arch inside a
-       rounded square became two eyes, a brow and a downturned mouth, worst at
-       16 and 32 pixels. Rearranging the particles made it worse twice. Small
+       rounded square became two eyes, a brow and a downturned mouth. Small
        shapes above a curve inside a rounded square IS a face schema, so the row
-       of shapes had to go rather than move.
+       of shapes had to go rather than be rearranged.
 
     2. It did not read as an ANIMAL — no leg separation, a snout that was a bump
-       rather than a point, the shovel paw buried inside the body outline. What
-       fixed it was silhouette rather than detail: the nose projects past
-       everything else, the back humps, the tail is clear of the body.
+       rather than a point, the digging paw buried inside the body outline.
+       Silhouette fixed it, not detail.
 
     3. It grew a FIFTH LEG. The foreleg was a separate shape with its own
-       outline, laid over the body, and it read as a limb sprouting from the
-       shoulder — with two hind feet already drawn, the animal had three legs
-       and a tail.
+       outline laid over the body, and with two hind feet already drawn the
+       animal had three legs and a tail.
 
-    So the body is now ONE CLOSED PATH and the legs are cut INTO its underside:
-    back, head, snout, under the chin, down the foreleg, across the spade foot,
-    up, along the belly, down the hind leg, across its foot, and home. A leg
-    that is part of the outline cannot detach from it. Two legs, which is what a
-    side profile shows.
+    4. The CLAWS were deleted rather than drawn. A first attempt cut a notch
+       into the foot, which read as a slot, and the response was to remove it
+       and call it detail that only cost something — leaving a mole without the
+       one feature a mole is known for.
+
+    So the body is ONE CLOSED PATH and everything that must not detach is part
+    of it: the legs are cut into the underside, and THE CLAWS ARE THE OUTLINE
+    ITSELF — three points fanning forward off the front foot. A knockout is a
+    mark on a shape and disappears when the shape gets small; a point on the
+    silhouette survives, and these still read at 96 pixels.
+
+    They stop short of the snout on purpose. Drawn longer they reach past the
+    nose and the animal has two things competing to be its front.
 
     THE TILE-COLOURED OUTLINE IS LOAD-BEARING. Without it the white animal and
-    the white arch merge into one shape the moment they touch, and the mole
-    stops being an object standing on something.
+    the white arch merge into one shape the moment they touch.
 
-    At 16 pixels this is a bump on an arch. That is what favicon.svg is for.
+    AT 16 PIXELS THIS IS A BUMP ON AN ARCH, and that is accepted. A second,
+    simpler drawing for the browser tab existed briefly; a favicon's job is to
+    be RECOGNISED in a row of twenty tabs rather than legible on its own, so one
+    drawing everywhere beats two that disagree.
   -->
   <rect width="512" height="512" rx="112" fill="#14532d"/>
   <g fill="none" stroke="#eef3fb" stroke-width="38" stroke-linecap="round">
     <path d="M44 440 Q256 322 468 440"/>
   </g>
-  <g transform="translate(65.1 137.1) scale(0.74)">
+  <g transform="translate(62.1 133.4) scale(0.74)">
     <g fill="none" stroke="#14532d" stroke-width="17" stroke-linejoin="round">
-      <path d="M144 252 C140 214 172 186 214 182 C252 178 292 188 316 204 C324 210 328 214 334 219 C354 227 384 234 412 242 C420 244 420 251 412 254 C388 261 362 266 344 271 L342 292 C354 292 366 296 370 302 C373 307 369 311 362 311 L316 311 C308 311 304 306 305 299 L307 285 C288 289 268 291 248 292 L244 296 C243 302 241 307 238 311 L200 311 C193 311 190 305 194 300 C198 294 202 291 206 289 L204 282 C168 277 147 268 144 252 Z"/>
+      <path d="M144 252 C140 214 172 186 214 182 C252 178 292 188 316 204 C324 210 328 214 334 219 C354 227 384 234 412 242 C420 244 420 251 412 254 C388 261 362 266 344 271 L342 288 C356 287 372 290 384 295 L408 295 L389 302 L412 307 L391 312 L407 317 L316 311 C308 311 304 306 305 299 L307 285 C288 289 268 291 248 292 L244 296 C243 302 241 307 238 311 L200 311 C193 311 190 305 194 300 C198 294 202 291 206 289 L204 282 C168 277 147 268 144 252 Z"/>
       <path d="M146 250 C136 244 124 234 116 224 C111 218 117 210 124 214 C136 221 148 232 156 242 C160 247 154 254 146 250 Z"/>
     </g>
     <g fill="#eef3fb">
-      <path d="M144 252 C140 214 172 186 214 182 C252 178 292 188 316 204 C324 210 328 214 334 219 C354 227 384 234 412 242 C420 244 420 251 412 254 C388 261 362 266 344 271 L342 292 C354 292 366 296 370 302 C373 307 369 311 362 311 L316 311 C308 311 304 306 305 299 L307 285 C288 289 268 291 248 292 L244 296 C243 302 241 307 238 311 L200 311 C193 311 190 305 194 300 C198 294 202 291 206 289 L204 282 C168 277 147 268 144 252 Z"/>
+      <path d="M144 252 C140 214 172 186 214 182 C252 178 292 188 316 204 C324 210 328 214 334 219 C354 227 384 234 412 242 C420 244 420 251 412 254 C388 261 362 266 344 271 L342 288 C356 287 372 290 384 295 L408 295 L389 302 L412 307 L391 312 L407 317 L316 311 C308 311 304 306 305 299 L307 285 C288 289 268 291 248 292 L244 296 C243 302 241 307 238 311 L200 311 C193 311 190 305 194 300 C198 294 202 291 206 289 L204 282 C168 277 147 268 144 252 Z"/>
       <path d="M146 250 C136 244 124 234 116 224 C111 218 117 210 124 214 C136 221 148 232 156 242 C160 247 154 254 146 250 Z"/>
     </g>
     <circle cx="360" cy="240" r="7" fill="#14532d"/>
