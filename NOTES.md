@@ -1011,6 +1011,80 @@ That is the ordinary way a gate's coverage narrows: not by anyone weakening it,
 but by the app moving out from under it. Stroke and fill on every SVG node are
 collected now, and a literal planted on the table icon's cells fired 720 times.
 
+## Three defects in one screenshot, none of which any gate could see
+
+All three came from a photograph of the app running on a real iPad. Every gate
+in this repository was green at the time.
+
+### The whole product was below the fold
+
+A wrong answer rendered `Not that one.` and, underneath it, the sentence saying
+WHICH mistake produced that exact number. On a tablet with the keyboard up, the
+second part was off the bottom of the screen. **Attribution is the thesis; the
+student was getting the "wrong" and not the "why".**
+
+Two causes, and the second is the ugly one.
+
+**The feedback lived after the whole form**, below the reveal box — so a student
+who had opened the reveal pushed the diagnosis further down every time. It is
+inside the form now, directly under the button that produced it, and above the
+reveal: the reveal is what a student asked for, the verdict is what they need
+whether they asked or not.
+
+**And the code was actively putting the keyboard back over it.** On a wrong
+answer it called `select()` and `focus()` on the field — the reflex, *they got it
+wrong, let them retype* — which on iOS re-raises the keyboard and scrolls the
+field into view, taking the diagnosis with it. **The fix was to stop.** Focus
+moves to the message instead, which is the standard place for it after a
+rejection, is better for a keyboard user, and is what lets the keyboard drop.
+Retyping costs one tap, which is the tap they were about to make.
+
+The walk now measures this rather than asserting it: it gets a step wrong at
+390x380 and requires the reason to be inside the viewport.
+
+### There was no way out of a set
+
+Once started, the only exits were finishing twelve steps or reloading the page.
+A student who picked the wrong tier, or wanted to go and read a lesson, was
+stuck. **Nothing in this repository had ever asked the question "can you get out
+of here", and no gate asks it now either** — the walk checks the control exists
+and works, which is a check somebody had to think to write.
+
+Two taps in an assignment, one in practice: leaving an assignment throws away the
+completion code, which is worth one deliberate second tap, and practice has
+nothing to lose. The armed state changes the WORDS — "Leave — you will not get a
+code" — rather than the colour, because a red button says only that something is
+dangerous.
+
+### The reveal was printing the simulation's precision
+
+`Show me this step's answer` said **180.156000000 g/mol**.
+
+`correctEntryFor` formats at `SCRATCH_SIG_FIGS`, which is twelve, and its comment
+says exactly why: it exists to DRIVE a session — the tests and the harness submit
+its result — and a simulated student has to carry full precision or it trips
+E-ROUND-EARLY by accident. **Twelve figures is load-bearing there and is not a
+number to show a person.** The UI borrowed the grader's function because it is
+the grader's function, which is the right instinct about the VALUE and the wrong
+one about the FORMAT.
+
+`revealEntryFor` is the display side: same value, same solution, formatted for
+reading. And the formatting splits, on purpose:
+
+- **Where figures are graded**, `formatUnambiguous` still pads to the problem's
+  precision, because there the trailing zeros ARE the answer — writing 1.5 where
+  1.50 was asked is E-SIG-FIGS, and a reveal that hid that would teach against
+  the thing being marked.
+- **Where they are not**, padding is machine output. A mole ratio of three over
+  two came out as `1.50000`.
+
+The test that caught the second case is worth keeping in mind: its first version
+demanded at least four figures of every intermediate and failed on `1.5`, an
+exact ratio whose extra digits would be the padding the test exists to forbid.
+**A character count was the wrong measure.** What matters is that the value is
+rounded to `REVEAL_SIG_FIGS`, and the test beside it checks that directly — it
+types the revealed text back in and requires the grader to accept it.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

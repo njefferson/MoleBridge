@@ -352,8 +352,70 @@ export function correctEntryFor(problem: Problem, solution: Solution, stage: Sta
  * Figures a simulated student writes at an intermediate stage. More than any
  * answer is graded to, so the simulation never trips E-ROUND-EARLY by accident
  * — carrying full precision through is exactly what the stage machine wants.
+ *
+ * FOR THE SIMULATION ONLY. `correctEntryFor` exists to DRIVE a session — the
+ * tests and the command-line harness submit its result — and twelve figures is
+ * load-bearing there. It is not a number to show a person, and the practice
+ * reveal borrowed it for months: a student who asked for the molar mass of
+ * glucose was told "180.156000000 g/mol", nine zeros of precision the value
+ * does not have and nobody asked for. Caught on a real screen, not by any gate.
  */
 const SCRATCH_SIG_FIGS = 12;
+
+/**
+ * Figures the practice reveal shows a PERSON.
+ *
+ * Six, and the two constraints that pick it: enough that carrying the revealed
+ * value forward cannot trip E-ROUND-EARLY, which grades against the problem's
+ * own precision and is never more than four; and few enough that the number
+ * reads as a quantity rather than as a machine's output. `formatUnambiguous`
+ * pads to the figures asked for, so asking for twelve is what produced the
+ * zeros — the fix is asking for a number of figures a person would write.
+ */
+export const REVEAL_SIG_FIGS = 6;
+
+/**
+ * What the practice reveal SAYS, as opposed to what the grader submits.
+ *
+ * Same value, from the same solution, formatted for reading. Kept beside
+ * `correctEntryFor` rather than in the UI because the rule that a screen never
+ * computes an answer has no exception for formatting one.
+ */
+export function revealEntryFor(problem: Problem, solution: Solution, stage: Stage): StudentEntry {
+  const entry = correctEntryFor(problem, solution, stage);
+  if (entry.kind !== 'text') return entry;
+  const value = numericAnswer(problem, solution, stage);
+  /*
+    THE GRADED STAGE AND THE INTERMEDIATE ONES ARE FORMATTED DIFFERENTLY, and
+    that is the point rather than an inconsistency.
+
+    Where figures are GRADED, `formatUnambiguous` is exactly right: it pads to
+    the problem's precision because at that stage the trailing zeros ARE the
+    answer — writing 1.5 where 1.50 was asked for is E-SIG-FIGS, and a reveal
+    that hid the distinction would be teaching against the thing being marked.
+
+    Where they are not, padding is machine output. A mole ratio of three over
+    two came out as "1.50000" and a molar mass as "180.156000000"; a person
+    writes 1.5 and 180.156. So an intermediate is shown at its own precision,
+    up to REVEAL_SIG_FIGS, with the padding trimmed.
+  */
+  const text = stage.gradesSigFigs
+    ? formatUnambiguous(value, problem.answerSigFigs)
+    : trimPadding(value.toPrecision(REVEAL_SIG_FIGS));
+  return { kind: 'text', text: stage.unit === 'none' ? text : `${text} ${stage.unit}` };
+}
+
+/**
+ * Trailing zeros off a fixed-precision string, without touching the integer
+ * part — 1.50000 is 1.5, and 1800 is emphatically not 18.
+ *
+ * An exponential form is left alone: there is no padding to strip that is not
+ * carrying meaning, and rewriting one by hand is how a value gets mangled.
+ */
+function trimPadding(text: string): string {
+  if (!text.includes('.') || text.includes('e') || text.includes('E')) return text;
+  return text.replace(/0+$/, '').replace(/\.$/, '');
+}
 
 /** The correct value at a numeric stage. ANSWER KEY. */
 export function numericAnswer(problem: Problem, solution: Solution, stage: Stage): number {

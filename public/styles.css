@@ -432,6 +432,28 @@ input[type="text"] {
 .button-small:hover { background: var(--surface-3); }
 .button-quiet { color: var(--text-1); background: transparent; border-color: var(--rail); }
 
+/*
+  The work screen's head: how far through, and the way out. They share a row so
+  the exit is beside the progress rather than hunted for at the bottom of a
+  scrolling page.
+*/
+.work-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--step);
+  flex-wrap: wrap;
+}
+.work-head .progress { margin: 0; }
+/* The armed state is a WORD CHANGE, not a colour change: "Leave — you will not
+   get a code" says what the second tap does, and a red button only says that
+   something is dangerous. */
+.work-leave-armed { background: var(--accent-soft); font-weight: 700; }
+
+/* Focus lands here after a rejection, so it needs a ring like anything else
+   that takes focus — a container with tabindex="-1" gets none by default. */
+.feedback:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: var(--radius); }
+
 /* ---------------- feedback ---------------- */
 
 .feedback { max-width: var(--measure); margin: 0 auto 2rem; }

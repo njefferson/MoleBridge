@@ -14,6 +14,7 @@ import {
   completionPayload,
   controllableClock,
   correctEntryFor,
+  revealEntryFor,
   currentProblem,
   currentStage,
   numericAnswer,
@@ -311,4 +312,54 @@ test('a practice session has no completion code, and asking for one throws', () 
     completionPayload(assigned, controllableClock(START)).assignmentKeyId >= 0,
     'assignment mode is unaffected',
   );
+});
+
+test('the practice reveal is written for a person, not for the simulation', () => {
+  // 180.156000000 g/mol was what a student asked for the molar mass of glucose
+  // actually saw — nine zeros of precision the value does not have. The reveal
+  // was borrowing SCRATCH_SIG_FIGS, which is twelve because a SIMULATED student
+  // has to carry full precision or it trips E-ROUND-EARLY by accident. Two jobs,
+  // one constant.
+  const problem = generateProblem('REVEAL-A', 2, 0);
+  const solution = solve(problem);
+  for (const stage of stagesFor(problem)) {
+    const shown = revealEntryFor(problem, solution, stage);
+    if (shown.kind !== 'text') continue;
+    const number = shown.text.split(' ')[0] ?? '';
+    assert.ok(
+      !/\.\d*?0{4,}$/.test(number),
+      `the reveal shows "${shown.text}", which is padded with zeros a person did not ask for`,
+    );
+    // NO DIGIT-COUNT ASSERTION HERE, deliberately. The first version of this
+    // demanded four figures of every intermediate and failed on "1.5" — an
+    // exact mole ratio of three over two, whose extra digits would be the
+    // padding this test exists to forbid. A count of characters is the wrong
+    // measure: what matters is that the value is rounded to REVEAL_SIG_FIGS,
+    // and the test below checks that property directly by typing the revealed
+    // text back in and requiring the grader to accept it.
+  }
+});
+
+test('what the reveal SHOWS and what the grader ACCEPTS are the same value', () => {
+  // The reveal reformats; it must never re-derive. A student who types back
+  // exactly what they were shown has to be right.
+  const problem = generateProblem('REVEAL-A', 3, 0);
+  const solution = solve(problem);
+  const clock = controllableClock(START);
+  let session = startSession(
+    config({ mode: 'practice', assignmentKey: 'REVEAL-A', tier: 3, problemCount: 1 }),
+    clock,
+  );
+  for (let guard = 0; guard < 12 && !session.finished; guard += 1) {
+    const stage = currentStage(session);
+    const shown = revealEntryFor(currentProblem(session), solve(currentProblem(session)), stage);
+    const result = submit(session, shown, clock);
+    assert.ok(
+      result.advanced || result.sessionComplete,
+      `the reveal showed something the grader rejected at ${stage.id}: ${JSON.stringify(shown)}`,
+    );
+    session = result.session;
+  }
+  void problem;
+  void solution;
 });

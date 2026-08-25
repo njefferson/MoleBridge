@@ -4,6 +4,27 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.13.0 — CAPABILITY
+
+You can leave a set now, and you can read what you got wrong.
+
+**There is a way out.** Once a set started there was no exit — you finished all
+twelve steps or you closed the tab. **Leave this set** now sits next to "Problem
+1 of 3". In practice it goes straight back. In a class assignment it asks twice,
+because leaving one means no code.
+
+**The explanation is where you can see it.** When a step was wrong, the sentence
+saying *which* mistake you made was rendered below the whole form — so on a
+tablet with the keyboard up, you saw "Not that one." and nothing else. It now
+appears directly under the button you pressed, and the app stops putting the
+keyboard back over it.
+
+**Revealed answers are written like a person would write them.** Asking for the
+molar mass of glucose said `180.156000000 g/mol`. It says `180.156 g/mol`. A
+mole ratio says `1.5`, not `1.50000`. Where the number of figures is being
+marked, the answer is still shown to exactly that many — there the trailing
+zeros are the point.
+
 ## 0.12.2 — ITERATION
 
 The buttons along the top are pictures now.

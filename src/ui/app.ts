@@ -101,6 +101,14 @@ function boot(): void {
     onExplain(errorClass): void {
       reference.open(errorClass);
     },
+    onLeave(): void {
+      // The session is dropped rather than parked. Nothing here can resume a
+      // half-finished set, and pretending otherwise by keeping it would make
+      // the next `begin` ambiguous about which session it is starting.
+      session = null;
+      showOnly(screens, home);
+      need<HTMLButtonElement>('#door-practice').focus();
+    },
     onFinished(finished: Session): void {
       session = finished;
       doneScreen.show(finished);

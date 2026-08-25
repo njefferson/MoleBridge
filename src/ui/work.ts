@@ -17,7 +17,7 @@ import { clear, el, fill, focusFirst, need } from './dom.ts';
 import { solve, type Problem, type Solution } from '../engine/problem.ts';
 import { stagesFor, type ErrorClass, type Stage, type StudentEntry } from '../engine/taxonomy.ts';
 import {
-  correctEntryFor,
+  revealEntryFor,
   currentProblem,
   currentStage,
   submit,
@@ -39,6 +39,8 @@ export interface WorkHost {
    * fix, reappearing one level up.
    */
   onExplain(errorClass: ErrorClass): void;
+  /** Abandon the set and go back to the three doors. */
+  onLeave(): void;
 }
 
 interface Elements {
@@ -130,7 +132,7 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     graded session refusing to answer is a program fact, and the second one
     survives somebody styling the page differently.
 
-    It shows one stage. `correctEntryFor` is the grader's own function, which is
+    It shows one stage. `revealEntryFor` is the grader's own value, which is
     the point: what a student sees revealed is exactly what they would have been
     marked against, rather than a second rendering that could disagree with it.
   */
@@ -139,7 +141,7 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     if (session.config.mode !== 'practice') return;
     const problem = currentProblem(session);
     const stage = currentStage(session);
-    const entry = correctEntryFor(problem, solve(problem), stage);
+    const entry = revealEntryFor(problem, solve(problem), stage);
     nodes.revealed.textContent =
       entry.kind === 'text'
         ? `This step is ${entry.text}. Work out where it comes from before you move on.`
@@ -201,15 +203,57 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
       return;
     }
     showWrong(nodes.feedback, result, solve(problem));
-    const field = nodes.inputs.querySelector<HTMLInputElement>('input');
-    if (field !== null) {
-      field.select();
-      focusFirst(field);
+    /*
+      FOCUS GOES TO THE DIAGNOSIS, NOT BACK INTO THE BOX.
+
+      This used to call select() and focus() on the field, which is the reflex —
+      "they got it wrong, let them retype" — and on a tablet it put the keyboard
+      straight back up over the sentence explaining what they did wrong. The
+      whole product is that sentence, and a student saw "Not that one." with the
+      rest below the fold.
+
+      Moving focus to the message is also the standard place for it after a
+      rejection: a keyboard user lands on the reason rather than on the input
+      they just came from, and a screen reader reads it whether or not the live
+      region fired. Retyping costs one tap on the field, which is the tap they
+      were about to make anyway.
+    */
+    nodes.feedback.focus({ preventScroll: true });
+    nodes.feedback.scrollIntoView({ block: 'nearest' });
+  });
+
+  /*
+    TWO STEPS IN AN ASSIGNMENT, ONE IN PRACTICE. Leaving an assignment throws
+    away the completion code, which is the whole reason the student is there, so
+    it is worth one deliberate second tap. Practice has nothing to lose and a
+    confirmation there is friction for its own sake.
+
+    Inline rather than a dialog: this app already opens four of them, and a
+    confirmation is the one kind of question that should not arrive as another
+    thing to dismiss.
+  */
+  const leave = need<HTMLButtonElement>('#work-leave');
+  let armed = false;
+  const disarm = (): void => {
+    armed = false;
+    leave.textContent = 'Leave this set';
+    leave.classList.remove('work-leave-armed');
+  };
+  leave.addEventListener('click', () => {
+    if (session === null) return;
+    if (session.config.mode === 'practice' || armed) {
+      disarm();
+      host.onLeave();
+      return;
     }
+    armed = true;
+    leave.textContent = 'Leave — you will not get a code';
+    leave.classList.add('work-leave-armed');
   });
 
   return {
     begin(started: Session): void {
+      disarm();
       session = started;
       clear(nodes.feedback);
       render();

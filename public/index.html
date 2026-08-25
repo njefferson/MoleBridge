@@ -303,7 +303,19 @@
   <section class="screen" id="screen-work" aria-labelledby="work-title" hidden>
     <h1 class="visually-hidden" id="work-title">Working a problem</h1>
 
-    <p class="progress" id="work-progress"></p>
+    <div class="work-head">
+      <p class="progress" id="work-progress"></p>
+      <!--
+        THE WAY OUT. There was none: once a set started, the only exit was to
+        finish it or reload the page, and a student who picked the wrong tier or
+        just wanted to go and read a lesson was stuck with twelve steps.
+
+        Two-step in an assignment, because leaving one throws away the code and
+        that is worth one deliberate tap. Immediate in practice, where there is
+        nothing to lose.
+      -->
+      <button type="button" class="button-small work-leave" id="work-leave">Leave this set</button>
+    </div>
 
     <div class="card problem-card">
       <p class="equation" id="work-equation"></p>
@@ -317,21 +329,36 @@
       <h2 class="stage-prompt" id="work-stage-prompt"></h2>
       <div id="work-inputs"></div>
       <button type="submit" class="button button-big" id="work-submit">Check this step</button>
+
+      <!--
+        DIRECTLY UNDER THE BUTTON THAT PRODUCED IT, and inside the form, which is
+        where it was not. It used to sit after the whole form, below the reveal
+        box — so on a tablet with the keyboard up, the diagnosis was off the
+        bottom of the screen. A student saw "Not that one." and nothing else,
+        and the sentence explaining WHICH mistake they made is the entire
+        product.
+
+        `tabindex="-1"` so focus can be moved here after a rejection. That is
+        the standard place for focus after an error, and on a touch device it is
+        also what drops the keyboard — the old code did the opposite, calling
+        select() on the field and putting the keyboard straight back up over the
+        thing the student needed to read.
+      -->
+      <div class="feedback" id="work-feedback" role="status" aria-live="polite" tabindex="-1"></div>
+
       <!--
         PRACTICE ONLY, and hidden outright in an assignment rather than
         disabled: a greyed-out "show me the answer" on a graded screen is an
         invitation and a distraction. `work.ts` removes it when the mode is not
         practice, so it is not merely invisible.
+
+        BELOW THE DIAGNOSIS NOW. Above it, an opened reveal pushed the verdict
+        further down the page every time — the reveal is the thing a student
+        asked for, the verdict is the thing they need whether they asked or not.
       -->
       <button type="button" class="button-small" id="work-reveal" hidden>Show me this step's answer</button>
       <p class="reveal" id="work-revealed" role="status" hidden></p>
     </form>
-
-    <!--
-      Everything about a wrong answer lands here, in one live region, so a screen
-      reader hears the diagnosis without having to go looking for it.
-    -->
-    <div class="feedback" id="work-feedback" role="status" aria-live="polite"></div>
   </section>
 
   <!-- ============ done ============ -->
