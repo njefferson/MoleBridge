@@ -10,9 +10,14 @@ name: Gates and deploy
 # Nothing in this job pushes, and nothing in it needs a token, so the checkout
 # leaves no credential in .git/config for whatever step gets added next year.
 
+# `staging` and `main` only, deliberately. The harness's own `claude/*` branch is
+# kept pointing at the same commit as `staging` so nothing is stranded on it —
+# which means listing it here buys no coverage and costs a SECOND full run and a
+# SECOND preview deploy of identical bytes on every push. Gates run where work
+# lands and where it is promoted to.
 on:
   push:
-    branches: [main, staging, "claude/**"]
+    branches: [main, staging]
   pull_request:
   workflow_dispatch:
 
