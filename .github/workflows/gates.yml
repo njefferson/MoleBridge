@@ -65,9 +65,6 @@ jobs:
       - name: The release triplet is written once
         run: npm run version:check
 
-      - name: The patch notes in the app match the changelog
-        run: node tools/changelog.mjs --check
-
       - name: Build the browser bundle
         run: npm run build
 

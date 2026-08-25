@@ -9,10 +9,21 @@
  * changelog drift, and nothing says so.
  *
  *   node tools/changelog.mjs           write src/ui/releases.ts
- *   node tools/changelog.mjs --check   fail if what is written has drifted
+ *   node tools/changelog.mjs --check   compare without writing
  *
- * `--check` runs in `npm run check`, so the drift is caught by the thing
- * everybody runs rather than by a reader noticing the app is a release behind.
+ * `src/ui/releases.ts` IS NOT COMMITTED, and that is what makes drift
+ * impossible rather than merely detectable: `npm run generate` runs ahead of
+ * every type check and every build, so the only version that can exist is the
+ * one this file just made from the changelog.
+ *
+ * `--check` is therefore not in `npm run check`, and putting it back would be
+ * theatre — it cannot fail against a file that was regenerated a moment before.
+ * It stays for the case where somebody wants to compare without writing.
+ *
+ * THE ORDERING IS LOAD-BEARING, and it was got wrong first: the generated file
+ * was ignored but the type check did not generate it, so a fresh clone had a
+ * source importing a module that did not exist. Every local run passed because
+ * the file was left over from a previous build; the first fresh clone was CI.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
