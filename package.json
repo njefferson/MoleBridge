@@ -9,10 +9,13 @@
     "node": ">=22.18.0"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf public/app",
     "test": "node --test 'test/**/*.test.ts'",
     "typecheck": "tsc --noEmit",
+    "version:check": "node tools/version-check.mjs",
     "cli": "node tools/cli.ts",
-    "check": "npm run typecheck && npm test",
+    "check": "npm run typecheck && npm run version:check && npm test",
     "gates": "node ../noahjefferson/privacy-check.mjs --repo . && node ../noahjefferson/quote-check.mjs --repo . && node ../noahjefferson/docs-check.mjs . && node ../noahjefferson/pin-check.mjs --repo .",
     "doctrine": "node ../noahjefferson/doctrine-sync.mjs --repo ."
   },

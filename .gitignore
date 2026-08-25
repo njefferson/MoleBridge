@@ -1,3 +1,7 @@
 node_modules/
 *.tsbuildinfo
 .hub/
+
+# Generated from src/ by `npm run build`. Never committed: a build artefact in
+# the tree is a build artefact that goes stale in the tree.
+public/app/

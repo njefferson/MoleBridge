@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "rewriteRelativeImportExtensions": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2022",
+    "lib": [
+      "es2022",
+      "dom",
+      "dom.iterable"
+    ],
+    "types": [],
+    "outDir": "public/app",
+    "removeComments": false,
+    "declaration": false,
+    "sourceMap": false,
+    "rootDir": "./src",
+    "noEmitOnError": true
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "test/**/*",
+    "tools/**/*"
+  ]
+}
