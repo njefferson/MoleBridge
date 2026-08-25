@@ -107,6 +107,7 @@ try {
   /* ---- work every stage of every problem ---- */
   let deliberateMistakes = 0;
   let sawRemediation = false;
+  let deliberateAnswer = '';
 
   for (let index = 0; index < COUNT; index += 1) {
     const problem = generateProblem(KEY, TIER, index);
@@ -126,7 +127,8 @@ try {
       if (index === 0 && stage.id === 'S3' && deliberateMistakes === 0) {
         deliberateMistakes += 1;
         const inverted = problem.given.value * solution.mmGiven;
-        await page.locator('#stage-answer').fill(`${formatUnambiguous(inverted, 6)} mol`);
+        deliberateAnswer = formatUnambiguous(inverted, 6);
+        await page.locator('#stage-answer').fill(`${deliberateAnswer} mol`);
         await page.locator('#work-submit').click();
         const why = (await page.locator('#work-feedback .why').textContent()) ?? '';
         check(why.toLowerCase().includes('multiplied'), 'a wrong answer is diagnosed, not just marked wrong');
@@ -173,11 +175,54 @@ try {
   await page.locator('#info-open').click();
   check(await page.locator('#info-panel').isVisible(), 'the information control opens the panel');
   const info = (await page.locator('#info-panel').textContent()) ?? '';
-  for (const owed of ['Installing', 'Chromebook', 'iPad', 'ViewBoard', 'IUPAC', 'Accessibility']) {
+  for (const owed of ['Installing', 'Chromebook', 'iPad', 'ViewBoard', 'IUPAC', 'Accessibility', 'What changed', 'Diagnostic']) {
     check(info.includes(owed), `the panel covers "${owed}"`);
   }
+  check(info.includes('0.1.0'), 'the patch notes name the release that is running');
+  check(info.includes('still missing'), 'and say what is still missing, not only what is new');
+
+  /* ---- §7f: the diagnostic ---- */
+  await page.getByRole('button', { name: 'Show the diagnostic' }).click();
+  // The report is built on demand and half of it is awaited — which worker is
+  // controlling the page, what is in the caches — so it arrives a tick after
+  // the press rather than with it.
+  await page.locator('.diagnostic').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  await page.waitForFunction(
+    () => (document.querySelector('.diagnostic')?.textContent ?? '').includes('session'),
+    undefined,
+    { timeout: TIMEOUT_MS },
+  );
+  const report = (await page.locator('.diagnostic').textContent()) ?? '';
+  check(report.includes('maxTouchPoints'), 'the diagnostic carries what the user agent hides');
+  check(report.includes('a new version is waiting'), 'and whether a newer build is sitting there');
+  check(report.includes('caches'), 'and which caches the device holds');
+  check(report.includes('WALK-A'), 'and enough to reproduce the fault');
+  check(!report.includes(String(ROSTER === 0 ? -1 : deliberateAnswer)), 'and NOT anything the student typed as an answer');
+  check(report.includes('no answers and no name'), 'and it says so');
   await page.locator('#info-close').click();
   check(!(await page.locator('#info-panel').isVisible()), 'and closes again');
+
+  /* ---- §7h and offline: the shell survives losing the network ---- */
+  const registered = await page.evaluate(async () => {
+    const r = await navigator.serviceWorker.getRegistration();
+    return r === undefined ? 'none' : r.active === null ? 'installing' : 'active';
+  });
+  check(registered !== 'none', `a service worker registers (${registered})`);
+  check(
+    await page.locator('#update-strip').isHidden(),
+    'a first-time visitor is NOT told a new version is ready — there is nothing waiting for them',
+  );
+
+  await page.reload({ waitUntil: 'load' });
+  const controlled = await page.evaluate(() => navigator.serviceWorker.controller !== null);
+  check(controlled, 'the worker is controlling the page after a reload');
+
+  await page.context().setOffline(true);
+  await page.reload({ waitUntil: 'load' });
+  check(await page.locator('#build-stamp').isVisible(), 'and the app still opens with the network gone');
+  const offlineStamp = (await page.locator('#build-stamp').textContent())?.trim();
+  check(offlineStamp === stamp, `offline, it is still the same build (${offlineStamp})`);
+  await page.context().setOffline(false);
 
   /* ---- nothing went wrong quietly ---- */
   check(consoleErrors.length === 0, `no console errors (${consoleErrors.slice(0, 2).join(' | ')})`);

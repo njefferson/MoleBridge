@@ -384,3 +384,23 @@ input[type="text"] {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* ---------------- what changed, and the diagnostic ---------------- */
+
+.release { margin-bottom: 1.25rem; }
+.release h4 { margin: 0 0 0.3rem; font-size: 1rem; }
+
+.diagnostic {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--page-alt);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  user-select: all;
+}

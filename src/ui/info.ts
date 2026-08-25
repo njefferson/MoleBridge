@@ -12,6 +12,10 @@
 
 import { el, fill, need } from './dom.ts';
 import { VERSION } from '../version.ts';
+import { RELEASES } from './releases.ts';
+import { buildDiagnostic, factsFrom } from './diagnostic.ts';
+import type { Updates } from './updates.ts';
+import type { Session } from '../engine/steps.ts';
 
 /** Remembers only that the orientation has been read. Nothing about anybody. */
 const SEEN_KEY = 'molebridge.orientation.seen';
@@ -29,7 +33,7 @@ export interface InfoPanel {
  *
  * PRECONDITION: the document contains the panel and its hooks.
  */
-export function mountInfo(): InfoPanel {
+export function mountInfo(getSession: () => Session | null, updates: Updates): InfoPanel {
   const panel = need<HTMLDialogElement>('#info-panel');
   const open = need<HTMLButtonElement>('#info-open');
   const close = need<HTMLButtonElement>('#info-close');
@@ -41,7 +45,19 @@ export function mountInfo(): InfoPanel {
     ? 'Loaded and working; it will keep working with no connection.'
     : 'Working with no connection right now.';
 
-  fill(sections, buildSections());
+  fill(sections, [
+    ...(updates.isWaiting()
+      ? [
+          el('p', {
+            className: 'note',
+            text: 'A newer version of MoleBridge is ready and waiting. Reload the page to switch to it.',
+          }),
+        ]
+      : []),
+    whatChanged(),
+    diagnosticSection(getSession),
+    ...buildSections(),
+  ]);
 
   open.addEventListener('click', () => {
     panel.showModal();
@@ -139,6 +155,76 @@ function buildSections(): HTMLElement[] {
       }),
     ]),
   ];
+}
+
+/**
+ * §7d: what changed, from one source. `releases.ts` is generated from
+ * CHANGELOG.md and `npm run check` fails if the two have drifted, so the app
+ * cannot show the notes for a release other than the one it is.
+ */
+function whatChanged(): HTMLElement {
+  return section(
+    'What changed',
+    RELEASES.map((release) =>
+      el('div', { className: 'release' }, [
+        el('h4', { text: `${release.version} — ${release.kind.toLowerCase()}` }),
+        ...release.paragraphs.map((paragraph) => el('p', { text: paragraph })),
+      ]),
+    ),
+  );
+}
+
+/**
+ * §7f: the text report to send instead of a screenshot. Built on demand, not at
+ * boot, because half of what it says — which worker is controlling the page,
+ * what is in the caches — is only true at the moment it is asked for.
+ */
+function diagnosticSection(getSession: () => Session | null): HTMLElement {
+  const output = el('pre', { className: 'diagnostic', attrs: { tabindex: '0', hidden: true } });
+  const status = el('p', { className: 'hint', attrs: { role: 'status' } });
+
+  const build = el('button', {
+    className: 'button button-small',
+    text: 'Show the diagnostic',
+    attrs: { type: 'button' },
+  });
+  const copy = el('button', {
+    className: 'button button-small button-quiet',
+    text: 'Copy it',
+    attrs: { type: 'button', hidden: true },
+  });
+
+  build.addEventListener('click', () => {
+    void (async () => {
+      output.textContent = await buildDiagnostic(new Date().toISOString(), factsFrom(getSession()));
+      output.hidden = false;
+      copy.hidden = false;
+      status.textContent = 'Send this as text. It says more than a photograph of the screen.';
+    })();
+  });
+
+  copy.addEventListener('click', () => {
+    void (async () => {
+      try {
+        await navigator.clipboard.writeText(output.textContent ?? '');
+        status.textContent = 'Copied.';
+      } catch {
+        status.textContent = 'Copying is blocked here. Select the text above and copy it by hand.';
+      }
+    })();
+  });
+
+  return section('Diagnostic', [
+    el('p', {
+      text:
+        'If something is wrong, this is what to send. It is text rather than a picture, '
+        + 'it carries no answers and no name, and it says which build you are actually '
+        + 'running — which a screenshot cannot.',
+    }),
+    el('div', { className: 'choices' }, [build, copy]),
+    status,
+    output,
+  ]);
 }
 
 function section(title: string, body: readonly HTMLElement[]): HTMLElement {

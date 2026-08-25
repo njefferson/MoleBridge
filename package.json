@@ -2,22 +2,23 @@
   "name": "molebridge",
   "version": "0.0.0",
   "private": true,
-  "description": "Step-gated stoichiometry trainer — domain engine and completion-code codec.",
+  "description": "Step-gated stoichiometry trainer \u2014 domain engine and completion-code codec.",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "node": ">=22.18.0"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node tools/changelog.mjs && node tools/assets.mjs",
     "clean": "rm -rf public/app",
     "test": "node --test 'test/**/*.test.ts'",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.ui.json",
     "version:check": "node tools/version-check.mjs",
     "cli": "node tools/cli.ts",
-    "check": "npm run typecheck && npm run version:check && npm test",
+    "check": "npm run typecheck && npm run version:check && node tools/changelog.mjs --check && npm test",
     "gates": "node ../noahjefferson/privacy-check.mjs --repo . && node ../noahjefferson/quote-check.mjs --repo . && node ../noahjefferson/docs-check.mjs . && node ../noahjefferson/pin-check.mjs --repo .",
-    "doctrine": "node ../noahjefferson/doctrine-sync.mjs --repo ."
+    "doctrine": "node ../noahjefferson/doctrine-sync.mjs --repo .",
+    "walk": "npm run build && node tools/walk.mjs"
   },
   "devDependencies": {
     "@types/node": "22.19.4",

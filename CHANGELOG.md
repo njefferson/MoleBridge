@@ -17,7 +17,7 @@ lines of the algebra using your own numbers.
 
 At the end you get a completion code to type into Canvas.
 
-Four kinds of problem: mass to mass, mass to particles, mass to volume at STP,
+Five kinds of problem: mass to mass, mass to particles, mass to volume at STP,
 limiting reactant, and percent yield. Your teacher's assignment key decides
 which problems you get, and everyone with the same key gets the same ones.
 

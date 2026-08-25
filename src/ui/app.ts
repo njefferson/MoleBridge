@@ -16,6 +16,7 @@ import { mountSetup } from './setup.ts';
 import { mountWork } from './work.ts';
 import { mountDone } from './done.ts';
 import { mountInfo } from './info.ts';
+import { mountUpdates } from './updates.ts';
 import { VERSION } from '../version.ts';
 import { startSession, type Clock, type Session, type SessionConfig } from '../engine/steps.ts';
 
@@ -42,9 +43,10 @@ function boot(): void {
   const done = need('#screen-done');
   const screens = [welcome, setup, work, done];
 
-  const info = mountInfo();
-
   let session: Session | null = null;
+
+  const updates = mountUpdates();
+  const info = mountInfo(() => session, updates);
 
   const doneScreen = mountDone(systemClock, {
     onRestart(): void {
@@ -87,14 +89,7 @@ function boot(): void {
   } else {
     showOnly(screens, welcome);
   }
-
-  // Exposed for the §7f diagnostic, which reports what the session is doing
-  // without asking anybody to describe it.
-  currentSession = () => session;
 }
-
-/** Read by the diagnostic. Set at boot; null until then. */
-export let currentSession: () => Session | null = () => null;
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', boot, { once: true });

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MoleBridge">
+  <!--
+    Wordless by design (Doctrine §3): lettering is overlaid afterwards in real
+    type where it is needed, never drawn into the artwork. This has to read at
+    16 pixels, so it is four shapes and no detail: a span carrying three
+    particles across a gap. The bridge is the metaphor the app is named for —
+    grams on one side, moles on the other.
+  -->
+  <rect width="512" height="512" rx="112" fill="#17458f"/>
+  <g fill="none" stroke="#eef3fb" stroke-width="30" stroke-linecap="round">
+    <path d="M96 344 Q256 176 416 344"/>
+    <path d="M96 344 v56"/>
+    <path d="M256 260 v140"/>
+    <path d="M416 344 v56"/>
+  </g>
+  <g fill="#eef3fb">
+    <circle cx="150" cy="150" r="30"/>
+    <circle cx="256" cy="112" r="30"/>
+    <circle cx="362" cy="150" r="30"/>
+  </g>
+</svg>
