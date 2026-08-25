@@ -17,6 +17,7 @@ import { mountPractice } from './practice.ts';
 import { mountLearn } from './learn.ts';
 import { mountReference } from './reference.ts';
 import { mountCalculator } from './calculator.ts';
+import { mountTable } from './table.ts';
 import { mountReport } from './report.ts';
 import { factsFrom } from './diagnostic.ts';
 import { mountWork } from './work.ts';
@@ -55,6 +56,11 @@ function boot(): void {
   const screens = [home, learn, lesson, practice, setup, work, done];
 
   let session: Session | null = null;
+
+  const periodicTable = mountTable();
+  need<HTMLButtonElement>('#table-open').addEventListener('click', () => {
+    periodicTable.open();
+  });
 
   const calculator = mountCalculator();
   need<HTMLButtonElement>('#calc-open').addEventListener('click', () => {

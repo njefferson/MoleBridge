@@ -28,6 +28,7 @@ import { formatUnambiguous } from '../src/chem/sigfig.ts';
 import { LESSONS } from '../src/learn/lessons.ts';
 import { REFERENCE } from '../src/learn/reference.ts';
 import { ERROR_CLASSES } from '../src/engine/taxonomy.ts';
+import { ELEMENTS } from '../src/chem/elements.ts';
 
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 const KEY = 'WALK-A';
@@ -477,6 +478,35 @@ try {
     !(await page.locator('#work-reveal').isVisible()),
     'and there is no such offer in a class assignment',
   );
+
+  /* ---- the periodic table ---- */
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-start').click();
+
+  await page.locator('#table-open').click();
+  check(await page.locator('#table-panel[open]').isVisible(), 'the periodic table opens from the chrome');
+  const cells = await page.locator('#table-grid .table-cell').count();
+  check(cells === ELEMENTS.length, `all ${ELEMENTS.length} elements are on it (${cells})`);
+
+  await page.locator('#table-grid [data-z="6"]').click();
+  const carbon = (await page.locator('#table-detail').textContent()) ?? '';
+  check(/Carbon/.test(carbon), 'picking one writes its name out');
+  check(/12\.011/.test(carbon), 'with its atomic weight at the published figures');
+
+  // WEIGHTS ONLY. A table that turned a formula into a molar mass would delete
+  // the same error classes the calculator's refusal protects, so the panel is
+  // checked for the one number that would prove it had.
+  // Checked against VALUES rather than against the words. The first version of
+  // this matched /molar mass is/ and went red on the panel's own sentence
+  // explaining that it will not work one out — a check that fires on the copy
+  // saying the rule is being kept.
+  const panelText = (await page.locator('#table-panel').textContent()) ?? '';
+  check(!/159\.6\d|249\.6\d|180\.1\d/.test(panelText), 'and no molar mass is anywhere on it');
+  check(/practising/i.test(panelText), 'and it says why it stops there');
+
+  await page.locator('#table-close').click();
+  check(await page.locator('#work-inputs').isVisible(), 'and closing it leaves the problem where it was');
 
   /* ---- the calculator, and what it must refuse ---- */
   //

@@ -833,6 +833,54 @@ longer message, it is where a student who typed a formula lands, and it is text
 on a surface rather than a number in an accent-soft box. Measuring the happy path
 would have measured the easier of the two.
 
+## The periodic table, and two things it found
+
+Atomic weights, and a student who wants a molar mass adds them up — the same line
+the calculator draws, for the same reason. Adding four atomic weights IS the step
+`E-MM-ARITH` and `E-MM-PARSE` are about. `table.test.ts` asserts the module
+exports nothing whose name mentions a formula, a compound or a molar mass.
+
+**The layout is COMPUTED from the atomic number**, not typed out. A hand-written
+grid of 118 positions is 118 chances to put an element in the wrong group, and
+every one of them looks plausible in a diff. The rules are the ones a chemist
+would state — the short periods skip the d-block, the f-block lifts out of
+periods 6 and 7 — and the test checks the landmarks: hydrogen top left, helium
+top right, boron at group 13 rather than 3, hafnium at group 4 rather than 19,
+thirty f-block elements in two rows and nothing else in those rows.
+
+**The DOM is in atomic-number order and the CSS grid does the placing.** Built in
+visual order the markup would match the picture and the reading order would be
+nonsense; built in atomic-number order a screen reader walks hydrogen to
+oganesson, which is the right order to hear them in anyway.
+
+### The CSP gate caught all 118 cells
+
+Each cell was placed with a `style` attribute. `style-src 'self'` blocks inline
+style attributes, so the walk's Content-Security-Policy check went red with three
+violations and a console error — **on a surface that looked completely correct on
+screen**, because the CSP is only enforced by the header the walk now serves.
+
+Placing them through the CSSOM instead — `button.style.gridRow = …` — works,
+because CSP restricts inline style ATTRIBUTES and does not restrict the CSSOM.
+This is what the CSP work in 0.6.0 was for: it found a real violation the first
+time a new surface needed positioning, four releases later.
+
+### A walk check that fired on the copy saying the rule was kept
+
+The molar-mass assertion matched `/molar mass is/` and went red on the panel's
+own sentence — "A molar mass is these added up for everything in the formula" —
+which is the app explaining that it will not do it. **A check on the words fires
+on the explanation; a check on the values fires on the violation.** It matches
+computed values now. Same shape as the report assurance in 0.9.0, twice in four
+releases.
+
+### Element names are lower case in the data, and a heading is not a sentence
+
+`elements.ts` holds `carbon`, not `Carbon`, because the lessons say "how many
+oxygen atoms" mid-sentence. A heading reading "carbon (C)" looks like a typo, so
+the panel capitalises for display — in the visible heading AND in the cell's
+accessible name, which have to agree or SC 2.5.3 is failed by the fix.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

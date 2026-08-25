@@ -249,6 +249,17 @@ const STATES = [
     },
   },
   {
+    name: 'the periodic table, with an element picked',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+      await page.locator('#table-open').click();
+      await page.locator('#table-grid [data-z="6"]').click();
+      await page.locator('#table-detail h3').waitFor({ state: 'visible' });
+    },
+  },
+  {
     name: 'the calculator, showing a refusal',
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });

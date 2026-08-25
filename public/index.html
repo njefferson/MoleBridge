@@ -42,6 +42,10 @@
     -->
     <span class="stamp" id="build-stamp" title="The version you are running">…</span>
   </div>
+  <button type="button" class="icon-button" id="table-open" aria-haspopup="dialog">
+    <span aria-hidden="true">He</span>
+    <span class="visually-hidden">Periodic table</span>
+  </button>
   <!--
     In the chrome rather than on the work screen, so it is in the same place
     during a lesson, during practice and during an assignment. A tool that moves
@@ -380,6 +384,42 @@
   entirely from things the app already knows, which means the assurance
   underneath it is CHECKABLE — and `report.test.ts` checks it.
 -->
+<!--
+  ============ the periodic table ============
+
+  ATOMIC WEIGHTS, and a student who wants a molar mass adds them up. That is not
+  a shortcoming: adding four atomic weights IS the step E-MM-ARITH and E-MM-PARSE
+  are about, and a table that did it would delete both — the calculator's
+  forbidden feature wearing a different hat.
+
+  The DOM is in atomic-number order and the CSS grid does the placing, so what a
+  screen reader walks is hydrogen to oganesson while the picture stays a periodic
+  table. Building it in visual order would have made the markup match the
+  picture and the reading order nonsense.
+-->
+<dialog class="info info-wide" id="table-panel" aria-labelledby="table-title">
+  <div class="info-head">
+    <h2 id="table-title">Periodic table</h2>
+    <button type="button" class="icon-button" id="table-close">
+      <span aria-hidden="true">✕</span>
+      <span class="visually-hidden">Close</span>
+    </button>
+  </div>
+  <div class="info-body">
+    <div class="table-scroll">
+      <div class="table-grid" id="table-grid"></div>
+    </div>
+    <div id="table-detail">
+      <p class="hint">Pick an element to see its name and weight written out.</p>
+    </div>
+    <p class="hint">
+      These are atomic weights, for one atom's worth. A molar mass is these
+      added up for everything in the formula — which is the part you are
+      practising, so this will not do it for you.
+    </p>
+  </div>
+</dialog>
+
 <!--
   ============ the calculator ============
 

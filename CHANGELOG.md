@@ -4,6 +4,26 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.12.0 — CAPABILITY
+
+A periodic table, in the top bar, next to the calculator.
+
+All 118 elements, laid out the way a printed one is. Tap any of them for its name
+and its atomic weight written out in full. Elements with no stable isotope show
+their mass number in brackets, the way the published data does — because that is
+a different kind of number and printing it bare would say something it does not.
+
+**It gives you atomic weights, not molar masses.** Adding four of them up is the
+step MoleBridge marks and explains, so a table that did the adding would take
+away the thing it is there to help with.
+
+On a phone it scrolls sideways rather than shrinking. Eighteen columns squeezed
+onto a narrow screen makes cells nobody can read or hit, and being a wide table
+is not a reason to make the buttons too small.
+
+**What is still missing.** No way to review a problem you have already finished,
+and no running total across sessions.
+
 ## 0.11.0 — CAPABILITY
 
 A calculator, in the top bar, on every screen.

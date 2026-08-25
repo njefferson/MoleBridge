@@ -748,6 +748,49 @@ textarea {
 .lesson-done { background: var(--accent-soft); }
 
 /*
+  ---- the periodic table ----
+
+  A GRID THAT SCROLLS SIDEWAYS RATHER THAN SHRINKING. Eighteen columns on a
+  phone means a cell about 18px wide, which is unreadable and untappable — and
+  the touch floor is not negotiable just because a periodic table is wide. The
+  cells stay a fixed, tappable size and the container scrolls, which is what a
+  paper table on a desk does too.
+*/
+.info-wide { max-width: min(96vw, 76rem); }
+.table-scroll { overflow-x: auto; padding-bottom: var(--step); }
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(18, 3.25rem);
+  grid-auto-rows: 3.25rem;
+  gap: 2px;
+  /* The f-block sits below a deliberate empty row; this keeps that gap from
+     collapsing when the grid is only as tall as its content. */
+  min-width: max-content;
+}
+.table-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  font: inherit;
+  line-height: 1.1;
+  color: var(--text-1);
+  background: var(--surface-1);
+  border: 1px solid var(--rail);
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+}
+.table-cell:hover { background: var(--surface-3); }
+.table-z { font-size: 0.5625rem; color: var(--text-2); }
+.table-symbol { font-size: 1rem; font-weight: 650; }
+.table-mass { font-size: 0.5rem; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.table-s { background: var(--surface-2); }
+.table-f { background: var(--accent-soft); }
+.table-weight { font-variant-numeric: tabular-nums; }
+
+/*
   ---- the calculator ----
 
   Twenty keys, each clearing the touch floor, in a grid that keeps the same
