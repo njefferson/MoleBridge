@@ -690,6 +690,33 @@ const MEASURE = `(() => {
       });
     }
 
+    /*
+      SVG ICONS ARE PAINT TOO, and moving the chrome's four controls from
+      characters to drawings put them outside this invariant — a glyph is text
+      and was collected; an <svg> is neither, and would have been a place a
+      literal colour could live unseen. The exposure was created by the same
+      change that fixed the bar reading as "He = !", which is the ordinary way a
+      gate's coverage quietly narrows.
+
+      Stroke AND fill, because an icon can be drawn either way and this app now
+      uses both.
+    */
+    if (node.tagName.toLowerCase() === 'svg' || node.ownerSVGElement !== undefined && node.ownerSVGElement !== null) {
+      const bg = backdrop(node);
+      for (const which of ['stroke', 'fill']) {
+        const declared = style[which];
+        if (declared === 'none' || declared === '') continue;
+        const ink = parse(declared);
+        if (ink === null || ink.a === 0) continue;
+        pairs.push({
+          selector: node.tagName.toLowerCase() + '[' + which + ']',
+          sample: '(drawn)',
+          fg: roleOf(over(ink, bg)),
+          bg: roleOf(bg),
+        });
+      }
+    }
+
     // EDGES, and only the load-bearing ones. PALETTES.md gives an app TWO edge
     // roles: --rail, which has to be seen because it bounds a control, and
     // --hairline, which is a decorative divider and does not. Flooring both put

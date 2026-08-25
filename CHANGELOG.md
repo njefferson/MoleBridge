@@ -4,6 +4,17 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.12.2 — ITERATION
+
+The buttons along the top are pictures now.
+
+They were single characters — `He`, `=`, `!`, `ⓘ` — and sitting in a row
+they read as one nonsense equation rather than as four separate controls. Each
+made sense on its own. Together they did not.
+
+There is now a little periodic table, a calculator, a flag for reporting a
+problem, and the same circled i for information. They say what they open.
+
 ## 0.12.1 — ITERATION
 
 Every small button in the app now uses your colour theme.

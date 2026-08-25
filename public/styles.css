@@ -222,6 +222,27 @@ body {
 }
 .icon-button:hover { background: var(--surface-1); border-color: var(--hairline); }
 
+/*
+  The chrome's icons. STROKED IN currentColor so they inherit the button's own
+  text token — nothing here declares a colour, which is what keeps every pixel
+  in the app inside the role system the theme swap depends on.
+
+  `round` caps are what make the three keypad dots and the (i)'s tittle read as
+  dots at all: they are zero-length lines, so a butt cap would draw nothing.
+*/
+/* The one icon drawn as solid cells rather than strokes. */
+.glyph-cells rect { fill: currentColor; stroke: none; }
+
+.glyph {
+  width: 1.375rem;
+  height: 1.375rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* ---------------- the stale-app strip (§7h) ---------------- */
 
 .update-strip {

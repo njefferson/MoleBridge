@@ -42,8 +42,46 @@
     -->
     <span class="stamp" id="build-stamp" title="The version you are running">…</span>
   </div>
+  <!--
+    DRAWN, NOT SPELLED. These four were single characters — He, =, !, ⓘ — and
+    sitting in a row they read as one nonsense equation rather than as four
+    controls: "He = !". Each was defensible alone and the SET was the defect,
+    which is a thing no gate here can see and only a person looking at the bar
+    can.
+
+    Inline SVG, stroked in `currentColor`, so they take the button's own text
+    token and stay inside the role system every colour in this app lives in.
+    `aria-hidden` on the drawing and the real name in a visually-hidden span,
+    exactly as the characters were.
+  -->
   <button type="button" class="icon-button" id="table-open" aria-haspopup="dialog">
-    <span aria-hidden="true">He</span>
+    <!--
+      MANY SMALL CELLS, in the table's stepped arrangement. The first drawing
+      was the silhouette as three stroked blocks — correct in outline and, at
+      22px, a bar chart with a short middle bar. What says "periodic table"
+      before anything is legible is the TEXTURE of a grid of little squares,
+      and the notch at the top left is what stops it being a calendar.
+    -->
+    <svg class="glyph glyph-cells" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="1.2" y="4.9" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="19.7" y="4.9" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="1.2" y="8.6" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="4.9" y="8.6" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="16.0" y="8.6" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="19.7" y="8.6" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="1.2" y="12.3" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="4.9" y="12.3" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="8.6" y="12.3" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="12.3" y="12.3" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="16.0" y="12.3" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="19.7" y="12.3" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="1.2" y="16.0" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="4.9" y="16.0" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="8.6" y="16.0" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="12.3" y="16.0" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="16.0" y="16.0" width="3.1" height="3.1" rx="0.6"/>
+      <rect x="19.7" y="16.0" width="3.1" height="3.1" rx="0.6"/>
+    </svg>
     <span class="visually-hidden">Periodic table</span>
   </button>
   <!--
@@ -52,7 +90,16 @@
     depending on where you are is one that has to be found again each time.
   -->
   <button type="button" class="icon-button" id="calc-open" aria-haspopup="dialog">
-    <span aria-hidden="true">=</span>
+    <svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="4.5" y="2.5" width="15" height="19" rx="2.5"/>
+      <line x1="8" y1="7" x2="16" y2="7"/>
+      <line x1="8.5" y1="12" x2="8.5" y2="12"/>
+      <line x1="12" y1="12" x2="12" y2="12"/>
+      <line x1="15.5" y1="12" x2="15.5" y2="12"/>
+      <line x1="8.5" y1="16.5" x2="8.5" y2="16.5"/>
+      <line x1="12" y1="16.5" x2="12" y2="16.5"/>
+      <line x1="15.5" y1="16.5" x2="15.5" y2="16.5"/>
+    </svg>
     <span class="visually-hidden">Calculator</span>
   </button>
   <!--
@@ -61,11 +108,22 @@
     bug report nobody files — a fifteen-year-old who hits a fault closes the tab.
   -->
   <button type="button" class="icon-button" id="report-open" aria-haspopup="dialog">
-    <span aria-hidden="true">!</span>
+    <svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <!-- A flag, because "report a problem" is planting one rather than
+           shouting. An exclamation mark next to a calculator read as arithmetic. -->
+      <line x1="6" y1="2.5" x2="6" y2="21.5"/>
+      <path d="M6 4h11l-2.5 4 2.5 4H6z"/>
+    </svg>
     <span class="visually-hidden">Report a problem with MoleBridge</span>
   </button>
   <button type="button" class="icon-button" id="info-open" aria-haspopup="dialog">
-    <span aria-hidden="true">ⓘ</span>
+    <!-- Still an (i) in a circle: Doctrine §7e names this control by that shape,
+         and a reader who has used another of these apps already knows it. -->
+    <svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="9.25"/>
+      <line x1="12" y1="10.5" x2="12" y2="17"/>
+      <line x1="12" y1="7" x2="12" y2="7"/>
+    </svg>
     <span class="visually-hidden">About MoleBridge, installing it, and what changed</span>
   </button>
 </header>

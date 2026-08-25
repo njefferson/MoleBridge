@@ -976,6 +976,41 @@ stamp (44 unmapped), a pairing removed from `_renders` (the app paints it and th
 gate is not flooring it), and a pairing added that nothing renders, caught only
 by `--all-palettes`.
 
+## The chrome read as an equation, and no gate could have seen it
+
+The four controls along the top were single characters: `He` for the periodic
+table, `=` for the calculator, `!` for reporting a problem, `ⓘ` for information.
+**Read left to right they say "He = !".** In a chemistry app, next to a
+calculator, that is an equation.
+
+Every one of them was defensible alone. **The SET was the defect** — which is
+the same shape as the icon's four faults and, like those, was found by a person
+looking at the bar rather than by anything mechanical. There is nothing to gate
+here: no check can know that four accessible names are fine and the four glyphs
+above them compose into a sentence.
+
+They are inline SVG now, stroked in `currentColor`, with the same
+visually-hidden names. The (i) stays a circled i because Doctrine §7e names that
+control by its shape and a reader who has used another of these apps knows it.
+
+**The first table icon was wrong and the render said so.** It was the periodic
+table's stepped silhouette as three stroked blocks — correct in outline, and at
+22px a bar chart with a short middle bar. What reads as a periodic table before
+anything on it is legible is the TEXTURE of a grid of little cells, with the
+notch at the top left to stop it being a calendar. Second drawing, checked at
+scale in both modes.
+
+### Moving to SVG opened a hole in the role invariant, in the same commit
+
+The invariant collects the colours of elements **with text in them**. A glyph is
+text and was collected; an `<svg>` is neither, so the four icons left the
+instrument's sight the moment they stopped being characters — **a place a
+literal colour could live unseen, created by the change that fixed the bar.**
+
+That is the ordinary way a gate's coverage narrows: not by anyone weakening it,
+but by the app moving out from under it. Stroke and fill on every SVG node are
+collected now, and a literal planted on the table icon's cells fired 720 times.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
