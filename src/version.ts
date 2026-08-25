@@ -21,4 +21,4 @@
  */
 
 /** The running release. Read at boot; never written down twice. */
-export const VERSION = '1.2.0';
+export const VERSION = '1.3.0';

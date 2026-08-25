@@ -85,6 +85,21 @@ that to the teacher.
   paint it prevents; external because this app has no inline script at all,
   which is what keeps a Content-Security-Policy reachable without
   `unsafe-inline`; after the stylesheet because it reads `--page` back out.
+- **AN ACCOMMODATION IS A DEVICE-LOCAL PREFERENCE AND NEVER LEAVES THE DEVICE.**
+  Text size, letter and line spacing, one-step-at-a-time and read-aloud live in
+  `localStorage` and are applied by `public/theme.js` before first paint. **None
+  of them may reach the completion code, the problem report, or the teacher's
+  page.** A student's accommodations are disability information; a code that
+  carried them would make a student disclose an accommodation by using it, over
+  a channel they cannot opt out of. Two gates hold it: `readout.test.ts` fails
+  on any codec field that is not described to the student, and the walk checks
+  the problem report with every setting turned on. And the app must never store
+  or transmit *which* accommodations a student has — that is her IEP paperwork
+  and her gradebook, not a web app with no accounts.
+- **Speech synthesis is allowed; speech RECOGNITION is not.** They are one
+  letter apart in the same corner of the platform, and recognition turns on a
+  microphone. `tools/permissions-check.mjs` names the allowance and forbids the
+  other by name.
 - **Every numeric tolerance is a named constant** in
   `src/engine/tolerance.ts`, with the judgement behind it written beside it.
   Never an inline literal.

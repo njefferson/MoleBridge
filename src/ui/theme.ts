@@ -20,6 +20,10 @@ interface ThemeBridge {
   readonly palettes: readonly string[];
   current(): { mode: string; palette: string };
   set(mode: string, palette: string): { mode: string; palette: string };
+  readonly textSizes: readonly string[];
+  readonly spacings: readonly string[];
+  reading(): { text: string; spacing: string; focus: string };
+  setReading(text: string, spacing: string, focus: string): { text: string; spacing: string; focus: string };
 }
 
 declare global {
@@ -70,4 +74,46 @@ export function mountTheme(): void {
 
   modes.addEventListener('change', onChange);
   palettes.addEventListener('change', onChange);
+
+  /*
+    ---- READING ----
+
+    Wired through the same bridge as the theme, and applied by the same
+    pre-paint script, because the reason is the same: a setting applied after
+    the first paint is a visible reflow, and text jumping size on load is worst
+    for the reader who needed the setting.
+
+    NOTHING HERE IS REPORTED. These three values never reach the completion
+    code, the problem report or the teacher's page. An accommodation a student
+    discloses by using it is not an accommodation.
+  */
+  const textSizes = need('#reading-text');
+  const spacings = need('#reading-spacing');
+  const focuses = need('#reading-focus');
+
+  const showReading = (values: { text: string; spacing: string; focus: string }): void => {
+    check(textSizes, values.text);
+    check(spacings, values.spacing);
+    check(focuses, values.focus);
+  };
+  showReading(bridge.reading());
+
+  const onReading = (): void => {
+    const now = bridge.reading();
+    const picked = (root: HTMLElement, fallback: string): string =>
+      root.querySelector<HTMLInputElement>('input:checked')?.value ?? fallback;
+    // Re-read for the same reason as the theme: the bridge refuses a value it
+    // does not know, and the radios must show what is actually in force.
+    showReading(
+      bridge.setReading(
+        picked(textSizes, now.text),
+        picked(spacings, now.spacing),
+        picked(focuses, now.focus),
+      ),
+    );
+  };
+
+  textSizes.addEventListener('change', onReading);
+  spacings.addEventListener('change', onReading);
+  focuses.addEventListener('change', onReading);
 }

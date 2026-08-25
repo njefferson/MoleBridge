@@ -355,7 +355,19 @@
     <ol class="rail" id="work-rail" aria-label="Steps in this problem"></ol>
 
     <form class="card stage-card" id="work-form" novalidate>
-      <h2 class="stage-prompt" id="work-stage-prompt"></h2>
+      <div class="stage-head">
+        <h2 class="stage-prompt" id="work-stage-prompt"></h2>
+        <!--
+          NOT A SCREEN READER, and that is the point. A sighted student with a
+          reading difficulty does not run one, and read-aloud is one of the most
+          common accommodations on a 504 there is. The browser's own speech
+          needs no permission, no network and no third-party anything, so it
+          costs a button.
+
+          Hidden where the browser cannot speak, rather than shown and dead.
+        -->
+        <button type="button" class="button-small speak" id="work-speak" hidden>Read this out</button>
+      </div>
       <div id="work-inputs"></div>
       <button type="submit" class="button button-big" id="work-submit">Check this step</button>
 
@@ -696,6 +708,61 @@
         Kept on this device only, in this browser. It is not sent anywhere and it
         does not follow you to another machine.
       </p>
+    </section>
+
+    <!--
+      ============ reading ============
+
+      SAME SHAPE AS THE APPEARANCE PICKER, deliberately: these are settings of
+      the same kind and a second visual language would say otherwise.
+
+      NOTHING HERE LEAVES THE DEVICE, and that is not a nicety. A student's
+      reading settings are the closest thing this app holds to information about
+      a person; putting any of it in the completion code would make a student
+      disclose an accommodation by using it. The code's own test holds it to its
+      declared fields, so a field added for this would fail the build.
+    -->
+    <section class="info-section theme-picker" id="reading-picker">
+      <h3>Reading</h3>
+
+      <fieldset class="theme-axis" id="reading-text">
+        <legend>Text size</legend>
+        <label class="choice"><input type="radio" name="molebridge-text" value="normal"> Normal</label>
+        <label class="choice"><input type="radio" name="molebridge-text" value="large"> Large</label>
+        <label class="choice"><input type="radio" name="molebridge-text" value="largest"> Largest</label>
+      </fieldset>
+
+      <fieldset class="theme-axis" id="reading-spacing">
+        <legend>Spacing between letters and lines</legend>
+        <label class="choice"><input type="radio" name="molebridge-spacing" value="normal"> Normal</label>
+        <label class="choice"><input type="radio" name="molebridge-spacing" value="roomy"> More spaced out</label>
+      </fieldset>
+
+      <fieldset class="theme-axis" id="reading-focus">
+        <legend>How much is on screen</legend>
+        <label class="choice"><input type="radio" name="molebridge-focus" value="off"> Show the whole problem</label>
+        <label class="choice"><input type="radio" name="molebridge-focus" value="on"> Just the step I am on</label>
+      </fieldset>
+
+      <p class="hint">
+        Also on this device only. Nothing about how you read is in the code you
+        hand in, and nothing about it reaches your teacher.
+      </p>
+    </section>
+
+    <!--
+      Said in the app rather than left for a student to wonder about. Every line
+      here is already true; none of it was anywhere a worried person would find
+      it.
+    -->
+    <section class="info-section">
+      <h3>Things worth knowing</h3>
+      <ul>
+        <li><strong>There is no time limit.</strong> The code records how long you had the app open, and that is not a score. Time you spend away from it is not counted at all.</li>
+        <li><strong>Getting a step wrong costs you nothing.</strong> Try it as many times as you like. What the code carries is how many were right first time, not how many tries you took.</li>
+        <li><strong>You can stop and come back.</strong> Close the tab, shut the lid, walk away. The app remembers where you were and what you had typed.</li>
+        <li><strong>Nothing you type is stored anywhere but this device</strong>, and none of it is in the code you hand in.</li>
+      </ul>
     </section>
     <div id="info-sections"></div>
   </div>

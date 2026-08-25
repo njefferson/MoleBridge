@@ -40,12 +40,33 @@
 
   var THEME_KEY = 'molebridge.theme';
   var PALETTE_KEY = 'molebridge.palette';
+  /*
+    READING PREFERENCES SIT HERE FOR THE SAME REASON THE THEME DOES: applied
+    after first paint they are a visible reflow, and text jumping size on load
+    is worse for the reader who needed the setting than for anyone else. They
+    are three attributes on <html>, and CSS does the rest.
+
+    NONE OF THIS EVER LEAVES THE DEVICE. A student's reading settings are the
+    closest thing this app has to information about a person, and they must not
+    reach the completion code, the report, or a teacher — an accommodation is
+    not something a student should have to disclose by using it. `readout.test`
+    holds the code to its declared fields, so a field added for this would fail
+    the build.
+  */
+  var TEXT_KEY = 'molebridge.text';
+  var SPACING_KEY = 'molebridge.spacing';
+  var FOCUS_KEY = 'molebridge.focus';
 
   /** The reader's choices, and what happens when the answer is not one of them. */
   var MODES = ['auto', 'light', 'dark'];
   var PALETTES = ['moss', 'harbour', 'clay'];
   var DEFAULT_MODE = 'auto';
   var DEFAULT_PALETTE = 'moss';
+  /* Named sizes rather than a number, so every step is one that was looked at
+     on a real screen rather than whatever a slider lands on. */
+  var TEXT_SIZES = ['normal', 'large', 'largest'];
+  var SPACINGS = ['normal', 'roomy'];
+  var FOCUS_MODES = ['off', 'on'];
 
   var root = document.documentElement;
   var dark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
@@ -86,6 +107,12 @@
     if (page !== '') meta.setAttribute('content', page);
   }
 
+  function applyReading(text, spacing, focus) {
+    root.setAttribute('data-text', text);
+    root.setAttribute('data-spacing', spacing);
+    root.setAttribute('data-focus', focus);
+  }
+
   function apply(mode, palette) {
     root.setAttribute('data-theme-pref', mode);
     root.setAttribute('data-theme', resolve(mode));
@@ -99,7 +126,11 @@
 
   var mode = stored(THEME_KEY, MODES, DEFAULT_MODE);
   var palette = stored(PALETTE_KEY, PALETTES, DEFAULT_PALETTE);
+  var text = stored(TEXT_KEY, TEXT_SIZES, 'normal');
+  var spacing = stored(SPACING_KEY, SPACINGS, 'normal');
+  var focus = stored(FOCUS_KEY, FOCUS_MODES, 'off');
   apply(mode, palette);
+  applyReading(text, spacing, focus);
 
   if (dark !== null && typeof dark.addEventListener === 'function') {
     dark.addEventListener('change', function () {
@@ -125,6 +156,27 @@
       }
       apply(mode, palette);
       return { mode: mode, palette: palette };
+    },
+    textSizes: TEXT_SIZES,
+    spacings: SPACINGS,
+    reading: function () {
+      return { text: text, spacing: spacing, focus: focus };
+    },
+    setReading: function (nextText, nextSpacing, nextFocus) {
+      if (TEXT_SIZES.indexOf(nextText) >= 0) {
+        text = nextText;
+        remember(TEXT_KEY, text);
+      }
+      if (SPACINGS.indexOf(nextSpacing) >= 0) {
+        spacing = nextSpacing;
+        remember(SPACING_KEY, spacing);
+      }
+      if (FOCUS_MODES.indexOf(nextFocus) >= 0) {
+        focus = nextFocus;
+        remember(FOCUS_KEY, focus);
+      }
+      applyReading(text, spacing, focus);
+      return { text: text, spacing: spacing, focus: focus };
     },
   };
 })();

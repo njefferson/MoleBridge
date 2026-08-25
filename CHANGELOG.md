@@ -4,6 +4,33 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.3.0 — CAPABILITY
+
+Settings for how you read, and a button that reads it out.
+
+Behind the ⓘ there is now a **Reading** section:
+
+**Text size** — normal, large, largest. It moves the buttons and the spacing
+with it, not just the letters, so a bigger screen is still a usable one.
+
+**Spacing between letters and lines** — more space is easier for a lot of people
+to read. It leaves the completion code and the equations alone, because those
+are read character by character and loosening them makes them harder.
+
+**How much is on screen** — *Just the step I am on* hides the equation card, the
+step list and the progress line, leaving only the question you are answering.
+
+And on every step there is **Read this out**, which uses the speech your browser
+already has. It reads the question and the equation. It never reads the answer.
+Press it again to stop.
+
+**None of this goes anywhere.** Not into the code you hand in, not into a
+problem report, not to your teacher. How you read is nobody's business but
+yours, and the app is built so it cannot become anybody else's.
+
+There is also a short **Things worth knowing** section: there is no time limit,
+getting a step wrong costs nothing, and you can stop and come back.
+
 ## 1.2.0 — CAPABILITY
 
 Closing the tab no longer loses your work.

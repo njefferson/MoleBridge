@@ -1328,6 +1328,77 @@ script had generated, the first submit silently did not advance, and the failure
 surfaced thirty seconds later as a missing answer box. A setup step left to a
 default is a test measuring something other than what it names.
 
+## G2: accommodations, and the line they must not cross
+
+**AN ACCOMMODATION IS A DEVICE-LOCAL PREFERENCE.** Text size, letter and line
+spacing, one-step-at-a-time and read-aloud live in `localStorage` and are applied
+by `theme.js` before first paint. **None of them reaches the completion code, the
+problem report, or the teacher's page.**
+
+That is not tidiness. A student's accommodations are disability information, and
+a code carrying them would make a student disclose an accommodation by using it,
+through a channel they cannot opt out of and — until 1.1.0 — could not even see.
+Two gates hold it: `readout.test.ts` fails on any codec field not described to
+the student, and the walk reads the problem report with every setting turned on.
+
+The app also never stores WHICH accommodations a student has, and no teacher-side
+control sets them. That belongs in her IEP paperwork and her gradebook, not in a
+web app with no accounts.
+
+### Why these four and not others
+
+- **Size is a root font size, not a zoom.** Everything here is in `rem`, so one
+  value moves the type, the touch targets and the spacing together — a student
+  who needs bigger text needs bigger buttons too, and a transform would have
+  scaled the layout off the side of the screen.
+- **Spacing rather than a typeface.** A dyslexia-friendly font cannot ship here:
+  no third-party runtime dependencies, and it has to work offline. The spacing is
+  most of what the evidence supports anyway. **It is switched OFF for the
+  completion code, the equations and the worked lines** — those are read
+  character by character, and loosening them makes them harder rather than
+  easier, which is the whole setting backwards.
+- **One step at a time** is three `display: none` rules, because the app was
+  step-gated already. This is what it looked like underneath.
+- **Read-aloud is not a screen reader.** A sighted student with a reading
+  difficulty does not run one, and it is among the commonest accommodations on a
+  504. It reads the question and the equation, never the answer — the rule about
+  not showing an answer before the attempt does not stop applying when the
+  delivery is audio.
+
+### The permissions gate was matching prose
+
+Adding speech surfaced a real flaw in `permissions-check.mjs`: it matches text,
+and text includes comments. A comment in `work.ts` mentioning
+`clipboard.writeText` made it report a clipboard write with no fallback **in a
+file that does not touch the clipboard**. The same flaw would fire on a comment
+saying "this deliberately does not call getUserMedia" — a gate that fails on a
+sentence promising to obey it teaches people to word things around it.
+
+Comments are stripped before matching now, **conservatively**, because a
+stripper that removes too much creates false negatives, which is the one failure
+this gate cannot afford: block comments come out whole, and a line comment comes
+out only when the line is entirely a comment, so `//` inside a URL cannot hide
+anything after it. Planted with a forbidden call sharing a line with an
+`https://` string; it fired.
+
+**Speech synthesis is allowed and speech RECOGNITION is forbidden by name.** They
+are one letter apart in the same corner of the platform and recognition turns on
+a microphone.
+
+### Two mistakes of mine worth recording
+
+**A plant that does not compile passes silently.** Planting
+`webkitSpeechRecognition` in a `.ts` file failed the type check, so the build
+never wrote a new bundle, and the gate read the OLD one and passed. It looked
+like the check not firing. A plant has to be verified as having reached the
+thing under test — here, the built bundle, which is what the gate actually reads,
+so that is where it was planted instead.
+
+**And `git checkout <file>` on a file with uncommitted work destroys it.** Used
+to revert a plant, it discarded the read-aloud code written minutes earlier,
+which had to be written again. The backup copy taken for exactly this purpose was
+sitting right there; the habit reached for git instead.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

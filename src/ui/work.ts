@@ -284,6 +284,56 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     confirmation is the one kind of question that should not arrive as another
     thing to dismiss.
   */
+  /*
+    ---- READ THIS OUT ----
+
+    Speech synthesis is output only. It raises no permission prompt, touches no
+    network and reads no device state — which is why it can exist in an app
+    whose whole posture is that it asks the browser for nothing.
+    `tools/permissions-check.mjs` names it as an allowance, and forbids
+    recognition in the same breath: the two are one letter apart in the same
+    corner of the platform, and recognition turns on a microphone.
+
+    NOT A SCREEN READER. A sighted student with a reading difficulty does not
+    run one, and read-aloud is among the commonest accommodations on a 504.
+
+    It reads the QUESTION and the equation. Never the answer, never the verdict:
+    the rule that the correct answer is not shown before the attempt does not
+    stop applying when the delivery is audio.
+  */
+  const speak = need<HTMLButtonElement>('#work-speak');
+  const canSpeak =
+    typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance === 'function';
+  speak.hidden = !canSpeak;
+  speak.addEventListener('click', () => {
+    if (!canSpeak || session === null) return;
+    // The same button stops it. A student who started it by accident, or who
+    // has heard enough, should not have to hunt for a second control.
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+      speak.textContent = 'Read this out';
+      return;
+    }
+    const said = [
+      nodes.equation.textContent ?? '',
+      nodes.prompt.textContent ?? '',
+      nodes.stagePrompt.textContent ?? '',
+      nodes.figures.textContent ?? '',
+    ]
+      .map((part) => part.trim())
+      .filter((part) => part !== '')
+      .join('. ');
+    const utterance = new SpeechSynthesisUtterance(said);
+    // Slower than the default, which is pitched for prose rather than for a
+    // sentence full of formulas and numbers.
+    utterance.rate = 0.9;
+    utterance.addEventListener('end', () => {
+      speak.textContent = 'Read this out';
+    });
+    speak.textContent = 'Stop reading';
+    speechSynthesis.speak(utterance);
+  });
+
   const leave = need<HTMLButtonElement>('#work-leave');
   let armed = false;
   const disarm = (): void => {

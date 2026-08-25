@@ -675,6 +675,88 @@ try {
   await page.locator('#table-close').click();
   check(await page.locator('#work-inputs').isVisible(), 'and closing it leaves the problem where it was');
 
+  /* ---- reading settings, and what they must never do ---- */
+  //
+  // Device-local accommodations: text size, spacing, and one-step-at-a-time.
+  // The load-bearing assertion is the LAST one — none of this reaches the code
+  // a student hands in. An accommodation somebody discloses by using it is not
+  // an accommodation.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-start').click();
+
+  const rootSize = () =>
+    page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+  const normalSize = await rootSize();
+
+  await page.locator('#info-open').click();
+  await page.locator('#reading-text input[value="largest"]').check();
+  const biggerSize = await rootSize();
+  check(biggerSize > normalSize, `largest text really is bigger (${normalSize} to ${biggerSize})`);
+
+  await page.locator('#reading-spacing input[value="roomy"]').check();
+  const spacing = await page.evaluate(() => getComputedStyle(document.body).letterSpacing);
+  check(spacing !== 'normal', `spacing opens up the letters (${spacing})`);
+  // NOT THE CODE OR THE FORMULAS. A completion code is transcribed character by
+  // character, and a formula's subscripts are part of its meaning.
+  await page.locator('#info-close').click();
+  const equationSpacing = await page.evaluate(() => {
+    const node = document.querySelector('.equation');
+    return node === null ? 'normal' : getComputedStyle(node).letterSpacing;
+  });
+  check(equationSpacing === 'normal', `the equation keeps its own spacing (${equationSpacing})`);
+
+  await page.locator('#info-open').click();
+  await page.locator('#reading-focus input[value="on"]').check();
+  await page.locator('#info-close').click();
+  check(!(await page.locator('#work-rail').isVisible()), 'one-step-at-a-time hides the step rail');
+  check(await page.locator('#work-inputs').isVisible(), 'and keeps the step you are on');
+
+  // It survives a reload, like every other preference here.
+  await page.reload({ waitUntil: 'load' });
+  const keptSize = await rootSize();
+  check(keptSize === biggerSize, `the reading settings survive a reload (${keptSize})`);
+
+  // BACK INTO THE PROBLEM FIRST. The reload above left a saved session, so the
+  // app is on the home screen offering it — which is 1.2.0 working, and is why
+  // the work screen's own controls are not on screen yet.
+  await page.locator('#resume-go').click();
+  await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+
+  /*
+    THE ONE THAT MATTERS, and the first version of it was worthless: it set the
+    three values itself and then checked they were in localStorage, which is
+    true by construction and could never fail.
+
+    What is actually worth asserting is that they do NOT reach the two things
+    that leave the device. The completion code is held to its declared fields by
+    `readout.test.ts`; the problem report is checked here, with every reading
+    setting turned on, because it is the other thing a student hands over.
+  */
+  await page.locator('#report-open').click();
+  await page.waitForFunction(
+    () => /what went wrong/i.test(document.querySelector('#report-body')?.textContent ?? ''),
+    undefined,
+    { timeout: TIMEOUT_MS },
+  );
+  const reportWithSettings = (await page.locator('#report-body').textContent()) ?? '';
+  for (const setting of ['largest', 'roomy', 'spacing', 'text size', 'read aloud']) {
+    check(
+      !reportWithSettings.toLowerCase().includes(setting),
+      `the problem report says nothing about "${setting}"`,
+    );
+  }
+  await page.locator('#report-close').click();
+
+  // Read-aloud: present, and it is the browser's own speech rather than
+  // anything that listens. The permissions gate is what holds the second half.
+  check(await page.locator('#work-speak').isVisible(), 'a step can be read out loud');
+  await page.locator('#work-speak').click();
+  check(
+    (await page.evaluate(() => typeof speechSynthesis !== 'undefined')) === true,
+    'using the browser\'s own speech, which asks for nothing',
+  );
+
   /* ---- the calculator, and what it must refuse ---- */
   //
   // THE REFUSAL IS THE FEATURE. A box that takes CuSO4 and returns 159.6 deletes
