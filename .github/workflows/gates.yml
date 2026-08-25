@@ -31,7 +31,15 @@ concurrency:
 env:
   # The hub commit this repository has reconciled with. Moved by
   # `doctrine-sync.mjs --adopt`, and this pin moves with it.
-  HUB_SHA: 2181454773e702bc2437f338d6117916fdccc5cc
+  #
+  # MOVED WITH 0.12.1, AND IT HAD TO BE. That release's whole argument — that a
+  # colour set clears every screen once the palette gate clears it — depends on
+  # `onAccent` and `_renders` being IN the palette gate, and CI runs the hub's
+  # canonical copy at this pin. Left at the old SHA, every gate would have gone
+  # green while running a palette check that had never heard of either, which is
+  # the stale-mirror shape in hub LESSONS 53: not a smaller gate, a different
+  # one.
+  HUB_SHA: 5cbee300c2c11ef900048375ef8d0d43828aaa15
 
 jobs:
   gates:
