@@ -1265,6 +1265,69 @@ reloaded page starts from nothing. For the students this app is now being aimed
 at — where taking a break mid-task is an accommodation rather than a
 distraction — that is the more valuable fix, and it is not this one.
 
+## G1: a session survives the tab closing
+
+Nothing was persisted. A refresh, a restored tab, a device that slept and woke on
+a reloaded page threw away a half-finished set and everything typed into it. For
+most people an annoyance; for the students this app is now aimed at, **where
+stopping mid-task is an accommodation rather than a lapse, it made the app punish
+the accommodation.**
+
+**A `Session` was already plain data** — numbers, booleans, a config of
+primitives — and the problems are not in it: they regenerate from the key
+deterministically, so the same set comes back by construction rather than by
+being saved. Alongside it goes the text sitting unsubmitted in the boxes, because
+that is the part a student would call their work.
+
+### The clock is the part that needed thinking about
+
+Duration was `now - startedAtMs`. Persisted as-is, a student who stopped for
+forty minutes would have forty minutes added to what their code reports — and
+the label on that number is "how long you had it open", which a break is exactly
+not. Worse, **it would report the accommodation**: a code showing two hours for
+twenty minutes of work makes a student who took a break look like they took ages.
+
+So time ACCUMULATES across stretches. `elapsedBeforeMs` holds what earlier
+stretches came to, `startedAtMs` is when this one began, and `resumeSession`
+folds one into the other on the way back. `elapsedFor` is the single reading,
+because two readings of "how long" is how the code and the screen come to
+disagree about the same number.
+
+### Saved on every change, not on unload
+
+A tab killed by the operating system, a device that sleeps and never wakes the
+page, a lid shut at the bell — none of them fire `beforeunload` reliably, and the
+one moment a save matters is the one nobody scheduled.
+
+### Offered, never forced
+
+A restored session lands on the HOME screen with the resume strip showing, not
+inside the problem. A student who closed the tab may have meant to leave, and
+reopening straight into a half-finished set takes that choice away. It also means
+the way back from a reload is the SAME control as the way back from a lesson —
+learned once, works everywhere. A set abandoned deliberately with "Leave this
+set" is forgotten rather than offered.
+
+### The validator is strict, and that is the safety
+
+Storage can hold an older build's shape, a half-written value, or something
+another tab left. **A session restored from a shape this build does not
+recognise would put a student in front of a problem the app cannot grade** — they
+would find out after answering it. So `isSavedSession` checks every field's type
+and refuses on anything else, and `resume.test.ts` feeds it fourteen kinds of
+rubbish.
+
+### What the walk does that no unit test can
+
+It reloads the page for real. Nothing short of that proves this works.
+
+**And the walk's own first version failed for an unrelated reason worth
+recording:** it filled the roster and key but never clicked the tier and count
+buttons, so the form's defaults produced a different problem from the one the
+script had generated, the first submit silently did not advance, and the failure
+surfaced thirty seconds later as a missing answer box. A setup step left to a
+default is a test measuring something other than what it names.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

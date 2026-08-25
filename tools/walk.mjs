@@ -593,6 +593,59 @@ try {
   await page.locator('#work-leave').click();
   check(await page.locator('#screen-home').isVisible(), 'and the second tap leaves');
 
+  /* ---- a session survives the tab closing ---- */
+  //
+  // A REAL RELOAD, because nothing else proves this. Before, a refresh threw
+  // away a half-finished set and everything typed into it — which for a student
+  // whose accommodation is stopping mid-task made the app punish the
+  // accommodation.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-assignment').click();
+  await page.locator('#setup-roster').fill(String(ROSTER));
+  await page.locator('#setup-key').fill(KEY);
+  // TIER AND COUNT SET EXPLICITLY. Left to the form's defaults, the problem on
+  // screen was not the one generated below, and the first submit silently did
+  // not advance — which surfaced thirty seconds later as a missing answer box.
+  await page.locator(`#setup-tier button[data-tier="${TIER}"]`).click();
+  await page.locator(`#setup-count button[data-count="${COUNT}"]`).click();
+  await page.locator('#setup-start').click();
+
+  // Get one step right, so the restored session has a position to be wrong
+  // about, then type into the next one WITHOUT submitting.
+  {
+    const first = generateProblem(KEY, TIER, 0);
+    const answers = solve(first).coefficients;
+    const boxes = page.locator('#work-inputs input');
+    for (let at = 0; at < answers.length; at += 1) await boxes.nth(at).fill(String(answers[at]));
+    await page.locator('#work-submit').click();
+    await page.locator('#stage-answer').fill('123.456 g/mol');
+  }
+  const wasProgress = (await page.locator('#work-progress').textContent()) ?? '';
+
+  await page.reload({ waitUntil: 'load' });
+
+  check(await page.locator('#resume-strip').isVisible(), 'after a reload, the open problem is offered back');
+  const offered = (await page.locator('#resume-message').textContent()) ?? '';
+  check(offered.includes(KEY), `and names the set it belongs to (${offered.trim()})`);
+  // OFFERED, NOT FORCED. A student who closed the tab may have meant to leave.
+  check(await page.locator('#screen-home').isVisible(), 'and does not drag them back into it');
+
+  await page.locator('#resume-go').click();
+  check(await page.locator('#screen-work').isVisible(), 'and one tap goes back to the problem');
+  const nowProgress = (await page.locator('#work-progress').textContent()) ?? '';
+  check(nowProgress === wasProgress, `at the same place in the set (${nowProgress} was ${wasProgress})`);
+  const keptInBox = await page.locator('#stage-answer').inputValue();
+  check(keptInBox === '123.456 g/mol', `with what was typed and never submitted still in the box (${keptInBox})`);
+
+  // Leaving clears it: a set abandoned on purpose must not come back.
+  await page.locator('#work-leave').click();
+  await page.locator('#work-leave').click();
+  await page.reload({ waitUntil: 'load' });
+  check(
+    !(await page.locator('#resume-strip').isVisible()),
+    'a set left on purpose is not offered back after a reload',
+  );
+
   /* ---- the periodic table ---- */
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });
   await page.locator('#door-practice').click();

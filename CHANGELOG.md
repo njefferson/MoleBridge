@@ -4,6 +4,27 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.2.0 — CAPABILITY
+
+Closing the tab no longer loses your work.
+
+A refresh, a tab the browser restored, a Chromebook that went to sleep and came
+back — any of them used to throw away a half-finished set and everything you had
+typed. Now the app remembers, and when you come back it says **you have a
+problem open** with a button back to it.
+
+It puts you back on the same problem, at the same step, **with what you typed in
+the box even if you never pressed Check**.
+
+**A break costs you nothing.** The code you hand in says how long you had the app
+open, and time you spend away is not counted — stop for forty minutes and the
+number does not move. Stopping and coming back is the point.
+
+You are offered it, never dropped into it. If you meant to leave, leave — and a
+set you deliberately left with **Leave this set** is not offered back.
+
+Everything stays on your device. None of it is sent anywhere.
+
 ## 1.1.1 — ITERATION
 
 You can always get back to a problem you walked away from.

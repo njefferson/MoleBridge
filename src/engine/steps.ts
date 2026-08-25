@@ -122,7 +122,22 @@ export type StageCounts = { readonly [K in CounterStage]: number };
 /** Everything the session has recorded. Immutable. */
 export interface Session {
   readonly config: SessionConfig;
+  /** When THIS stretch of work began. Not when the session first began. */
   readonly startedAtMs: number;
+  /**
+   * Milliseconds already worked before this stretch, from stretches ended by
+   * closing the tab.
+   *
+   * WHY THE SPLIT. A session survives a reload now, and a student who stops for
+   * forty minutes and comes back should not have forty minutes added to what
+   * the code reports. The label on that number is "how long you had it open",
+   * and a break is precisely the time it was not open — so time is ACCUMULATED
+   * across stretches rather than measured from a first start. It also matters
+   * that this is the honest reading for the student the break was for: stopping
+   * mid-task is an accommodation, and a code that made it look like they took
+   * two hours would punish them for using it.
+   */
+  readonly elapsedBeforeMs: number;
   /** Index of the problem in front of the student. Equals `problemCount` when done. */
   readonly problemIndex: number;
   /** Index into the current problem's stage list. */
@@ -144,6 +159,32 @@ export interface Session {
 const ZERO_COUNTS: StageCounts = { S1: 0, S2: 0, S3: 0, S4: 0, S5: 0, S6: 0 };
 
 /**
+ * How long the app has actually been open on this session, across every stretch.
+ *
+ * ONE PLACE, because two readings of "how long" is how the code and the screen
+ * come to disagree about the same number.
+ */
+export function elapsedFor(session: Session, clock: Clock): number {
+  return session.elapsedBeforeMs + Math.max(0, clock.now() - session.startedAtMs);
+}
+
+/**
+ * The same session, picked up again now.
+ *
+ * Folds the stretch that just ended into `elapsedBeforeMs` and restarts the
+ * clock, so the gap between closing the tab and opening it again counts for
+ * nothing.
+ */
+export function resumeSession(session: Session, clock: Clock, endedAtMs: number): Session {
+  const stretch = Math.max(0, endedAtMs - session.startedAtMs);
+  return {
+    ...session,
+    startedAtMs: clock.now(),
+    elapsedBeforeMs: session.elapsedBeforeMs + stretch,
+  };
+}
+
+/**
  * Begin a session.
  *
  * PRECONDITION: `config.problemCount` is a positive integer and `config.tier`
@@ -153,6 +194,7 @@ export function startSession(config: SessionConfig, clock: Clock): Session {
   return {
     config,
     startedAtMs: clock.now(),
+    elapsedBeforeMs: 0,
     problemIndex: 0,
     stageIndex: 0,
     attemptsAtStage: 0,
@@ -304,7 +346,7 @@ export function completionPayload(session: Session, clock: Clock): CompletionPay
   if (session.config.mode !== 'assignment') {
     throw new Error('a practice session has no completion code, and must never be asked for one');
   }
-  const elapsedMs = Math.max(0, clock.now() - session.startedAtMs);
+  const elapsedMs = elapsedFor(session, clock);
   const dayOffset = Math.floor((session.startedAtMs - session.config.assignmentEpochMs) / MS_PER_DAY);
   return {
     version: CODE_VERSION,
