@@ -33,7 +33,12 @@
     the white arch merge into one shape the moment they touch, and the mole
     stops being an object standing on something.
 
-    At 16 pixels this is a bump on an arch. That is what favicon.svg is for.
+    AT 16 PIXELS THIS IS A BUMP ON AN ARCH, and that is accepted. There was
+    briefly a second, simpler drawing for the browser tab on the argument that
+    one file cannot be both a home-screen tile and a 16-pixel favicon. It cannot
+    — but a tab showing a DIFFERENT mark is worse than a tab showing this one
+    imprecisely, because the job of a favicon is to be recognised in a row of
+    twenty, not to be legible on its own. One drawing, everywhere.
   -->
   <rect width="512" height="512" rx="112" fill="#14532d"/>
   <g fill="none" stroke="#eef3fb" stroke-width="38" stroke-linecap="round">

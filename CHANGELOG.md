@@ -4,6 +4,22 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.4.3 — ITERATION
+
+The browser tab shows the mole now, same as everywhere else.
+
+There was briefly a second, simpler drawing just for the tab, because a mole at
+sixteen pixels across is a bump on an arch. It is — but recognising your own tab
+in a row of twenty matters more than the picture being sharp, and two different
+marks for one app was the wrong trade.
+
+**What is still missing.** The mole's big digging paw is not drawn. It was
+there, it looked like a slot cut in its foot, and it was removed rather than
+fixed. The tile is also green whichever colour you choose in the app; a
+home-screen icon cannot follow a setting. And the same gaps as before: no way to
+review a problem you have already finished, and no running total across
+sessions.
+
 ## 0.4.2 — ITERATION
 
 The mole has four legs' worth of sense in it now — two, which is what you see

@@ -329,6 +329,28 @@ boxy in round two and read as a satchel. Every one of these was invisible in the
 source and obvious the moment it was rendered, which is the whole argument for
 rendering rather than reading.
 
+**ONE DRAWING, EVERYWHERE — the two-file argument was lost on purpose.** A
+second, simpler `favicon.svg` briefly existed on the reasoning that a mole at
+sixteen pixels is a bump and one file cannot be both a home-screen tile and a
+favicon. That reasoning is correct and the conclusion was still wrong: the job
+of a favicon is to be RECOGNISED in a row of twenty tabs, not to be legible on
+its own, and a tab showing a different mark defeats that more thoroughly than a
+soft one. The owner made the call; the file is gone and both `rel="icon"` links
+point at `icon.svg`.
+
+**The shovel paw is missing, and it was dropped rather than solved.** A mole's
+defining feature is the outsized digging hand, and 0.4.2's commit message
+described removing the claw notch as cutting detail that only ever cost
+something. What actually happened is that the notch read as a slot cut into the
+foot, and rather than redraw the paw it was deleted — a tidy sentence over a
+thing given up on. Written down here because the drawing looks finished and is
+not, and the next session would otherwise have no way to tell the difference.
+
+**The hind leg sits about a third back rather than at the tail, and that is not
+anatomy.** It was placed where the belly curve was flattest. Moving it rearward
+lengthens the overhang behind it, and a long body with limbs at both extremes
+over a low arched back reads as a TURTLE — which is why it stays where it is.
+
 **0.4.0's lump reached staging and a preview URL and never reached production.**
 That is the branch model doing exactly what it is for, on its first real test.
 
