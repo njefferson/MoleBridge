@@ -1,0 +1,98 @@
+name: Gates
+
+# Everything that can be checked without a person looking at a screen.
+#
+# The privacy gate is here from this repository's FIRST workflow, per Doctrine
+# §9b: a repository that waits to be caught by somebody running the script by
+# hand is not gated. It runs the hub's CANONICAL copy rather than a fork, so a
+# pattern widened in the hub binds here on the next push with no copy to drift.
+#
+# Nothing in this job pushes, and nothing in it needs a token, so the checkout
+# leaves no credential in .git/config for whatever step gets added next year.
+
+on:
+  push:
+    branches: [main, staging, "claude/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gates-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The hub commit this repository has reconciled with. Moved by
+  # `doctrine-sync.mjs --adopt`, and this pin moves with it.
+  HUB_SHA: 2181454773e702bc2437f338d6117916fdccc5cc
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The hub, at an untracked path, pinned by SHA. `.hub` is the name the
+      # hub's own gates know to skip when they walk a sibling's tree.
+      - name: Check the hub out for the shared gates
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: njefferson/noahjefferson
+          ref: ${{ env.HUB_SHA }}
+          path: .hub
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # The engine's own gates first: a type error or a failed test says more
+      # about this repository than anything below it.
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      # Doctrine §9b — the FAIL state. Design statements are repo material; the
+      # owner's person is not. Canonical in the hub, run from there.
+      - name: The owner's person is not repo material
+        run: node .hub/privacy-check.mjs --repo .
+
+      # The privacy rule's second half: never in what words.
+      - name: Every set-apart quotation says whose words it is
+        run: node .hub/quote-check.mjs --repo .
+
+      # Doctrine §2 — markdown tables are LOST on an iPad, not merely ugly.
+      - name: No grids in anything the owner reads
+        run: node .hub/docs-check.mjs .
+
+      - name: npm hygiene
+        run: node .hub/pin-check.mjs --repo .
+
+      # zizmor is maintained and off-the-shelf, and is itself pinned by version
+      # AND hash in the hub's requirements file — canonical there so every
+      # repository installs the same build. `--require-hashes` rejects a swapped
+      # artefact; `--only-binary` stops a silent fall back to building from
+      # source next to whatever else runs on this runner.
+      - name: Install zizmor (version- and hash-pinned by the hub)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/zizmor"
+          "$RUNNER_TEMP/zizmor/bin/pip" install --quiet --only-binary=:all: \
+            --require-hashes -r .hub/.github/requirements-ci.txt
+
+      # --strict-collection is not optional. Without it an unparseable workflow
+      # is logged, skipped, and the audit still exits 0 with "No findings" — the
+      # file most likely to be wrong is the one excused.
+      - name: Workflow security audit
+        run: |
+          "$RUNNER_TEMP/zizmor/bin/zizmor" --offline --strict-collection \
+            .github/workflows/
