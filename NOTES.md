@@ -241,18 +241,22 @@ Pages project was created, the token verified, 36 files uploaded including
 build the gates passed as an artifact, so the bytes that went out are the bytes
 the journey walk drove and the accessibility gate measured.
 
-**What has NOT been verified, and cannot be from here.** The live page has not
-been fetched. This sandbox's proxy denies `*.molebridge.pages.dev` at the CONNECT
-stage — its own relay log records `connect_rejected, gateway answered 403` for
-that host, while `github.com` answers normally, so the network is fine and the
-host is refused by policy. That leaves three things owed to a real device:
+**The iPad pass is done** — the owner confirmed the deployed page works on a
+real iPad, 2026-08-25. That is the check no gate here can perform.
 
-- **Does the page load and work**, on a Chromebook, an iPad and the ViewBoard.
-- **Are the security headers actually applied at the edge.** `_headers` uploaded,
-  but Doctrine §16.8 says headers are checked by fetching the deployed page, and
-  that fetch has not happened.
-- **The on-device feel** — a 44px target is measured, not felt, and no gate has
-  an opinion about a software keyboard covering the answer box.
+**The headers are checked by the runner now.** This sandbox's proxy denies
+`*.molebridge.pages.dev` at the CONNECT stage — its own relay log records
+`connect_rejected, gateway answered 403` for that host while `github.com`
+answers normally — so the fetch that Doctrine §16.8 requires cannot happen from
+a session. It happens on the runner instead, immediately after the deploy: the
+page is fetched, and the run fails if `X-Content-Type-Options`, `Referrer-Policy`,
+`X-Frame-Options`, `Cross-Origin-Opener-Policy` or `Permissions-Policy` is
+missing, or if `sw.js` is not served `no-cache`, or if what came back is not
+MoleBridge. A gate rather than a manual step handed over.
+
+**Still owed to a real device: the ViewBoard, and a Chromebook.** The board at
+the front of the room is further away and runs a Chromium nobody here can test
+against.
 
 ## Repository obligations still open
 

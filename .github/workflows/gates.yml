@@ -249,12 +249,61 @@ jobs:
           echo "That is instant. A git revert also works but waits for a fresh build,"
           echo "and concurrency cancel-in-progress can cancel an in-flight deploy."
 
-      - name: Where it went
+      # Doctrine §16.6/§16.8: headers are checked by FETCHING THE DEPLOYED PAGE.
+      # Nothing else proves them — `_headers` uploading only means the file
+      # arrived, not that the edge applied it, and the difference is invisible
+      # from the repository. The session sandbox cannot make this request (its
+      # proxy denies *.pages.dev at CONNECT), so the runner does it, which is
+      # the difference between a manual step handed over and a gate.
+      - name: The deployed page answers, with its headers
         if: steps.cf.outputs.ready == 'true'
         env:
           DEPLOYED_URL: ${{ steps.deploy.outputs.deployment-url }}
         run: |
-          # LESSONS 53: a push is not a release. The URL is read from the
-          # deploy's own output rather than assembled from a branch name, so
-          # what is reported is what Cloudflare actually answered with.
+          set -euo pipefail
           echo "deployed to: $DEPLOYED_URL"
+
+          # Cloudflare needs a moment between "deployment complete" and the edge
+          # serving it. Retry rather than sleep-and-hope.
+          for attempt in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$DEPLOYED_URL/" || echo 000)
+            [ "$code" = "200" ] && break
+            echo "  attempt $attempt: $code, waiting"
+            sleep 5
+          done
+          [ "$code" = "200" ] || { echo "FAIL the deployed page answered $code"; exit 1; }
+
+          headers=$(curl -sS -D - -o /dev/null --max-time 20 "$DEPLOYED_URL/" | tr 'A-Z' 'a-z')
+          fail=0
+          for required in \
+            'x-content-type-options: nosniff' \
+            'referrer-policy:' \
+            'x-frame-options: deny' \
+            'cross-origin-opener-policy: same-origin' \
+            'permissions-policy:'
+          do
+            if printf '%s' "$headers" | grep -q "$required"; then
+              echo "  ok    $required"
+            else
+              echo "  FAIL  $required is missing from the deployed page"
+              fail=1
+            fi
+          done
+
+          # The worker must never come from a cache older than itself, or a new
+          # release cannot arrive at all.
+          sw=$(curl -sS -D - -o /dev/null --max-time 20 "$DEPLOYED_URL/sw.js" | tr 'A-Z' 'a-z')
+          if printf '%s' "$sw" | grep -q 'cache-control:.*no-cache'; then
+            echo "  ok    sw.js is served no-cache"
+          else
+            echo "  FAIL  sw.js is not served no-cache — a new release could never arrive"
+            fail=1
+          fi
+
+          # And it is really the app, not a holding page.
+          body=$(curl -sS --max-time 20 "$DEPLOYED_URL/")
+          printf '%s' "$body" | grep -q '/app/ui/app.js' \
+            && echo "  ok    the page loads the app" \
+            || { echo "  FAIL  the deployed page is not MoleBridge"; fail=1; }
+
+          exit $fail

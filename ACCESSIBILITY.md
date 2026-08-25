@@ -64,11 +64,17 @@ type check would have objected to:
   than guessing from alpha, so retuning a token cannot quietly reclassify half
   the app.
 
-**Still owed, and not measured by anything here.** The on-device pass: real
-iPad and real ViewBoard, by touch, at the front of a room. Headless Chromium
-cannot tell whether a target that measures 44px is comfortable to hit with a
-finger at arm's length, and it has no opinion at all about the software keyboard
-covering the answer box.
+**The iPad pass: DONE, 2026-08-25.** The owner confirmed the deployed page works
+on a real iPad. That is the verification no gate in this repository can perform
+— headless Chromium cannot tell whether a target that measures 44px is
+comfortable to hit with a finger at arm's length, and it has no opinion at all
+about a software keyboard covering the answer box.
+
+**Still owed: the ViewBoard.** The board at the front of the room is a different
+proposition from a tablet held at reading distance — further away, a bigger
+finger target in practice, and a Chromium build nobody here can test against.
+The Chromebook pass is owed too, though it is the case headless Chromium
+resembles most closely.
 
 **One thing deliberately kept as it is.** The skip link is revealed by focus and
 is a KEYBOARD route. It is not the only way to anything: every screen's first
