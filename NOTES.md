@@ -599,9 +599,33 @@ work a session can finish on its own.
   cannot run. Once the promote merge puts `tools/` on `main`, the branch rule
   and its escape become the operative pair there. The same commit on `staging`
   went through with the triplet check printing its four lines.
-- **No Content-Security-Policy.** `public/_headers` says so in as many words
-  rather than implying otherwise. The app carries no inline script, so one is
-  reachable; it is a refactor rather than a header and it has not been done.
+- **There is a Content-Security-Policy, and it cost a header rather than a
+  refactor.** Doctrine §16.6 says a CSP is a refactor anywhere a page carries
+  inline script; this app has never carried one, and that was preserved
+  deliberately — it is why `theme.js` is an external blocking file rather than
+  the inline one-liner PALETTES.md suggests. This is what that decision was
+  being kept for. Deny by default, with allowances only for what the app does:
+  its own script, stylesheet, icons, worker and manifest. `form-action 'none'`
+  and `connect-src 'self'` turn the no-network claim into a rule the browser
+  enforces rather than a promise the code makes.
+- **`tools/serve.mjs` parses `public/_headers` and serves what it declares**,
+  which is the change that makes the policy real rather than aspirational. For
+  most of this repository's life `_headers` was a Cloudflare file whose contents
+  existed only in production: every browser-driven gate ran against a server
+  sending none of them. That was survivable while they were headers that cannot
+  break a page. **A CSP breaks a page silently and completely**, so a policy
+  nothing exercises is a policy discovered by a class. Now the journey walk and
+  the accessibility gate both run under it on every run. The parser handles a
+  deliberate subset — exact paths and one trailing wildcard — and THROWS on a
+  line it cannot read, because a header quietly not applied is the same
+  fail-open the file exists to close.
+- **The walk fails on any policy violation**, collected from the browser's own
+  `securitypolicyviolation` event rather than by reading the console, and
+  harvested from the teacher page before navigating away — `window` does not
+  survive a navigation and the decoder is a different module. Planted twice:
+  forbidding the stylesheet took nine checks down with it, and forbidding the
+  module stopped the app booting at all. The edge check in CI asserts the header
+  is actually present on the deployed page.
 - **The on-device pass.** Headless Chromium cannot tell whether a 44px target is
   comfortable to hit with a finger at arm's length, and it has no opinion about
   a software keyboard covering the answer box. Real iPad, real ViewBoard, real

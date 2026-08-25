@@ -4,6 +4,27 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.6.0 — CAPABILITY
+
+MoleBridge now tells your browser what it is allowed to do, and the answer is
+almost nothing.
+
+Nothing about using the app changes. What changed is that the browser is handed
+a rule — a Content-Security-Policy — that refuses everything by default and then
+permits only the handful of things this app genuinely does: load its own script,
+its own stylesheet, its own icons, and nothing from anywhere else. It cannot be
+put in a frame, it cannot run code that arrives in a page, and it cannot send a
+form anywhere.
+
+That last one is the no-network promise turned into something your browser
+enforces rather than something we say. MoleBridge has never made a network call
+while you use it; now the browser stops one even if it tried.
+
+**What is still missing.** The tile is green whichever colour you choose in the
+app; a home-screen icon cannot follow a setting. And the same gaps as before: no
+way to review a problem you have already finished, and no running total across
+sessions.
+
 ## 0.5.0 — CAPABILITY
 
 The first-run explanation opens over the app instead of in front of it.

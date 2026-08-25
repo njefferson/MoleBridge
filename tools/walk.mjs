@@ -66,6 +66,23 @@ const browser = await chromium.launch(executablePath === null ? {} : { executabl
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 
 const consoleErrors = [];
+
+/**
+ * EVERY CONTENT-SECURITY-POLICY VIOLATION, from the browser's own event rather
+ * than by reading the console. A CSP breaks a page silently and completely —
+ * the blocked thing simply does not happen — so a walk that only checked
+ * whether screens appear could pass while the policy quietly removed something.
+ *
+ * `addInitScript` runs before any page script, so this is listening from before
+ * the first byte the policy could refuse.
+ */
+const cspViolations = [];
+await page.addInitScript(() => {
+  document.addEventListener('securitypolicyviolation', (event) => {
+    const seen = (window.__csp ??= []);
+    seen.push(`${event.violatedDirective} blocked ${event.blockedURI || '(inline)'}`);
+  });
+});
 page.on('console', (message) => {
   if (message.type() === 'error') consoleErrors.push(message.text());
 });
@@ -322,6 +339,11 @@ try {
   // is checked across a RELOAD, because a preference that does not survive one
   // is not a preference — it is a toggle that forgets.
 
+  // Harvest the teacher page's violations before navigating away — `window`
+  // does not survive a navigation, and the decoder is a different module from
+  // the one the student journey exercises.
+  for (const seen of await page.evaluate(() => window.__csp ?? [])) cspViolations.push(seen);
+
   // Back to the student app: the walk finished on the teacher page, which has
   // no ⓘ and therefore no picker.
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });
@@ -380,6 +402,16 @@ try {
   check(
     afterReload.mode === 'light' && afterReload.palette === 'clay',
     `both choices survive a reload (${afterReload.mode}/${afterReload.palette})`,
+  );
+
+  /* ---- the policy did not quietly remove anything ---- */
+  //
+  // Collected from every page this walk visited, not just the last one — the
+  // teacher decoder loads a different module and would be the easy one to miss.
+  for (const seen of await page.evaluate(() => window.__csp ?? [])) cspViolations.push(seen);
+  check(
+    cspViolations.length === 0,
+    `the Content-Security-Policy blocked nothing (${cspViolations.slice(0, 3).join(' | ') || 'clean'})`,
   );
 
   /* ---- nothing went wrong quietly ---- */

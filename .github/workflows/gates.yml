@@ -333,6 +333,7 @@ jobs:
           headers=$(curl -sS -D - -o /dev/null --max-time 20 "$DEPLOYED_URL/" | tr 'A-Z' 'a-z')
           fail=0
           for required in \
+            'content-security-policy: default-src' \
             'x-content-type-options: nosniff' \
             'referrer-policy:' \
             'x-frame-options: deny' \
