@@ -242,24 +242,32 @@ is how an unreadable one survives.
 
 ## Waiting on the owner — a candidate is deployed
 
-**Version 0.1.0 is live on a preview URL**, from commit `e1a29ac`:
+**Version 0.2.0 is live on a preview URL**, from commit `ae86390` on `staging`:
 
-    https://claude-molebridge-engine-cod.molebridge.pages.dev
+    https://45f826d7.molebridge.pages.dev
 
-That is the branch alias and it moves with each push to the working branch. The
-immutable per-deploy URL for this exact build is
-`https://8d621a6a.molebridge.pages.dev`. Both were read out of the deploy log
-rather than assembled from a branch name.
+That is the immutable per-deploy URL for this exact build, read out of the
+deploy log rather than assembled from a branch name. Cloudflare also serves a
+moving alias per branch; that one was NOT printed in the log, so it is not
+written here as fact.
+
+**The old alias has stopped moving.** `https://claude-molebridge-engine-cod.molebridge.pages.dev`
+served every build up to 0.2.0 at `8920f67`, and will keep serving that one:
+gates no longer run on the harness branch, so nothing deploys from it. Anyone
+holding that address is holding a build that will never advance, which is worth
+knowing before it is handed to a class.
 
 **Production is empty, and that is correct.** `main` is the Pages production
 branch and the code is not on `main`, so `molebridge.pages.dev` answers with
 nothing until somebody merges.
 
 **What the run actually did**, from the log rather than from its exit code: the
-Pages project was created, the token verified, 36 files uploaded including
-`_headers`, and Cloudflare answered with the URLs above. The deploy job took the
-build the gates passed as an artifact, so the bytes that went out are the bytes
-the journey walk drove and the accessibility gate measured.
+token was verified, the Pages project confirmed, the build uploaded, and the
+live page then fetched from the runner — every required header present, `sw.js`
+served `no-cache`, and the returned HTML actually loading `/app/ui/app.js`
+rather than a holding page. The deploy job took the build the gates passed as an
+artifact, so the bytes that went out are the bytes the journey walk drove and
+the accessibility gate measured.
 
 **The iPad pass is done** — the owner confirmed the deployed page works on a
 real iPad, 2026-08-25. That is the check no gate here can perform.
