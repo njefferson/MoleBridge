@@ -9,6 +9,7 @@
     "types": []
   },
   "include": [
-    "src/ui/**/*.ts"
+    "src/ui/**/*.ts",
+    "src/teacher/**/*.ts"
   ]
 }

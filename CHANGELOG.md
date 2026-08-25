@@ -4,6 +4,21 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.2.0 — CAPABILITY
+
+Your teacher can decode a whole class at once now. Nothing has changed about how
+you work a problem or about the code you hand in.
+
+What that means for you: the code you type into Canvas is read alongside
+everybody else's, and what your teacher sees is which steps the class found
+hard. It carries your roster number, never your name — MoleBridge has never had
+anywhere to put one, and the page your teacher pastes into throws away
+everything except the codes.
+
+**What is still missing.** The same things as before: no way to review a problem
+you have already finished, and no running total across sessions. The code still
+carries counts only, so it cannot show which particular problem went wrong.
+
 ## 0.1.0 — CAPABILITY
 
 The first build you can actually use.

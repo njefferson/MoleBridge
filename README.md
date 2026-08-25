@@ -21,9 +21,10 @@ MoleBridge is, types the roster number and assignment key their teacher put on
 the board, picks a set, and works problems one step at a time. It is installable
 and works with no connection.
 
-Deploy is wired to Cloudflare Pages: `main` is production, every other branch
-lands as a preview on its own URL, and the build that deploys is the exact one
-the gates passed. The teacher's decoder is session 3.
+The teacher's decoder is at `/teacher/`: paste a gradebook column, get back
+where the class got stuck, and print it. Deploy is wired to Cloudflare Pages —
+`main` is production, every other branch lands as a preview on its own URL, and
+the build that deploys is the exact one the gates passed.
 
 `NOTES.md` is the source of truth for what is settled, what each judgement call
 cost, and what is still owed.
@@ -178,6 +179,11 @@ should not be added.
   clock.
 - `src/engine/tolerance.ts` — every numeric tolerance in the engine, named, with
   the judgement behind it written down.
+- `src/code/gradebook.ts` — reading a pasted gradebook column. Everything that
+  is not a code is discarded, and the reason is student names, not tidiness.
+- `src/ui/` and `src/teacher/` — the student app and the teacher's decoder. The
+  engine is type-checked WITHOUT the DOM library so a browser global cannot
+  reach it.
 
 ## What session 1 measured
 

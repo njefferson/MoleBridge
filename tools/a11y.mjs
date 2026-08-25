@@ -35,6 +35,9 @@ import { serve, chromiumPath } from './serve.mjs';
 import { generateProblem, solve } from '../src/engine/problem.ts';
 import { stagesFor } from '../src/engine/taxonomy.ts';
 import { formatUnambiguous } from '../src/chem/sigfig.ts';
+import { encodeCompletionCode } from '../src/code/codec.ts';
+import { BUILD_SECRET } from '../src/code/secret.ts';
+import { assignmentKeyIdFor } from '../src/engine/assignment.ts';
 
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 const VERBOSE = process.argv.includes('--verbose');
@@ -153,6 +156,28 @@ const STATES = [
     },
   },
   {
+    name: 'the decoder, before anything is pasted',
+    async reach(page) {
+      await page.goto(`${page.__origin}/teacher/`, { waitUntil: 'load' });
+    },
+  },
+  {
+    name: 'the decoder, showing a class',
+    async reach(page) {
+      await decodeAClass(page);
+    },
+  },
+  {
+    name: 'the decoder, as it prints',
+    async reach(page) {
+      // The print stylesheet forces its own palette and is a SHIPPED SURFACE
+      // that nothing else looks at — a printed class list nobody can read is
+      // exactly the kind of thing that survives because it is never on screen.
+      await decodeAClass(page);
+      await page.emulateMedia({ media: 'print' });
+    },
+  },
+  {
     name: 'finished, showing the code',
     async reach(page) {
       await startSession(page, 3);
@@ -177,6 +202,47 @@ const STATES = [
     },
   },
 ];
+
+/** A class's worth of codes, for the decoder states. */
+const TEACHER_KEY = 'A11Y-CLASS';
+const TEACHER_KEY_ID = assignmentKeyIdFor(TEACHER_KEY);
+
+function mint(over) {
+  return encodeCompletionCode(
+    {
+      version: 1,
+      assignmentKeyId: TEACHER_KEY_ID,
+      rosterId: 1,
+      attempted: 5,
+      firstTryCorrect: 3,
+      errS1: 1, errS2: 2, errS3: 1, errS4: 0, errS5: 0, errS6: 1,
+      algebraTriggers: 1,
+      unclassified: 1,
+      durationMin: 20,
+      dayOffset: 2,
+      ...over,
+    },
+    BUILD_SECRET,
+  );
+}
+
+const CLASS_PASTE = [
+  'Student,ID,Assignment',
+  `Aguilar, Rosa,11,${mint({ rosterId: 11, errS2: 4 })}`,
+  `O'Donnell, Sean,12,${mint({ rosterId: 12, errS3: 3 })}`,
+  `Chen, Wei,13,${mint({ rosterId: 13, assignmentKeyId: (TEACHER_KEY_ID + 1) % 4096 })}`,
+  'Dubois, Marie,14,',
+  `Evans, Tom,15,${'Z'.repeat(24)}`,
+].join('\n');
+
+/** Drive the decoder to a decoded class. */
+async function decodeAClass(page) {
+  await page.goto(`${page.__origin}/teacher/`, { waitUntil: 'load' });
+  await page.locator('#teacher-key').fill(TEACHER_KEY);
+  await page.locator('#teacher-paste').fill(CLASS_PASTE);
+  await page.locator('#decode-run').click();
+  await page.locator('#results').waitFor({ state: 'visible' });
+}
 
 function valueFor(solution, id) {
   return {

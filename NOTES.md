@@ -212,13 +212,33 @@ mistake.
 holds it in role terms and the hub's gate measures it. Reskinning is a matter of
 swapping that file, which is what `PALETTES.md` exists for.
 
-**Session 3 — the teacher decoder and the print view.** The decoder takes a
-pasted gradebook column, decodes each code, and reports a per-student and
-class-wide error histogram. `decodeCompletionCode` already returns everything it
-needs, including the four verdicts and the named consistency failures. Note that
-it reports fields for a code that verifies but contradicts itself, and reports
-nothing at all for a code whose MAC failed — the teacher-facing wording has to
-keep those apart.
+**Session 3 — the teacher decoder — is built**, at `/teacher/`. Three decisions
+in it are worth keeping:
+
+**Everything that is not a code is discarded, and the reason is not tidiness.**
+A pasted gradebook column contains student NAMES. This application has no field
+for one and must never acquire one, so `extractCodes` finds the code token on
+each line and throws the rest away — and the page says so above the box, before
+anything is pasted. A test asserts that a realistic paste's names appear nowhere
+in the parse, and the browser walk asserts they appear nowhere on the rendered
+page.
+
+**A code from another assignment still verifies.** The MAC is keyed with the
+assignment id carried inside the code, so last week's code is a perfectly valid
+code — it is simply not this one. That has to be compared explicitly or a class
+silently looks better or worse than it was. It is counted separately and named.
+
+**Nothing that could not be counted is dropped quietly.** A decoder that shows
+twenty-six results for a class of thirty is worse than useless, because the four
+that went missing are the students the teacher needs to know about. Lines with no
+code, codes that failed their check, codes for another assignment and duplicate
+roster numbers are all reported with their line numbers.
+
+**The print view is the one place this app uses a grid**, and deliberately: a
+printed class list is read on a fixed-width page at a desk, so none of the
+reasons the screen avoids one apply. The print stylesheet is measured by the
+accessibility gate as its own state, because a shipped surface nobody looks at
+is how an unreadable one survives.
 
 ## Waiting on the owner — a candidate is deployed
 

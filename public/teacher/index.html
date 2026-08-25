@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>MoleBridge — decode a class</title>
+<meta name="description" content="Paste a gradebook column of MoleBridge completion codes and see where the class got stuck.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body class="teacher">
+
+<a class="skip" href="#main">Skip to the paste box</a>
+
+<header class="chrome">
+  <div class="chrome-left">
+    <span class="brand">MoleBridge</span>
+    <span class="stamp" id="build-stamp" title="The version you are running">…</span>
+  </div>
+  <a class="button button-small button-quiet" href="/">The student app</a>
+</header>
+
+<main id="main">
+  <section class="screen">
+    <h1>Decode a class</h1>
+
+    <p class="lede">
+      Paste the whole gradebook column. Names, section numbers and blank rows can
+      stay in — MoleBridge finds the codes and ignores everything else.
+    </p>
+
+    <!--
+      Said BEFORE they paste, not after. A promise nobody is told about is not
+      one they can rely on, and this is the promise the roster number exists to
+      keep.
+    -->
+    <p class="why">
+      <strong>Nothing but the codes is read.</strong> Student names in what you
+      paste are discarded as the codes are picked out — not stored, not shown,
+      not counted. A code identifies a roster number and nothing else, so the
+      mapping back to a person stays in your gradebook where it already lives.
+      Nothing here is sent anywhere or kept after you close the tab.
+    </p>
+
+    <form id="decode-form" novalidate>
+      <div class="field">
+        <label for="teacher-key">Your assignment key</label>
+        <p class="hint" id="teacher-key-hint">
+          The same one you put on the board. It decides which codes belong to
+          this assignment.
+        </p>
+        <input type="text" id="teacher-key" autocomplete="off" autocapitalize="characters"
+               spellcheck="false" aria-describedby="teacher-key-hint" required>
+      </div>
+
+      <div class="field">
+        <label for="teacher-paste">The gradebook column</label>
+        <p class="hint" id="teacher-paste-hint">One student per line, in any format.</p>
+        <textarea id="teacher-paste" rows="8" spellcheck="false"
+                  aria-describedby="teacher-paste-hint" required></textarea>
+      </div>
+
+      <p class="error" id="decode-error" role="alert" hidden></p>
+      <button type="submit" class="button button-big" id="decode-run">Decode</button>
+    </form>
+  </section>
+
+  <section class="screen" id="results" aria-labelledby="results-title" hidden>
+    <div class="results-head">
+      <h2 id="results-title">The class</h2>
+      <button type="button" class="button button-small button-quiet" id="print">Print this</button>
+    </div>
+
+    <div id="class-summary"></div>
+    <div id="class-problems"></div>
+
+    <h2>Student by student</h2>
+    <p class="hint">Roster numbers, in the order they were pasted.</p>
+    <div id="students"></div>
+  </section>
+</main>
+
+<noscript>
+  <div class="screen">
+    <h1>This page needs JavaScript</h1>
+    <p>
+      Decoding happens on your own device — there is no server to do it instead,
+      which is why nothing you paste leaves the machine.
+    </p>
+  </div>
+</noscript>
+
+<script type="module" src="/app/teacher/main.js"></script>
+</body>
+</html>

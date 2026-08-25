@@ -417,3 +417,117 @@ input[type="text"] {
   overflow-x: auto;
   user-select: all;
 }
+
+/* ---------------- the teacher's decoder ---------------- */
+
+textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9375rem;
+  color: var(--text-1);
+  background: var(--surface-3);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  resize: vertical;
+}
+
+.results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--step);
+  flex-wrap: wrap;
+}
+.results-head h2 { margin-top: 0; }
+
+.histogram { list-style: none; padding: 0; margin: 0 0 1rem; }
+
+.histogram-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+}
+.histogram-name { font-size: 0.9375rem; }
+.histogram-track {
+  height: 1.1rem;
+  background: var(--page-alt);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bar {
+  display: block;
+  height: 100%;
+  width: var(--fill, 0%);
+  background: var(--accent);
+}
+.histogram-count { font-variant-numeric: tabular-nums; font-size: 0.9375rem; color: var(--text-2); }
+
+.trouble { padding-left: 1.4rem; }
+.trouble li { margin: 0.45rem 0; }
+
+.student { background: var(--surface-2); margin-bottom: 0.75rem; }
+.student h3 { margin-top: 0; }
+
+/*
+  On a narrow screen the histogram stops being a row and becomes a stack. A
+  three-column grid at 380px wide puts two characters per line in the middle
+  column, which is a chart nobody can read.
+*/
+@media (max-width: 30rem) {
+  .histogram-row { grid-template-columns: 1fr auto; }
+  .histogram-track { grid-column: 1 / -1; }
+}
+
+/* ---------------- print ---------------- */
+
+@media print {
+  /*
+    A printed class list is read on a fixed-width page, at a desk, on paper. The
+    reasons the screen avoids a grid — a tablet, a narrow viewport, a reader who
+    might be holding it one-handed — none of them apply here, and a printed
+    column of cards would run to six pages.
+  */
+  :root {
+    --page: #fff;
+    --page-alt: #fff;
+    --surface-1: #fff;
+    --surface-2: #fff;
+    --surface-3: #fff;
+    --text-1: #000;
+    --text-2: #222;
+    --text-3: #333;
+    --rail: #000;
+    --hairline: #999;
+    --accent: #000;
+    --accent-soft: #eee;
+  }
+
+  .chrome, .skip, #decode-form, #print, .update-strip, noscript { display: none !important; }
+  body { padding: 0; font-size: 10.5pt; }
+  main { padding: 0; }
+  .screen { max-width: none; }
+  .card { border: 1px solid var(--hairline); break-inside: avoid; }
+
+  .student {
+    display: inline-block;
+    width: 48%;
+    vertical-align: top;
+    margin: 0 1% 0.5rem 0;
+  }
+
+  h1 { font-size: 16pt; }
+  h2 { font-size: 13pt; page-break-after: avoid; }
+  h3 { font-size: 11pt; page-break-after: avoid; }
+
+  /* The bars survive: a printer that drops backgrounds would print an empty
+     chart, so the fill is outlined as well as filled. */
+  .histogram-track { border: 1px solid #000; }
+  .bar { background: #000; }
+
+  a[href]::after { content: ""; }
+}

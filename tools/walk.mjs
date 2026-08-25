@@ -21,7 +21,8 @@ import { fileURLToPath } from 'node:url';
 import { serve, chromiumPath } from './serve.mjs';
 import { generateProblem, solve } from '../src/engine/problem.ts';
 import { stagesFor, predictionsFor } from '../src/engine/taxonomy.ts';
-import { decodeCompletionCode } from '../src/code/codec.ts';
+import { decodeCompletionCode, encodeCompletionCode } from '../src/code/codec.ts';
+import { assignmentKeyIdFor } from '../src/engine/assignment.ts';
 import { BUILD_SECRET } from '../src/code/secret.ts';
 import { formatUnambiguous } from '../src/chem/sigfig.ts';
 
@@ -223,6 +224,67 @@ try {
   const offlineStamp = (await page.locator('#build-stamp').textContent())?.trim();
   check(offlineStamp === stamp, `offline, it is still the same build (${offlineStamp})`);
   await page.context().setOffline(false);
+
+  /* ---- the teacher's decoder ---- */
+  const teacherKey = 'WALK-CLASS';
+  const keyId = assignmentKeyIdFor(teacherKey);
+  const mint = (over) =>
+    encodeCompletionCode(
+      {
+        version: 1,
+        assignmentKeyId: keyId,
+        rosterId: 1,
+        attempted: 5,
+        firstTryCorrect: 3,
+        errS1: 0, errS2: 2, errS3: 1, errS4: 0, errS5: 0, errS6: 0,
+        algebraTriggers: 1,
+        unclassified: 0,
+        durationMin: 20,
+        dayOffset: 2,
+        ...over,
+      },
+      BUILD_SECRET,
+    );
+
+  // A realistic paste: names, a header, an empty submission, a code from last
+  // week's assignment, and one that has been mistyped.
+  const pastedNames = ['Aguilar', 'Rosa', "O'Donnell", 'Sean', 'Chen', 'Wei'];
+  const pasted = [
+    'Student,ID,Assignment',
+    `Aguilar, Rosa,11,${mint({ rosterId: 11, errS2: 4 })}`,
+    `O'Donnell, Sean,12,${mint({ rosterId: 12, errS3: 3, unclassified: 2 })}`,
+    `Chen, Wei,13,${mint({ rosterId: 13, assignmentKeyId: (keyId + 1) % 4096 })}`,
+    'Dubois, Marie,14,',
+    `Evans, Tom,15,${'Z'.repeat(24)}`,
+  ].join('\n');
+
+  await page.goto(`${server.origin}/teacher/`, { waitUntil: 'load' });
+  check(await page.locator('#decode-form').isVisible(), 'the decoder page loads');
+  check(
+    ((await page.locator('.why').textContent()) ?? '').includes('discarded'),
+    'and says what it does with names BEFORE anything is pasted',
+  );
+
+  await page.locator('#teacher-key').fill(teacherKey);
+  await page.locator('#teacher-paste').fill(pasted);
+  await page.locator('#decode-run').click();
+  await page.locator('#results').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+
+  const rendered = (await page.locator('body').textContent()) ?? '';
+  // THE ASSERTION THIS PAGE EXISTS TO KEEP.
+  for (const name of pastedNames) {
+    check(!rendered.includes(name), `"${name}" does not appear anywhere on the decoded page`);
+  }
+
+  check(rendered.includes('2 students handed in'), 'two codes counted for this assignment');
+  check(/different assignment/i.test(rendered), 'the code from another assignment is called out, not counted');
+  check(/no code on them/i.test(rendered), 'the empty submission is reported with its line number');
+  check(/failed the check/i.test(rendered), 'the mistyped code is reported rather than dropped');
+  check(rendered.includes('Roster 11') && rendered.includes('Roster 12'), 'each counted student gets a card');
+  check(!rendered.includes('Roster 13'), 'and the other assignment does not get one');
+
+  const bars = await page.locator('.histogram-row').count();
+  check(bars === 6, `the histogram covers all six stages (${bars})`);
 
   /* ---- nothing went wrong quietly ---- */
   check(consoleErrors.length === 0, `no console errors (${consoleErrors.slice(0, 2).join(' | ')})`);
