@@ -491,6 +491,16 @@ try {
 
   check(await page.locator('#work-leave').isVisible(), 'a set can be left, and the way out is on screen');
 
+  // THE ORDER OF THE DOORS IS THE OWNER'S CALL and is asserted rather than left
+  // to whoever edits the markup: learning first, practice second, the class
+  // assignment last.
+  const doorOrder = await page.evaluate(() =>
+    [...document.querySelectorAll('.door')].map((node) => node.id));
+  check(
+    JSON.stringify(doorOrder) === JSON.stringify(['door-learn', 'door-practice', 'door-assignment']),
+    `the doors are in the order the owner asked for (${doorOrder.join(', ')})`,
+  );
+
   {
     const inputs = page.locator('#work-inputs input');
     const count = await inputs.count();

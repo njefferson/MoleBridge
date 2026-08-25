@@ -28,6 +28,16 @@ import { mountUpdates } from './updates.ts';
 import { VERSION } from '../version.ts';
 import { startSession, type Clock, type Session, type SessionConfig } from '../engine/steps.ts';
 
+/**
+ * The first door on the home screen, and the one focus lands on.
+ *
+ * NAMED ONCE rather than written at each of the two places that focus it. The
+ * order changed — learning first, practice second — and a hard-coded
+ * `#door-practice` in two handlers is two chances to leave focus in the middle
+ * of the menu after the order moves again.
+ */
+const FIRST_DOOR = '#door-learn';
+
 /** The real clock. The only one in the repository. */
 const systemClock: Clock = { now: () => Date.now() };
 
@@ -107,7 +117,7 @@ function boot(): void {
       // the next `begin` ambiguous about which session it is starting.
       session = null;
       showOnly(screens, home);
-      need<HTMLButtonElement>('#door-practice').focus();
+      need<HTMLButtonElement>(FIRST_DOOR).focus();
     },
     onFinished(finished: Session): void {
       session = finished;
@@ -167,7 +177,7 @@ function boot(): void {
   // out of this panel goes through one place.
   welcomePanel.addEventListener('close', () => {
     info.adoptOrientation();
-    need<HTMLButtonElement>('#door-practice').focus();
+    need<HTMLButtonElement>(FIRST_DOOR).focus();
   });
   need<HTMLButtonElement>('#welcome-begin').addEventListener('click', () => {
     welcomePanel.close();

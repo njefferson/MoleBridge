@@ -4,6 +4,28 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.14.0 — CAPABILITY
+
+Revealed answers have the right number of significant figures now.
+
+They did not. Every one of them was shown to six figures whatever the question
+gave you — asking for the moles in 8.135 g of KClO₃ answered `0.0663836 mol`,
+which claims six figures out of a four-figure mass. **Every intermediate in every
+problem was wrong the same way.**
+
+Each step now shows the figures its own data supports, and says how many: *"This
+step is 0.06638 mol, to 4 significant figures."* A mole ratio says it is exact
+and that significant figures do not apply to it, because it comes from counted
+coefficients.
+
+**And it tells you what to carry.** Typing a properly rounded intermediate into
+the next step is rounding early — which MoleBridge marks — so the reveal gives
+you both: *"Carry 0.0663836 mol into the next step and round once, at the end."*
+That is the rule anyway, and this is the place to say it.
+
+**Learn is the first thing on the menu now**, then Practice, then your class
+assignment.
+
 ## 0.13.0 — CAPABILITY
 
 You can leave a set now, and you can read what you got wrong.

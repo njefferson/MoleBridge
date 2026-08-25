@@ -25,8 +25,8 @@ import {
   CODE_VERSION,
   FIELD_MAX,
 } from '../code/codec.ts';
-import { formatUnambiguous } from '../chem/sigfig.ts';
-import { generateProblem, solve, type Problem, type Solution } from './problem.ts';
+import { formatUnambiguous, reportableSigFigs } from '../chem/sigfig.ts';
+import { generateProblem, quantityAt, solve, type Problem, type Solution } from './problem.ts';
 import {
   algebraFor,
   buildRemediation,
@@ -372,37 +372,88 @@ const SCRATCH_SIG_FIGS = 12;
  * pads to the figures asked for, so asking for twelve is what produced the
  * zeros — the fix is asking for a number of figures a person would write.
  */
-export const REVEAL_SIG_FIGS = 6;
+/**
+ * Guard digits carried past the last significant one.
+ *
+ * TWO, which is the rule a chemistry course teaches and the number that makes
+ * the reveal usable at all. Showing an intermediate at exactly its significant
+ * figures is CORRECT and is a trap: a student who types that value into the
+ * next step has rounded early, and `E-ROUND-EARLY` — which predicts precisely
+ * the value you get by rounding intermediates to the answer's figures — would
+ * then diagnose them for doing what the app just told them.
+ *
+ * So the reveal says both: the value to its real figures, and the digits to
+ * carry. `steps.test.ts` walks whole problems on the carried values and
+ * requires the final answer to still land, and no stage to classify as
+ * E-ROUND-EARLY.
+ */
+export const REVEAL_GUARD_DIGITS = 2;
+
+/** What one stage's answer is, at its own precision, and what to carry. */
+export interface RevealedValue {
+  /** The value rounded to the figures the data actually supports. */
+  readonly shown: string;
+  /** Significant figures in `shown`, or null where the quantity is exact. */
+  readonly sigFigs: number | null;
+  /**
+   * The same value with guard digits, or null where there is nothing to carry
+   * — an exact quantity, or the graded final stage where rounding IS the task.
+   */
+  readonly carry: string | null;
+  readonly unit: string | null;
+}
 
 /**
  * What the practice reveal SAYS, as opposed to what the grader submits.
  *
- * Same value, from the same solution, formatted for reading. Kept beside
- * `correctEntryFor` rather than in the UI because the rule that a screen never
- * computes an answer has no exception for formatting one.
+ * Same value, same solution, formatted at the precision the engine says the
+ * quantity has. `correctEntryFor` formats at `SCRATCH_SIG_FIGS` because it
+ * exists to DRIVE a session, and twelve figures is load-bearing there; borrowing
+ * it for a screen showed a student six figures of a four-figure measurement at
+ * every intermediate stage.
  */
-export function revealEntryFor(problem: Problem, solution: Solution, stage: Stage): StudentEntry {
-  const entry = correctEntryFor(problem, solution, stage);
-  if (entry.kind !== 'text') return entry;
+export function revealValueFor(
+  problem: Problem,
+  solution: Solution,
+  stage: Stage,
+): RevealedValue | null {
+  if (stage.kind !== 'NUMERIC') return null;
   const value = numericAnswer(problem, solution, stage);
-  /*
-    THE GRADED STAGE AND THE INTERMEDIATE ONES ARE FORMATTED DIFFERENTLY, and
-    that is the point rather than an inconsistency.
+  const unit = stage.unit === 'none' ? null : stage.unit;
 
-    Where figures are GRADED, `formatUnambiguous` is exactly right: it pads to
-    the problem's precision because at that stage the trailing zeros ARE the
-    answer — writing 1.5 where 1.50 was asked for is E-SIG-FIGS, and a reveal
-    that hid the distinction would be teaching against the thing being marked.
+  // WHERE FIGURES ARE GRADED, the problem's own precision is the answer and
+  // `formatUnambiguous` is exactly right — it pads, because there the trailing
+  // zeros ARE the answer. Writing 1.5 where 1.50 was asked is E-SIG-FIGS, and a
+  // reveal that hid that would teach against the thing being marked. Nothing to
+  // carry: this is the last step.
+  if (stage.gradesSigFigs) {
+    return {
+      shown: formatUnambiguous(value, problem.answerSigFigs),
+      sigFigs: problem.answerSigFigs,
+      carry: null,
+      unit,
+    };
+  }
 
-    Where they are not, padding is machine output. A mole ratio of three over
-    two came out as "1.50000" and a molar mass as "180.156000000"; a person
-    writes 1.5 and 180.156. So an intermediate is shown at its own precision,
-    up to REVEAL_SIG_FIGS, with the padding trimmed.
-  */
-  const text = stage.gradesSigFigs
-    ? formatUnambiguous(value, problem.answerSigFigs)
-    : trimPadding(value.toPrecision(REVEAL_SIG_FIGS));
-  return { kind: 'text', text: stage.unit === 'none' ? text : `${text} ${stage.unit}` };
+  const quantity = quantityAt(problem, solution, stage.id);
+  const sigFigs = quantity === null ? null : reportableSigFigs(quantity);
+  if (sigFigs === null) {
+    // Exact — a mole ratio comes from counted coefficients. Claiming a number
+    // of significant figures for it would be teaching the opposite of what it
+    // is, so it is shown plainly and says nothing about precision.
+    return { shown: trimPadding(value.toPrecision(12)), sigFigs: null, carry: null, unit };
+  }
+  const shown = formatUnambiguous(value, sigFigs);
+  const carry = trimPadding(value.toPrecision(Math.min(21, sigFigs + REVEAL_GUARD_DIGITS)));
+  return {
+    shown,
+    sigFigs,
+    // NOTHING TO CARRY WHEN THERE IS NOTHING MORE. A molar mass often has no
+    // digits past its last significant one, and "this is 31.998; carry 31.998"
+    // reads as a fault in the app rather than as advice.
+    carry: carry === shown ? null : carry,
+    unit,
+  };
 }
 
 /**

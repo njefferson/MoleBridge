@@ -1085,6 +1085,62 @@ exact ratio whose extra digits would be the padding the test exists to forbid.
 rounded to `REVEAL_SIG_FIGS`, and the test beside it checks that directly — it
 types the revealed text back in and requires the grader to accept it.
 
+## Every revealed intermediate had the wrong significant figures
+
+The owner read them on a real device and said so, and it was true of all of
+them. 0.13.0 had fixed the padding — `180.156000000` became `180.156` — which was
+the visible half of a deeper fault and, on its own, still wrong.
+
+**`solve` carried precision for the FINAL answer only.** `finalQuantity` is a
+`Quantity`; every intermediate came out of `solve` as a bare number. So anything
+showing a student an intermediate had nothing to round it to, and the reveal
+picked a constant: six figures for everything. Asking for the moles in 8.135 g of
+KClO₃ answered `0.0663836 mol` — six figures out of a four-figure mass.
+
+`quantityAt(problem, solution, stageId)` is what closed it. The rules are the
+ordinary ones and `sigfig.ts` already implemented them; nobody had ever asked it
+about a middle step. Multiplication and division take the fewest significant
+figures among the operands, an exact quantity constrains nothing, and where two
+reactants are given the LIMITING one's measurement is what constrains the
+answer — its route is the one the number actually came from.
+
+### The correct number is a trap, which is why the reveal shows two
+
+Showing an intermediate at exactly its significant figures is right, and a
+student who types it into the next step has rounded early. `E-ROUND-EARLY`
+predicts precisely the value you get by rounding intermediates to the answer's
+figures — **so the app would have diagnosed a student for doing what it had just
+told them.**
+
+So the reveal says both: the value to its real figures, and the digits to carry.
+Two guard digits, which is the rule a course teaches anyway. `steps.test.ts`
+walks sixteen whole problems submitting the CARRIED value at every stage and
+requires the grader to take each one, which is the property the guard digits
+exist for rather than an assertion that they are there.
+
+**A mole ratio says it is exact and claims no figures at all.** It comes from
+counted coefficients; "1.5, to two significant figures" would teach the opposite
+of what a ratio is.
+
+### What this was NOT
+
+The first suspicion was that `molarMass` used the wrong rule — the multiplication
+rule where a sum wants the addition rule, which for KClO₃ is the difference
+between 122.5 and 122.55. **It does not.** `molarmass.ts` computes BOTH, names
+the element that set each, and its header says the disagreement is real and that
+the project specification asked for the least-precise-element rule. The engine
+knew; only the screen did not. Worth recording because the cost of the check was
+five minutes and the cost of "fixing" a correct rule would have been a grading
+change nobody asked for.
+
+### The menu order
+
+Learning first, then practice, then the class assignment — the owner's call,
+reversing the earlier one. The two places that focus "the first door" now name a
+constant rather than an id, because the order moved once and a hard-coded
+`#door-practice` in two handlers is two chances to leave focus in the middle of
+the menu next time. The walk asserts the order.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
