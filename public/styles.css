@@ -344,6 +344,15 @@ input[type="text"] {
 .choices { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 
 .choice {
+  /*
+    DISPLAY FIRST, AND IT IS LOAD-BEARING. `min-height` does nothing at all to a
+    non-replaced INLINE element, and a <label> is inline — so this floor only
+    ever held where a .choice happened to be a flex item of `.choices`, and was
+    silently ignored anywhere else. The report panel's symptom list was that
+    anywhere else, and measured 42px against a 44px floor.
+  */
+  display: flex;
+  align-items: center;
   min-height: var(--touch);
   padding: 0.6rem 1.1rem;
   font: inherit;
@@ -592,25 +601,31 @@ textarea {
 }
 
 /*
-  ---- the appearance picker ----
+  ---- a stacked radio group (the appearance picker, the symptom list) ----
 
   Radios rather than a select: one tap per option, and a native select on a
   board at the front of a room opens a list nobody at the back can read. The
   label is the target, so it clears --touch by containing the control rather
   than by being sized next to one.
+
+  SCOPED TO `.theme-axis`, NOT TO THE PICKER. Every rule here used to be a
+  descendant of `.theme-picker`, which read as tidy and meant that the second
+  fieldset to use this markup — the report panel's symptom list — got the class
+  name, none of the styling, and rows two pixels under the touch floor. The
+  shape is general; the picker was only the first one to want it.
 */
-.theme-picker .theme-axis {
+.theme-axis {
   border: 1px solid var(--hairline);
   border-radius: var(--radius);
   padding: var(--step) calc(var(--step) * 1.5) calc(var(--step) * 1.5);
   margin: 0 0 var(--step);
 }
-.theme-picker legend {
+.theme-axis legend {
   padding: 0 calc(var(--step) * 0.5);
   color: var(--text-2);
   font-size: 0.9rem;
 }
-.theme-picker .choice {
+.theme-axis .choice {
   display: flex;
   align-items: center;
   gap: calc(var(--step) * 1.25);
@@ -619,11 +634,251 @@ textarea {
   border-radius: var(--radius);
   cursor: pointer;
 }
-.theme-picker .choice:hover { background: var(--accent-soft); }
-.theme-picker input[type="radio"] {
+.theme-axis .choice:hover { background: var(--accent-soft); }
+.theme-axis input[type="radio"] {
   width: 1.25rem;
   height: 1.25rem;
   accent-color: var(--accent);
   flex: 0 0 auto;
 }
-.theme-picker input[type="radio"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.theme-axis input[type="radio"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+/*
+  ---- the first-run dialog ----
+
+  THE ACTION BAR IS PINNED, and that is the whole point of the change. As a
+  full-height screen this content pushed its own "Get started" below the fold on
+  a real device, so the one control that mattered was the one thing nobody could
+  see. Here the body scrolls inside the panel and the button stays put at every
+  height.
+
+  `100dvh` rather than `100vh`: on a phone browser `vh` is the height WITHOUT
+  the address bar, so a panel sized against it is taller than the visible area
+  and puts the bar back off screen — which is the same defect wearing a
+  different hat.
+*/
+.welcome-dialog {
+  display: none;
+  max-height: min(calc(100dvh - 2rem), 52rem);
+  flex-direction: column;
+}
+.welcome-dialog[open] { display: flex; }
+.welcome-dialog .info-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.welcome-actions {
+  flex: 0 0 auto;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--hairline);
+  background: var(--surface-1);
+}
+.welcome-actions .button { width: 100%; }
+
+/*
+  ---- the three doors ----
+
+  Big targets, stacked, each one saying what it is FOR rather than just naming
+  itself. A menu of bare nouns makes a student guess which one produces the
+  thing their teacher asked for, and guessing wrong in an assignment costs them
+  a code they then cannot produce.
+*/
+.doors { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--step); }
+.door {
+  width: 100%;
+  min-height: var(--touch);
+  display: block;
+  text-align: left;
+  padding: calc(var(--step) * 1.75);
+  color: var(--text-1);
+  background: var(--surface-1);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font: inherit;
+}
+.door:hover { background: var(--surface-2); }
+.door:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.door-name { display: block; font-size: 1.35rem; font-weight: 650; }
+.door-what { display: block; margin-top: calc(var(--step) * 0.5); color: var(--text-2); }
+
+/*
+  The revealed answer. --accent-soft rather than a colour of its own: this is
+  the app telling you something you asked for, which is the same voice as the
+  algebra help, and a second highlight colour would imply a second meaning.
+*/
+.reveal {
+  margin-top: var(--step);
+  padding: 0.75rem 1rem;
+  color: var(--text-1);
+  background: var(--accent-soft);
+  border-left: 4px solid var(--rail);
+  border-radius: var(--radius);
+}
+
+/*
+  ---- the lesson list and one lesson ----
+
+  EVERY ROW IS A LIVE CONTROL, including the ones not yet finished and the ones
+  already done. Nothing is locked here, and a greyed-out row would promise
+  otherwise — the state is said in words instead, which a screen reader can also
+  read and which does not depend on noticing a colour.
+*/
+.lessons { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--step); }
+.lesson-row {
+  width: 100%;
+  min-height: var(--touch);
+  display: block;
+  text-align: left;
+  padding: calc(var(--step) * 1.5);
+  color: var(--text-1);
+  background: var(--surface-1);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font: inherit;
+}
+.lesson-row:hover { background: var(--surface-2); }
+.lesson-row:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.lesson-name { display: block; font-size: 1.15rem; font-weight: 650; }
+.lesson-promise { display: block; margin-top: calc(var(--step) * 0.4); color: var(--text-2); }
+.lesson-state { display: block; margin-top: calc(var(--step) * 0.5); color: var(--text-3); font-size: 0.9rem; }
+.lesson-done { background: var(--accent-soft); }
+
+/*
+  ---- the periodic table ----
+
+  A GRID THAT SCROLLS SIDEWAYS RATHER THAN SHRINKING. Eighteen columns on a
+  phone means a cell about 18px wide, which is unreadable and untappable — and
+  the touch floor is not negotiable just because a periodic table is wide. The
+  cells stay a fixed, tappable size and the container scrolls, which is what a
+  paper table on a desk does too.
+*/
+.info-wide { max-width: min(96vw, 76rem); }
+.table-scroll { overflow-x: auto; padding-bottom: var(--step); }
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(18, 3.25rem);
+  grid-auto-rows: 3.25rem;
+  gap: 2px;
+  /* The f-block sits below a deliberate empty row; this keeps that gap from
+     collapsing when the grid is only as tall as its content. */
+  min-width: max-content;
+}
+.table-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  font: inherit;
+  line-height: 1.1;
+  color: var(--text-1);
+  background: var(--surface-1);
+  border: 1px solid var(--rail);
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+}
+.table-cell:hover { background: var(--surface-3); }
+.table-z { font-size: 0.5625rem; color: var(--text-2); }
+.table-symbol { font-size: 1rem; font-weight: 650; }
+.table-mass { font-size: 0.5rem; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.table-s { background: var(--surface-2); }
+.table-f { background: var(--accent-soft); }
+.table-weight { font-variant-numeric: tabular-nums; }
+
+/*
+  ---- the calculator ----
+
+  Twenty keys, each clearing the touch floor, in a grid that keeps the same
+  shape on a phone and on a board at the front of a room.
+*/
+.calc-keys {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: calc(var(--step) * 0.75);
+  margin: var(--step) 0;
+}
+.calc-key {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 1.25rem;
+  color: var(--text-1);
+  background: var(--surface-2);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.calc-key:hover { background: var(--surface-3); }
+.calc-out {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  margin: var(--step) 0 0;
+  padding: 0 calc(var(--step) * 1.25);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+.calc-value { font-size: 1.375rem; font-weight: 650; color: var(--text-1); background: var(--accent-soft); border-radius: var(--radius); }
+.calc-error { color: var(--text-2); }
+#calc-entry { width: 100%; }
+
+/*
+  ---- the reference ----
+
+  The same row shape as a lesson, because it is the same act: a list of things
+  to open. A second visual language for a second list would say the two are
+  different kinds of thing, and they are not.
+*/
+.reference { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(var(--step) * 0.75); }
+.reference-row {
+  width: 100%;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  text-align: left;
+  padding: calc(var(--step) * 1.25);
+  color: var(--text-1);
+  background: var(--surface-1);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font: inherit;
+}
+.reference-row:hover { background: var(--surface-2); }
+.reference-lessons { list-style: none; margin: var(--step) 0 0; padding: 0; display: grid; gap: var(--step); }
+
+/* The route out of a diagnosis, so it reads as an offer rather than as the
+   next thing to press instead of answering. */
+.explain { margin-top: var(--step); }
+
+/* Worked lines align on purpose — the units sit under each other, and that
+   alignment is part of the explanation rather than decoration. */
+.worked {
+  margin: var(--step) 0;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  color: var(--text-1);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.drills { list-style: decimal; margin: 0; padding-left: 1.5rem; display: grid; gap: calc(var(--step) * 1.5); }
+.drill input { width: 100%; min-height: var(--touch); }
+.drill-verdict {
+  margin-top: calc(var(--step) * 0.75);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  border-left: 4px solid var(--rail);
+  background: var(--accent-soft);
+  color: var(--text-1);
+}

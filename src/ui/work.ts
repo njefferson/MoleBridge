@@ -15,8 +15,9 @@
 
 import { clear, el, fill, focusFirst, need } from './dom.ts';
 import { solve, type Problem, type Solution } from '../engine/problem.ts';
-import { stagesFor, type Stage, type StudentEntry } from '../engine/taxonomy.ts';
+import { stagesFor, type ErrorClass, type Stage, type StudentEntry } from '../engine/taxonomy.ts';
 import {
+  correctEntryFor,
   currentProblem,
   currentStage,
   submit,
@@ -29,6 +30,15 @@ import {
 export interface WorkHost {
   /** Called with the finished session when the last stage of the last problem lands. */
   onFinished(session: Session): void;
+  /**
+   * Open the reference at the class just attributed.
+   *
+   * THE OTHER END OF THE DIAGNOSIS. Naming somebody's mistake and stopping
+   * there tells a student who does not already know the vocabulary the name of
+   * their problem and nothing else — which is the failure this app was built to
+   * fix, reappearing one level up.
+   */
+  onExplain(errorClass: ErrorClass): void;
 }
 
 interface Elements {
@@ -41,6 +51,9 @@ interface Elements {
   readonly stagePrompt: HTMLElement;
   readonly inputs: HTMLElement;
   readonly feedback: HTMLElement;
+  /** Practice only. Hidden outright in an assignment rather than disabled. */
+  readonly reveal: HTMLButtonElement;
+  readonly revealed: HTMLElement;
 }
 
 /** The live work screen. */
@@ -66,7 +79,17 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     stagePrompt: need('#work-stage-prompt'),
     inputs: need('#work-inputs'),
     feedback: need('#work-feedback'),
+    reveal: need<HTMLButtonElement>('#work-reveal'),
+    revealed: need('#work-revealed'),
   };
+
+  // Delegated, because the button is rebuilt with every verdict. One listener
+  // that outlives the markup beats one attached per wrong answer and leaked.
+  nodes.feedback.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLElement>('[data-explain]');
+    if (button === null) return;
+    host.onExplain(button.dataset['explain'] as ErrorClass);
+  });
 
   let session: Session | null = null;
   /** The species index a CHOICE stage currently has selected, or null. */
@@ -91,8 +114,40 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     nodes.stagePrompt.textContent = stage.prompt;
     choice = null;
     renderInputs(nodes.inputs, problem, stage);
+
+    // THE REVEAL, and it resets at every stage. Asking to see one step's answer
+    // is not asking to see the rest of the problem, and leaving the previous
+    // one on screen would give away a stage the student had not asked about.
+    nodes.revealed.hidden = true;
+    nodes.revealed.textContent = '';
+    nodes.reveal.hidden = session.config.mode !== 'practice';
     focusFirst(nodes.inputs.querySelector<HTMLElement>('input, button'));
   };
+
+  /*
+    PRACTICE ONLY, and the check is against the SESSION rather than against
+    whether the button happens to be visible. A hidden control is a CSS fact; a
+    graded session refusing to answer is a program fact, and the second one
+    survives somebody styling the page differently.
+
+    It shows one stage. `correctEntryFor` is the grader's own function, which is
+    the point: what a student sees revealed is exactly what they would have been
+    marked against, rather than a second rendering that could disagree with it.
+  */
+  nodes.reveal.addEventListener('click', () => {
+    if (session === null || session.finished) return;
+    if (session.config.mode !== 'practice') return;
+    const problem = currentProblem(session);
+    const stage = currentStage(session);
+    const entry = correctEntryFor(problem, solve(problem), stage);
+    nodes.revealed.textContent =
+      entry.kind === 'text'
+        ? `This step is ${entry.text}. Work out where it comes from before you move on.`
+        : entry.kind === 'coefficients'
+          ? `The coefficients are ${entry.values.join(', ')}. Check them against the atoms on each side.`
+          : `The limiting reactant is the one numbered ${entry.speciesIndex + 1}. Work out why.`;
+    nodes.revealed.hidden = false;
+  });
 
   const readEntry = (problem: Problem, stage: Stage): StudentEntry | null => {
     if (stage.kind === 'COEFFICIENTS') {
@@ -309,6 +364,19 @@ function showWrong(feedback: HTMLElement, result: SubmitResult, _solution: Solut
     // An entry that matched two error classes is an engine defect, not a
     // student's problem. Say something true and unhelpful rather than pick one.
     children.push(el('p', { className: 'why', text: 'That is not right, and MoleBridge cannot tell you why. Try the step again.' }));
+  }
+
+  // THE ROUTE OUT OF THE SENTENCE. Offered for every attributed class,
+  // E-UNCLASSIFIED included — that page says what to check and points at the ⚑,
+  // which is more use than the silence the unexplained case used to end on.
+  if (classification.errorClass !== null) {
+    children.push(
+      el('button', {
+        className: 'button-small explain',
+        text: 'What does this mean?',
+        attrs: { type: 'button', 'data-explain': classification.errorClass },
+      }),
+    );
   }
 
   for (const help of remediation) {

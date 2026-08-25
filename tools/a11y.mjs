@@ -94,9 +94,76 @@ const TIER = 3;
  */
 const STATES = [
   {
-    name: 'welcome',
+    // The first-run orientation, which is a MODAL over the setup screen rather
+    // than a screen of its own. Measured with the dialog open, so the pinned
+    // action bar and the scrolling body are both under the gate — the defect
+    // that made it a dialog was a button below the fold, and a state that only
+    // measured the prose would not have seen it.
+    name: 'the first-run orientation',
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-panel[open]').waitFor();
+    },
+  },
+  {
+    // The three doors. Practice is the destination and the assignment is the
+    // errand, so this is the screen most students see most often.
+    name: 'the three doors',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#screen-home:not([hidden])').waitFor();
+    },
+  },
+  {
+    name: 'the lesson list',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-learn').click();
+    },
+  },
+  {
+    // One lesson WITH a drill answered, so the verdict is on screen and
+    // measured. A state that only ever showed the prose would leave the one
+    // element a student actually reads after trying entirely unchecked.
+    name: 'a lesson, with a drill answered',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-learn').click();
+      await page.locator('.lesson-row').first().click();
+      await page.locator('.drill input').first().fill('12');
+      await page.locator('.drill button').first().click();
+    },
+  },
+  {
+    name: 'the progress code',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-learn').click();
+      await page.locator('#learn-progress').evaluate((node) => node.setAttribute('open', ''));
+    },
+  },
+  {
+    name: 'practice setup',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+    },
+  },
+  {
+    // Practice mid-problem, WITH the answer revealed — a surface that only
+    // exists in this mode and would otherwise ship unmeasured.
+    name: 'practice with the answer shown',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+      await page.locator('#practice-start').click();
+      await page.locator('#work-reveal').click();
     },
   },
   {
@@ -104,6 +171,7 @@ const STATES = [
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
       await page.locator('#welcome-begin').click();
+      await page.locator('#door-assignment').click();
     },
   },
   {
@@ -111,6 +179,7 @@ const STATES = [
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
       await page.locator('#welcome-begin').click();
+      await page.locator('#door-assignment').click();
       await page.locator('#setup-roster').fill('0');
       await page.locator('#setup-key').fill(KEY);
       await page.locator('#setup-start').click();
@@ -164,6 +233,7 @@ const STATES = [
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
       await page.locator('#welcome-begin').click();
+      await page.locator('#door-assignment').click();
       await page.locator('#info-open').click();
     },
   },
@@ -172,9 +242,76 @@ const STATES = [
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
       await page.locator('#welcome-begin').click();
+      await page.locator('#door-assignment').click();
       await page.locator('#info-open').click();
       await page.getByRole('button', { name: 'Show the diagnostic' }).click();
       await page.locator('.diagnostic').waitFor({ state: 'visible' });
+    },
+  },
+  {
+    name: 'the periodic table, with an element picked',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+      await page.locator('#table-open').click();
+      await page.locator('#table-grid [data-z="6"]').click();
+      await page.locator('#table-detail h3').waitFor({ state: 'visible' });
+    },
+  },
+  {
+    name: 'the calculator, showing a refusal',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+      await page.locator('#calc-open').click();
+      // THE REFUSAL RATHER THAN A RESULT. It is the longer message, it is the
+      // state a student who typed a formula lands in, and it is the one with
+      // text that has to be readable against a surface rather than a number in
+      // an accent-soft box. Measuring the happy path would measure the easier
+      // of the two.
+      await page.locator('#calc-entry').fill('CuSO4');
+      await page.waitForFunction(
+        () => (document.querySelector('#calc-out')?.textContent ?? '').length > 0,
+      );
+    },
+  },
+  {
+    name: 'the reference, at one page',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-learn').click();
+      await page.locator('#learn-reference').click();
+      // The detail view rather than the list: it is the one with headings,
+      // prose and the lesson links in it, so it is the one with something to
+      // measure. The list is twenty instances of a row shape already measured
+      // on the lesson list.
+      await page.locator('#reference-list .reference-row').first().click();
+      await page.locator('#reference-detail').waitFor({ state: 'visible' });
+    },
+  },
+  {
+    // ONE STATE, NOT TWO. The panel before a symptom is chosen and the panel
+    // after it differ by a checked radio and one line of generated text —
+    // nothing this gate measures moves between them, and each state costs six
+    // measured passes (three palettes, two modes). The chosen one is the one
+    // kept because it is the state a student is in when they read the report.
+    name: 'the report panel, with a symptom chosen',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+      await page.locator('#report-open').click();
+      await page.locator('#report-what input').first().check();
+      // The report is awaited — it asks the service worker and the cache store
+      // about themselves — so the panel is not finished painting when the click
+      // returns. Measuring it mid-paint measures a shorter panel than a student
+      // sees.
+      await page.waitForFunction(
+        () => /what went wrong: [A-Z-]+/.test(document.querySelector('#report-body')?.textContent ?? ''),
+      );
     },
   },
   {
@@ -282,6 +419,7 @@ function valueFor(solution, id) {
 async function startSession(page, count = 3) {
   await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
   await page.locator('#welcome-begin').click();
+      await page.locator('#door-assignment').click();
   await page.locator('#setup-roster').fill('7');
   await page.locator('#setup-key').fill(KEY);
   await page.locator(`#setup-tier button[data-tier="${TIER}"]`).click();

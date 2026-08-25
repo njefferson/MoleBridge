@@ -4,6 +4,197 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.12.0 — CAPABILITY
+
+A periodic table, in the top bar, next to the calculator.
+
+All 118 elements, laid out the way a printed one is. Tap any of them for its name
+and its atomic weight written out in full. Elements with no stable isotope show
+their mass number in brackets, the way the published data does — because that is
+a different kind of number and printing it bare would say something it does not.
+
+**It gives you atomic weights, not molar masses.** Adding four of them up is the
+step MoleBridge marks and explains, so a table that did the adding would take
+away the thing it is there to help with.
+
+On a phone it scrolls sideways rather than shrinking. Eighteen columns squeezed
+onto a narrow screen makes cells nobody can read or hit, and being a wide table
+is not a reason to make the buttons too small.
+
+**What is still missing.** No way to review a problem you have already finished,
+and no running total across sessions.
+
+## 0.11.0 — CAPABILITY
+
+A calculator, in the top bar, on every screen.
+
+Press **=**. Type a sum or tap the keys. It handles brackets, decimals and
+scientific notation, so `6.022e23 * 2` works and so does `(2.50 + 1.25) / 3`.
+
+**It will not do the chemistry, and that is on purpose.** Type a formula and it
+says so instead of answering. Working out a molar mass and choosing which way up
+to put a conversion are the steps you are practising — MoleBridge can only tell
+you what went wrong in them if you do them, and a box that hands back 249.68
+takes both the step and the explanation away.
+
+It does not round to the number of figures your answer needs. That decision is
+yours and it is one MoleBridge marks, so the calculator shows plenty of figures
+and says nothing about how many belong.
+
+It opens over whatever you were doing and closes back to it, and it is empty
+every time it opens.
+
+**What is still missing.** No periodic table yet. And the same gaps as before:
+no way to review a problem you have already finished, and no running total
+across sessions.
+
+## 0.10.0 — CAPABILITY
+
+Somewhere to go when MoleBridge tells you what you did wrong.
+
+Every wrong answer already got a sentence saying which mistake produced that
+exact number. Now that sentence has a **What does this mean?** button under it,
+and it opens a page on that specific mistake: what happened, how to catch it in
+your own working next time, what to do instead, and which lesson teaches it.
+
+**There are twenty pages, one for every mistake MoleBridge can recognise** — and
+you can browse them all from **Look up a mistake** on the Learn screen, without
+having to get something wrong first.
+
+It opens **over** the problem you are in the middle of. Close it and you are back
+exactly where you were, with nothing lost.
+
+**A new lesson: Litres, particles and other units.** MoleBridge has always set
+problems that ask for litres of a gas at STP or a number of particles, and no
+lesson taught the conversion. That was a gap, and the reference is what found it
+— every mistake needs a lesson behind it, and one had nowhere to point.
+
+**Progress codes from before this release will not be accepted.** The code had
+room for seven lessons and there are now eight, which changes its shape. If you
+have one written down, it will say it came from a different version — open your
+lessons again and take a new code.
+
+**What is still missing.** No calculator and no periodic table yet. And the same
+gaps as before: no way to review a problem you have already finished, and no
+running total across sessions.
+
+## 0.9.0 — CAPABILITY
+
+Telling someone it is broken, in two taps.
+
+There is a **⚑ button in the top bar on every screen**. Press it, pick whichever
+line is closest to what went wrong, and it writes a short report you can copy and
+paste into a message to your teacher. You do not have to describe anything.
+
+**There is nowhere in it to type**, and that is on purpose. The report carries
+which version you are running, what the device is, whether the app is up to date,
+and — if you are in the middle of a problem — which problem set and which step.
+It says all of that on the report itself, along with what it does *not* carry:
+your name, your roster number, anything you typed as an answer, and any working.
+
+The same is now true of the diagnostic behind the ⓘ. It used to include the
+roster number and describe itself as having "no answers and no name", which was
+true and was narrower than it sounded. It no longer includes it.
+
+**MoleBridge asks your browser for nothing.** No camera, no microphone, no
+location, no notifications — there is no prompt anywhere in it, and a check now
+runs on every build that fails if anything is added that could raise one.
+
+**What is still missing.** No reference to look things up in yet, no calculator,
+no periodic table. And the same gaps as before: no way to review a problem you
+have already finished, and no running total across sessions.
+
+## 0.8.0 — CAPABILITY
+
+Lessons. Seven of them, and none is locked.
+
+Reading a formula, molar mass, grams and moles, balancing, the mole ratio, the
+limiting reactant, percent yield — in the order they build on each other. **Open
+any of them in any order.** If you already know one, skip it. If you jump ahead
+and it makes no sense, come back. Nothing is held shut behind anything else.
+
+Each lesson explains the thing, shows it worked through, and gives you a few to
+try. **The answer only appears after you have had a go** — same as everywhere
+else in MoleBridge — and when you get one wrong it tells you the answer and why,
+rather than just marking it.
+
+**Your place is kept on this device.** You do not need to do anything for that.
+And if you are moving to another computer, or you use a shared one, there is a
+short code under "Moving to another device" that carries your progress: write it
+down, type it in on the other machine. It only ever adds — using an old code
+cannot un-finish a lesson you have already done.
+
+**What is still missing.** No reference to look things up in yet, no calculator,
+no periodic table. The tile is green whichever colour you choose in the app. And
+the same gaps as before: no way to review a problem you have already finished,
+and no running total across sessions.
+
+## 0.7.0 — CAPABILITY
+
+MoleBridge opens on a menu now, and practice is the point of it.
+
+**Practice** is there whenever you want it. Press Random for a set of problems,
+or type in a set name you have seen before to get exactly those problems back —
+so if you got one wrong you can return to it, or read the name across the room
+to somebody else. Nothing is handed in and nothing is recorded.
+
+**In practice you can ask to see the answer.** There is a button on every step.
+It shows you that step only, so you can work backwards to it and find out where
+it comes from, and asking about one step does not give away the rest.
+
+**Class assignment** is unchanged: the problems your teacher set, answers stay
+hidden, and you finish with the code to type into Canvas. **It is the only door
+that produces a code.** Practice cannot make one — not "does not", cannot.
+
+Lessons are coming and will join this menu. They are not here yet, and there is
+no door for them until there is something behind it.
+
+**What is still missing.** No lessons yet. No calculator or periodic table yet.
+The tile is green whichever colour you choose in the app. And the same gaps as
+before: no way to review a problem you have already finished, and no running
+total across sessions.
+
+## 0.6.0 — CAPABILITY
+
+MoleBridge now tells your browser what it is allowed to do, and the answer is
+almost nothing.
+
+Nothing about using the app changes. What changed is that the browser is handed
+a rule — a Content-Security-Policy — that refuses everything by default and then
+permits only the handful of things this app genuinely does: load its own script,
+its own stylesheet, its own icons, and nothing from anywhere else. It cannot be
+put in a frame, it cannot run code that arrives in a page, and it cannot send a
+form anywhere.
+
+That last one is the no-network promise turned into something your browser
+enforces rather than something we say. MoleBridge has never made a network call
+while you use it; now the browser stops one even if it tried.
+
+**What is still missing.** The tile is green whichever colour you choose in the
+app; a home-screen icon cannot follow a setting. And the same gaps as before: no
+way to review a problem you have already finished, and no running total across
+sessions.
+
+## 0.5.0 — CAPABILITY
+
+The first-run explanation opens over the app instead of in front of it.
+
+It used to be a full page, and on a phone or a small window the **Get started**
+button sat below the bottom of the screen — so the one thing you needed to press
+was the one thing you could not see. That was wrong, and it was wrong from the
+first release.
+
+It is a panel now. The text scrolls inside it and the button stays pinned at the
+bottom where you can always reach it, and the app is visible behind, so you can
+see what you are about to use rather than reading about it first. Escape closes
+it too, and the explanation still moves into the ⓘ where it always was — there
+is no way past it that loses it.
+
+**What is still missing.** The tile is green whichever colour you choose in the
+app; a home-screen icon cannot follow a setting. And the same gaps as before: no
+way to review a problem you have already finished, and no running total across
+sessions.
+
 ## 0.4.4 — ITERATION
 
 The mole has claws now.

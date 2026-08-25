@@ -42,6 +42,28 @@
     -->
     <span class="stamp" id="build-stamp" title="The version you are running">…</span>
   </div>
+  <button type="button" class="icon-button" id="table-open" aria-haspopup="dialog">
+    <span aria-hidden="true">He</span>
+    <span class="visually-hidden">Periodic table</span>
+  </button>
+  <!--
+    In the chrome rather than on the work screen, so it is in the same place
+    during a lesson, during practice and during an assignment. A tool that moves
+    depending on where you are is one that has to be found again each time.
+  -->
+  <button type="button" class="icon-button" id="calc-open" aria-haspopup="dialog">
+    <span aria-hidden="true">=</span>
+    <span class="visually-hidden">Calculator</span>
+  </button>
+  <!--
+    RAPID ON PURPOSE: in the app's own chrome, on every screen, one tap away
+    from the moment something went wrong. A bug report buried behind the ⓘ is a
+    bug report nobody files — a fifteen-year-old who hits a fault closes the tab.
+  -->
+  <button type="button" class="icon-button" id="report-open" aria-haspopup="dialog">
+    <span aria-hidden="true">!</span>
+    <span class="visually-hidden">Report a problem with MoleBridge</span>
+  </button>
   <button type="button" class="icon-button" id="info-open" aria-haspopup="dialog">
     <span aria-hidden="true">ⓘ</span>
     <span class="visually-hidden">About MoleBridge, installing it, and what changed</span>
@@ -61,53 +83,126 @@
 
 <main id="main">
 
-  <!-- ============ welcome ============ -->
-  <section class="screen" id="screen-welcome" aria-labelledby="welcome-title">
-    <h1 id="welcome-title">MoleBridge</h1>
+  <!-- ============ home ============ -->
+  <!--
+    THREE DOORS, and which one you came through decides what the app does.
+    Practice is the destination; the class assignment is the errand.
+
+    The doors are the code wall made visible. Only the assignment door leads to
+    a completion code, and a student can SEE that rather than being told it in
+    prose they will not read — practice shows answers on request, so if it could
+    also produce a code it would be the route to credit for work the app did.
+    `completionPayload` refuses a practice session outright; this is the same
+    fact where a person can look at it.
+
+    Learn is not here yet. It joins this menu in the commit that builds it — a
+    door that opens onto an apology is worse than a door that is not there.
+  -->
+  <section class="screen" id="screen-home" aria-labelledby="home-title" hidden>
+    <h1 id="home-title">MoleBridge</h1>
+    <p class="lede">Work stoichiometry one step at a time, and find out which mistake made the number you got.</p>
+
+    <ul class="doors">
+      <li>
+        <button type="button" class="door" id="door-practice">
+          <span class="door-name">Practice</span>
+          <span class="door-what">Any number of problems, whenever you like. You can ask to see the answer and work back to it. Nothing is handed in.</span>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="door" id="door-learn">
+          <span class="door-name">Learn</span>
+          <span class="door-what">Seven short lessons, from reading a formula to percent yield. Open any of them in any order — nothing is locked.</span>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="door" id="door-assignment">
+          <span class="door-name">Class assignment</span>
+          <span class="door-what">The problems your teacher set. Answers stay hidden, and you finish with a code to type into Canvas.</span>
+        </button>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ learn ============ -->
+  <section class="screen" id="screen-learn" aria-labelledby="learn-title" hidden>
+    <h1 id="learn-title">Learn</h1>
+    <p class="lede">Seven lessons, in the order they build on each other. <strong>None of them is locked</strong> — if you already know one, skip it; if you jump ahead and it makes no sense, come back.</p>
+
+    <ol class="lessons" id="learn-list"></ol>
 
     <!--
-      §7e: ONE orientation block. It is shown here on a first run and then MOVED
-      into the ⓘ panel — moved, never copied, so the two can never drift apart
-      and so it survives whatever the reader presses to begin.
+      Progress is kept on this device automatically. This is for when it cannot
+      be: a shared Chromebook, a new device, cleared site data. It is a backup
+      and a transfer, never the way to keep your place.
     -->
-    <div id="orientation">
-      <h2>What this is</h2>
-      <p>
-        A stoichiometry problem, worked one step at a time. You enter every value
-        along the way — the balanced coefficients, the molar mass, the moles, the
-        ratio — and you cannot move on until the step in front of you is right.
-      </p>
-      <p>
-        When a step is wrong, MoleBridge works out which mistake produces that
-        exact number and tells you, instead of just marking it wrong. If the
-        mistake is an algebra one, it shows you three lines of the algebra using
-        your own numbers.
-      </p>
+    <details class="card" id="learn-progress">
+      <summary>Moving to another device</summary>
+      <p class="hint" id="learn-storage"></p>
+      <p>Write this down to carry your progress somewhere else:</p>
+      <p class="code" id="learn-code" tabindex="0" aria-label="Your progress code"></p>
+      <button type="button" class="button-small" id="learn-copy">Copy it</button>
+      <p class="hint" id="learn-copy-status" role="status"></p>
 
-      <h2>What this is not</h2>
-      <ul>
-        <li>It is <strong>not a solver</strong>. It will not do a problem for you, and it never shows you an answer before you have tried it.</li>
-        <li>It is <strong>not a grade</strong>. The code at the end records how far you got and where you got stuck. Your teacher decides what that is worth.</li>
-        <li>It <strong>does not know who you are</strong>. It asks for the roster number your teacher gave you and nothing else — no name, no email, no account.</li>
-      </ul>
+      <label class="field">
+        <span class="field-label">Or type one in</span>
+        <input type="text" id="learn-restore" inputmode="latin" autocomplete="off" spellcheck="false">
+      </label>
+      <button type="button" class="button-small" id="learn-restore-go">Use this code</button>
+      <p class="hint" id="learn-restore-status" role="status"></p>
+    </details>
 
-      <h2>How a session goes</h2>
-      <ol>
-        <li>Type in the roster number and assignment key your teacher put on the board.</li>
-        <li>Work each problem stage by stage. Getting one wrong costs you nothing except that the problem stops counting as first-try.</li>
-        <li>At the end you get a short code. Type it into the Canvas assignment.</li>
-      </ol>
+    <!--
+      The other door into the reference. A student who came here to look
+      something up should not have to get an answer wrong first to find it.
+    -->
+    <button type="button" class="button-small" id="learn-reference">Look up a mistake</button>
+    <button type="button" class="button-small" id="learn-back">Back</button>
+  </section>
 
-      <h2>Nothing is stored and nothing is sent</h2>
-      <p>
-        MoleBridge has no account and no server. Nothing you type leaves the
-        device, and nothing is kept after you close the tab — so if you stop
-        halfway, you start again. That is the trade for it working with no
-        connection and holding nothing about you.
-      </p>
-    </div>
+  <!-- ============ one lesson ============ -->
+  <section class="screen" id="screen-lesson" aria-labelledby="lesson-title" hidden>
+    <h1 id="lesson-title"></h1>
+    <p class="lede" id="lesson-promise"></p>
+    <div id="lesson-body"></div>
 
-    <button type="button" class="button button-big" id="welcome-begin">Get started</button>
+    <h2>Try it</h2>
+    <ol class="drills" id="lesson-drills"></ol>
+
+    <button type="button" class="button button-big" id="lesson-done">I have got this</button>
+    <button type="button" class="button-small" id="lesson-back">Back to the lessons</button>
+  </section>
+
+  <!-- ============ practice ============ -->
+  <section class="screen" id="screen-practice" aria-labelledby="practice-title" hidden>
+    <h1 id="practice-title">Practice</h1>
+    <p class="lede">Nothing here is handed in and nothing is recorded. Ask to see an answer whenever you want it.</p>
+
+    <form class="card" id="practice-form" novalidate>
+      <!--
+        THE SEED IS SHOWN, and that is the point of it. A random button that
+        keeps its roll to itself makes every problem unrepeatable — a student
+        who got one wrong could never return to it, show it to a friend, or
+        bring it to a teacher. Roll it, show it, and let it be typed back in.
+      -->
+      <label class="field">
+        <span class="field-label">Problem set</span>
+        <input type="text" id="practice-seed" inputmode="text" autocomplete="off" spellcheck="false">
+      </label>
+      <p class="hint">Press Random for a new set, or type one you have seen before to get the same problems again.</p>
+      <button type="button" class="button" id="practice-random">Random</button>
+
+      <span class="field-label" id="practice-tier-label">How hard</span>
+      <div class="choices" id="practice-tier" role="radiogroup" aria-labelledby="practice-tier-label"></div>
+
+      <span class="field-label" id="practice-count-label">How many</span>
+      <div class="choices" id="practice-count" role="radiogroup" aria-labelledby="practice-count-label"></div>
+
+      <p class="error" id="practice-error" role="alert" hidden></p>
+      <button type="submit" class="button button-big" id="practice-start">Start practising</button>
+    </form>
+
+    <button type="button" class="button-small" id="practice-back">Back</button>
   </section>
 
   <!-- ============ setup ============ -->
@@ -164,6 +259,14 @@
       <h2 class="stage-prompt" id="work-stage-prompt"></h2>
       <div id="work-inputs"></div>
       <button type="submit" class="button button-big" id="work-submit">Check this step</button>
+      <!--
+        PRACTICE ONLY, and hidden outright in an assignment rather than
+        disabled: a greyed-out "show me the answer" on a graded screen is an
+        invitation and a distraction. `work.ts` removes it when the mode is not
+        practice, so it is not merely invisible.
+      -->
+      <button type="button" class="button-small" id="work-reveal" hidden>Show me this step's answer</button>
+      <p class="reveal" id="work-revealed" role="status" hidden></p>
     </form>
 
     <!--
@@ -177,6 +280,9 @@
   <section class="screen" id="screen-done" aria-labelledby="done-title" hidden>
     <h1 id="done-title">Finished</h1>
     <p class="lede">Type this code into the Canvas assignment. It is the same every time for this session, so you can come back to it.</p>
+
+    <!-- Practice ends here too, and says so instead of showing a blank card. -->
+    <p class="lede" id="done-practice" hidden></p>
 
     <div class="card code-card">
       <p class="code" id="done-code" tabindex="0" aria-label="Your completion code"></p>
@@ -197,6 +303,220 @@
   </section>
 
 </main>
+
+<!--
+  ============ first run ============
+
+  A MODAL OVER THE APP RATHER THAN A SCREEN IN FRONT OF IT. This was a
+  full-height screen, and on a real device the button that dismissed it sat
+  below the fold — so the one control that mattered was the one thing a reader
+  could not see. Nobody scrolls a wall of text they did not ask for to look for
+  a button they do not know is there.
+
+  As a dialog the body scrolls INSIDE the panel and the action bar is pinned to
+  the bottom of it, so "Get started" is on screen at every height. The app is
+  visible behind, which also answers "what is this thing" better than a page of
+  prose does.
+
+  §7e still holds: this is the ONE orientation block, and pressing past it MOVES
+  it into the ⓘ panel rather than copying it — including when the reader
+  dismisses with Escape or the backdrop, which is handled on `close` rather than
+  on the button, so there is no way past this that loses it.
+-->
+<dialog class="info welcome-dialog" id="welcome-panel" aria-labelledby="welcome-title">
+  <div class="info-head">
+    <h2 id="welcome-title">Welcome to MoleBridge</h2>
+  </div>
+  <div class="info-body">
+    <div id="orientation">
+      <h2>What this is</h2>
+      <p>
+        A stoichiometry problem, worked one step at a time. You enter every value
+        along the way — the balanced coefficients, the molar mass, the moles, the
+        ratio — and you cannot move on until the step in front of you is right.
+      </p>
+      <p>
+        When a step is wrong, MoleBridge works out which mistake produces that
+        exact number and tells you, instead of just marking it wrong. If the
+        mistake is an algebra one, it shows you three lines of the algebra using
+        your own numbers.
+      </p>
+
+      <h2>What this is not</h2>
+      <ul>
+        <li>It is <strong>not a solver</strong>. It will not do a problem for you, and it never shows you an answer before you have tried it.</li>
+        <li>It is <strong>not a grade</strong>. The code at the end records how far you got and where you got stuck. Your teacher decides what that is worth.</li>
+        <li>It <strong>does not know who you are</strong>. It asks for the roster number your teacher gave you and nothing else — no name, no email, no account.</li>
+      </ul>
+
+      <h2>How a session goes</h2>
+      <ol>
+        <li>Type in the roster number and assignment key your teacher put on the board.</li>
+        <li>Work each problem stage by stage. Getting one wrong costs you nothing except that the problem stops counting as first-try.</li>
+        <li>At the end you get a short code. Type it into the Canvas assignment.</li>
+      </ol>
+
+      <h2>Nothing is stored and nothing is sent</h2>
+      <p>
+        MoleBridge has no account and no server. Nothing you type leaves the
+        device, and nothing is kept after you close the tab — so if you stop
+        halfway, you start again. That is the trade for it working with no
+        connection and holding nothing about you.
+      </p>
+    </div>
+  </div>
+  <div class="welcome-actions">
+    <button type="button" class="button button-big" id="welcome-begin">Get started</button>
+  </div>
+</dialog>
+
+<!--
+  ============ report a problem ============
+
+  THERE IS NO FREE-TEXT BOX, AND THAT IS THE WHOLE DESIGN.
+
+  A "describe what happened" field is the obvious thing to build and it is the
+  one thing that would make "this contains nothing about you" a promise about
+  what a student typed rather than a fact about what the app collects. Somebody
+  would put their name in it. Somebody always does.
+
+  So what goes wrong is chosen from a list instead. The report is then generated
+  entirely from things the app already knows, which means the assurance
+  underneath it is CHECKABLE — and `report.test.ts` checks it.
+-->
+<!--
+  ============ the periodic table ============
+
+  ATOMIC WEIGHTS, and a student who wants a molar mass adds them up. That is not
+  a shortcoming: adding four atomic weights IS the step E-MM-ARITH and E-MM-PARSE
+  are about, and a table that did it would delete both — the calculator's
+  forbidden feature wearing a different hat.
+
+  The DOM is in atomic-number order and the CSS grid does the placing, so what a
+  screen reader walks is hydrogen to oganesson while the picture stays a periodic
+  table. Building it in visual order would have made the markup match the
+  picture and the reading order nonsense.
+-->
+<dialog class="info info-wide" id="table-panel" aria-labelledby="table-title">
+  <div class="info-head">
+    <h2 id="table-title">Periodic table</h2>
+    <button type="button" class="icon-button" id="table-close">
+      <span aria-hidden="true">✕</span>
+      <span class="visually-hidden">Close</span>
+    </button>
+  </div>
+  <div class="info-body">
+    <div class="table-scroll">
+      <div class="table-grid" id="table-grid"></div>
+    </div>
+    <div id="table-detail">
+      <p class="hint">Pick an element to see its name and weight written out.</p>
+    </div>
+    <p class="hint">
+      These are atomic weights, for one atom's worth. A molar mass is these
+      added up for everything in the formula — which is the part you are
+      practising, so this will not do it for you.
+    </p>
+  </div>
+</dialog>
+
+<!--
+  ============ the calculator ============
+
+  ARITHMETIC AND NOTHING ELSE, and the nothing else is the feature. A box that
+  takes CuSO4·5H2O and hands back 249.68 removes the step it is meant to help
+  with, and with it every diagnosis MoleBridge could have given a student who
+  cannot do that step yet. A letter anywhere in the input is refused, and
+  `calculator.test.ts` feeds it all 118 element symbols to prove it.
+-->
+<dialog class="info" id="calc-panel" aria-labelledby="calc-title">
+  <div class="info-head">
+    <h2 id="calc-title">Calculator</h2>
+    <button type="button" class="icon-button" id="calc-close">
+      <span aria-hidden="true">✕</span>
+      <span class="visually-hidden">Close</span>
+    </button>
+  </div>
+  <div class="info-body">
+    <label class="field" for="calc-entry">
+      <span class="field-label">Type a sum, or use the keys</span>
+    </label>
+    <input type="text" id="calc-entry" inputmode="text" autocomplete="off" spellcheck="false">
+    <p class="calc-out" id="calc-out" role="status"></p>
+    <div class="calc-keys" id="calc-keys"></div>
+    <p class="hint">
+      This does numbers only. It will not work out a molar mass or convert a
+      unit for you — those are the parts you are practising, and MoleBridge can
+      only tell you what went wrong in them if you do them.
+    </p>
+  </div>
+</dialog>
+
+<!--
+  ============ the reference ============
+
+  A PANEL RATHER THAN A SCREEN. This opens from a wrong answer, mid-step, with a
+  half-finished problem underneath — a screen would have to unmount the problem
+  and put the student back afterwards, which is three chances to lose their
+  place in the one moment they are already stuck.
+
+  It opens AT the entry the app just attributed, not at a contents page. Making
+  somebody find their own mistake in a list of twenty is asking them to diagnose
+  themselves before they can read the diagnosis.
+-->
+<dialog class="info" id="reference-panel" aria-labelledby="reference-title">
+  <div class="info-head">
+    <h2 id="reference-title">What can go wrong</h2>
+    <button type="button" class="icon-button" id="reference-close">
+      <span aria-hidden="true">✕</span>
+      <span class="visually-hidden">Close</span>
+    </button>
+  </div>
+  <div class="info-body">
+    <button type="button" class="button-small" id="reference-back" hidden>All of them</button>
+    <ul class="reference" id="reference-list"></ul>
+    <div id="reference-detail" hidden></div>
+  </div>
+</dialog>
+
+<dialog class="info" id="report-panel" aria-labelledby="report-title">
+  <div class="info-head">
+    <h2 id="report-title">Report a problem</h2>
+    <button type="button" class="icon-button" id="report-close">
+      <span aria-hidden="true">✕</span>
+      <span class="visually-hidden">Close</span>
+    </button>
+  </div>
+  <div class="info-body">
+    <p>Pick whatever is closest. You do not have to describe it.</p>
+
+    <fieldset class="theme-axis" id="report-what">
+      <legend>What went wrong</legend>
+    </fieldset>
+
+    <h3>What gets sent</h3>
+    <p class="hint">
+      This is the whole report. Nothing else is collected, and there is nowhere
+      here for you to type anything — so there is nothing in it about you.
+    </p>
+    <pre class="worked" id="report-body">…</pre>
+
+    <button type="button" class="button button-big" id="report-copy">Copy this report</button>
+    <p class="hint" id="report-copy-status" role="status"></p>
+
+    <h3>How to send it</h3>
+    <ol>
+      <li>Press <strong>Copy this report</strong>.</li>
+      <li>Paste it into a message to your teacher — a Canvas message or an email both work.</li>
+      <li>That is all. You do not need to explain it; the report says what MoleBridge was doing.</li>
+    </ol>
+    <p class="hint">
+      MoleBridge cannot send anything itself. It has no way to reach the
+      internet while you use it, which is also why it keeps working when the
+      wifi does not.
+    </p>
+  </div>
+</dialog>
 
 <!-- ============ the ⓘ surface ============ -->
 <dialog class="info" id="info-panel" aria-labelledby="info-title">

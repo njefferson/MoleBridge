@@ -1,17 +1,55 @@
 # Cloudflare Pages security headers (Doctrine §16.6).
 #
-# These cost one file and break nothing. A Content-Security-Policy is worth more
-# and costs more — it is a refactor rather than a header anywhere a page carries
-# inline script — so what is here is stated honestly rather than implied:
-# MoleBridge has NO Content-Security-Policy yet. It has no inline script either,
-# so one is reachable; it is owed, and it is not here.
+# THERE IS A CONTENT-SECURITY-POLICY NOW, and it cost a header rather than a
+# refactor because this app has never carried a single inline script or inline
+# style. That was preserved on purpose — it is why `theme.js` is an external
+# blocking file rather than the inline one-liner PALETTES.md suggests — and this
+# is what that decision was being kept for.
+#
+# The policy is DENY-BY-DEFAULT and every allowance below is something the app
+# genuinely does:
+#
+#   script-src    theme.js and the ES module. No inline, no eval, no wasm.
+#   style-src     styles.css. Custom properties set through the CSSOM are not
+#                 covered by style-src, so the histogram's --fill and theme.js's
+#                 colorScheme need nothing here.
+#   img-src       the SVG icons. No data: URIs anywhere in this app.
+#   connect-src   the service worker fetching what it precaches. Same origin
+#                 only, which is also the runtime no-network claim written as a
+#                 rule the browser enforces rather than a promise.
+#   worker-src    sw.js.
+#   manifest-src  the webmanifest.
+#   form-action   'none'. Every form here is submitted through JavaScript and
+#                 the default prevented; if that ever fails, this stops the
+#                 navigation rather than letting the page post somewhere.
+#   font-src      'none'. System fonts only.
+#
+# AND THE PERMISSIONS-POLICY DENIES EVERYTHING THE BROWSER OFFERS, one feature
+# at a time, rather than listing the frightening ones. Camera and microphone are
+# what a person asks about; the list below also refuses the ones nobody thinks
+# to ask about — idle detection, window management, local font enumeration,
+# topics — because those are the ones that would arrive quietly.
+#
+# `clipboard-write=(self)` is the ONE allowance, and it is what the copy buttons
+# need. Writing to the clipboard on a click needs no prompt; reading it is
+# denied outright, which is the half that could see something a student did not
+# mean to give.
+#
+# `tools/permissions-check.mjs` holds this list against the bundle: it fails if
+# any code that could prompt for a permission appears, and it fails if a feature
+# on its list stops being denied here.
+#
+# `tools/serve.mjs` parses this file and serves what it declares, so the journey
+# walk and the accessibility gate both run UNDER this policy on every run. A
+# policy nothing exercises is a policy discovered by a class.
 
 /*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; font-src 'none'
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   X-Frame-Options: DENY
   Cross-Origin-Opener-Policy: same-origin
-  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+  Permissions-Policy: accelerometer=(), ambient-light-sensor=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(), display-capture=(), encrypted-media=(), gamepad=(), geolocation=(), gyroscope=(), hid=(), idle-detection=(), interest-cohort=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), storage-access=(), usb=(), window-management=(), xr-spatial-tracking=(), clipboard-read=(), clipboard-write=(self)
 
 # The worker must never be served from a cache older than itself, or a new
 # release cannot arrive at all.

@@ -137,6 +137,7 @@ export function runSession(options: Options): SimulationResult {
 
   let session = startSession(
     {
+      mode: 'assignment',
       assignmentKey: options.key,
       assignmentKeyId: options.assignmentKeyId,
       rosterId: options.roster,

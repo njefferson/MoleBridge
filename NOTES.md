@@ -290,9 +290,150 @@ page is fetched, and the run fails if `X-Content-Type-Options`, `Referrer-Policy
 missing, or if `sw.js` is not served `no-cache`, or if what came back is not
 MoleBridge. A gate rather than a manual step handed over.
 
+**The production URL answers.** `https://molebridge.pages.dev` was opened by the
+owner on 2026-08-25 and works. That is the check no gate here can perform: this
+sandbox's proxy refuses `*.pages.dev`, and until this the deploy job's own
+assertions had only ever run against the immutable per-deploy host — a different
+address that had existed for nine seconds. The apex follows a push, so
+Cloudflare's production branch is correctly configured.
+
 **Still owed to a real device: the ViewBoard, and a Chromebook.** The board at
 the front of the room is further away and runs a Chromium nobody here can test
 against.
+
+## The lessons, and the circular test that would have shipped
+
+The seven lessons compute their numbers from the engine rather than typing them:
+a worked example with a hand-typed molar mass can disagree with what the app
+grades, silently and forever, in the one place a student is being told how it
+works.
+
+**The first version of that was only half true, and the owner asked the question
+that found it.** Eleven drill answers were bare literals — atom counts, balancing
+coefficients, mole ratios, limiting reactants, percent yields. And the test that
+looked like it covered them, *every drill's own stated answer passes its own
+checker*, is CIRCULAR for a literal: had the oxygen count been typed as 13, the
+checker would have accepted 13 and the test would have gone green.
+
+What each of them became:
+
+- **Atom counts, ratios and percent yields** are computed from `parseFormula`
+  and from the arithmetic being taught.
+- **Balancing coefficients stay declared, because of a rule.** `solveBalance`
+  must not be reachable from any student-facing path and `lessons.ts` ships to
+  the browser, so importing the solver to generate an answer would put a working
+  balancer in the bundle. They are verified in `lessons.test.ts` instead, which
+  never reaches a student. The constraint pushed this from deriving to checking,
+  and checking is the stronger of the two anyway.
+- **Limiting reactants** are checked in the test against moles ÷ coefficient —
+  the rule the lesson teaches — so the answers and the rule cannot disagree
+  without something failing.
+
+Two plants confirmed the new checks fail: a wrong coefficient and a wrong
+limiting reactant were both caught by name.
+
+**A third plant passed, and that is the part worth keeping.** Swapping the atom
+count's symbol from O to S made the answer self-consistently 3 while the
+question still read "How many oxygen atoms" — every test green, content wrong.
+Computing an ANSWER does not protect the PROSE around it. The fix is
+structural rather than another check: the element's name is looked up from the
+same symbol the count is taken with and the sentence is generated, so the
+question moves with the arithmetic. Swapping the symbol now reads "How many
+sulfur atoms in Al₂(SO₄)₃? → 3", which is wrong-but-honest rather than
+right-looking-and-false.
+
+## Three doors, and the code wall is one of them
+
+The owner's shape: practice is the main destination, learning easy to get to, a
+class assignment beside them. Two of the three are built; **Learn joins the menu
+in the commit that builds it**, because a door that opens onto an apology is
+worse than a door that is not there.
+
+**The doors ARE the code wall, made visible.** Practice shows answers on
+request, so if practice could also emit a completion code then "practice" would
+be the route to credit for work the app did in front of you. A student can see
+that the assignment door is the one with a code at the end of it, rather than
+being told so in prose nobody reads.
+
+**And the wall is in the engine, not the screen.** `completionPayload` THROWS on
+a practice session rather than returning something a caller is trusted to
+discard. A screen that must remember not to render a button is not a wall; a
+function that refuses is. Asserted by a test that also checks the same session
+in assignment mode still works, so the refusal is about the mode rather than
+about something else being broken.
+
+**The seed is rolled AND shown.** The engine is deterministic from a key, and a
+Random button that kept its roll to itself would throw that away — a student who
+got one wrong could never return to it, show a friend, or bring it to a teacher.
+Random rolls a word-pair seed, puts it in the field, and the field takes one
+typed back. The words are short and unambiguous when spoken because they get
+read across a classroom; a base-32 hash would not survive that trip. `Math.random`
+belongs here and nowhere else in this repository: nothing is graded from it and
+the one thing it must not be is reproducible.
+
+**The reveal is per stage, and gated on the session rather than the CSS.** It
+shows one step, resets at every stage — asking about one step is not asking
+about the rest — and `work.ts` checks `session.config.mode` rather than whether
+the button happens to be visible. A hidden control is a stylesheet fact; a
+graded session refusing to answer is a program fact, and only the second one
+survives someone styling the page differently. What it shows comes from
+`correctEntryFor`, the grader's own function, so a revealed answer is exactly
+what the student would have been marked against.
+
+### A flake found by running the gate ten times instead of once
+
+The walk went green, then red, then green. Six runs isolated it: `dialog.close()`
+fires its `close` event as a QUEUED TASK rather than synchronously, so the
+orientation's move into the ⓘ panel happens a tick after the click returns — and
+the assertion that read the DOM immediately afterwards was racing the browser
+and losing about one run in three.
+
+The app was right and the check was wrong; it waits now. **It had already passed
+twice before it first failed**, which is the whole point: a gate run once is not
+known to be stable, and a flaky gate passing on the first attempt is
+indistinguishable from a working one. Ten consecutive clean runs after the fix.
+
+## The first run is a modal, because its button was below the fold
+
+The orientation was a full-height screen, and on a real device the **Get
+started** button that dismissed it sat below the bottom of the viewport. The one
+control that mattered was the one thing a reader could not see, and nobody
+scrolls a wall of text they did not ask for looking for a button they do not
+know is there. It shipped that way from the first release and was found by the
+owner on a device, not by any gate.
+
+It is a `<dialog>` now: the body scrolls INSIDE the panel and the action bar is
+pinned to the bottom of it, so the button is on screen at every height. The app
+is behind it rather than replaced by it, which answers "what is this thing"
+better than a page of prose in front of it does.
+
+**Every route out goes through `close`, not through the button.** A dialog can
+also be dismissed with Escape or the backdrop, and §7e requires the orientation
+to survive whatever the reader presses to begin — so the move into the ⓘ panel
+is wired to the dialog's `close` event and there is no path past it that loses
+the block.
+
+**`100dvh`, not `100vh`.** On a phone browser `vh` is the height WITHOUT the
+address bar, so a panel sized against it is taller than the visible area and
+puts the action bar back off screen — the same defect wearing a different hat.
+
+### The gate could not have caught this, and now can
+
+The journey walk ran at 1280x900, which is roomy enough that the old full-height
+screen fitted. A check there would have passed throughout the defect's entire
+life. It now asserts that the button's box lies inside the viewport at four
+sizes: a phone upright, a phone on its side, a small Chromebook window, and a
+full window.
+
+Planted by taking away the scrolling body so the action bar scrolls with the
+content — the original failure exactly. Three of the four sizes went red, the
+button landing at 1609 on a 664-high phone, **and the full window passed**,
+which is the whole reason this survived as long as it did.
+
+A first attempt at planting removed the panel's `max-height` and everything
+stayed green: a `<dialog>` carries its own user-agent height cap, so that rule
+was not the load-bearing one. Worth recording — a plant that fails to break
+anything is evidence about the plant, not about the gate.
 
 ## The icon, three drawings later — and a gate that lied about it
 
@@ -487,6 +628,259 @@ Nothing has been changed. The icon is an installed identity — it is on a home
 screen — so which one ships is the owner's call, and until it is made the social
 preview should not be uploaded either, because the glyph goes on it.
 
+## Reporting a problem, and what the assurance under it costs
+
+**Two taps, and nowhere to type.** A ⚑ in the chrome on every screen opens a
+panel; the student picks the closest of eight symptoms, written in a student's
+words rather than an engineer's, and copies a report.
+
+**THE MISSING FREE-TEXT BOX IS THE DESIGN.** "Describe what happened" is the
+obvious field and it is the one thing that would turn *this contains nothing
+about you* from a fact about what the app collects into a promise about what a
+fifteen-year-old typed. Somebody puts a name in it. With no box, the report is
+generated entirely from what the app already knows about itself, so the sentence
+printed underneath is checkable — and `test/report.test.ts` checks it, the walk
+checks it against a real session, and the panel is asserted to contain zero text
+inputs so that whoever edits the markup next cannot quietly add one.
+
+**The diagnostic was carrying the roster number while saying it did not.** The
+old sentence was "no answers and no name". That was TRUE — a roster number is
+not a name, and it was in there on exactly that reasoning — and it is narrower
+than any reader would take it. The roster number is the identifier this whole
+app is built around and the one a teacher's gradebook maps back to a person. It
+is out of both surfaces now, and the assurance is written as what the report DOES
+carry followed by what it does not, by name.
+
+Worth noting how it survived: the walk asserted `report.includes('no answers and
+no name')`, so the sentence was gated. **A gate on the wording is not a gate on
+the claim.** What replaced it checks that the body contains no roster number at
+all, which is a fact rather than a phrase.
+
+**`ReportInput` has no field for it.** Not omitted from the output — absent from
+the type, so a report that carried it would have to be a different shape. That
+also meant splitting the deciding from the gathering: `src/report/render.ts` is a
+pure function over plain data with no browser in it, and `src/ui/report.ts` does
+nothing but collect facts and call it. The test needs no `navigator` stub, which
+matters because a stub passes when the GUESS about the browser is right rather
+than when the code is.
+
+### The permissions gate, and its three plants
+
+The other half of the ask was that none of this asks for anything. It does not,
+and *does not* is a fact about a moment: a photo of your working, a notification
+when a new version lands, a wake lock for a long problem are all sentences
+somebody would say in good faith, and each would put a permission prompt in front
+of a student on a school device.
+
+`tools/permissions-check.mjs` reads the BUILT BUNDLE — not the source it came
+from — for twenty-one APIs that can raise a prompt, and reads `public/_headers`
+for twenty features that must stay denied. `Permissions-Policy` now names 28
+denials.
+
+**One allowance, named: `clipboard.writeText`.** Writing from a click prompts in
+no current browser, and `clipboard-read` is denied outright — reading is the half
+that could see something a student never meant to hand over. The gate also
+requires every write to sit inside a `try`, because a copy button that silently
+does nothing reads as the app being broken rather than as the clipboard being
+unavailable.
+
+Planted red three times before it was believed: a `getUserMedia` call added to a
+UI module, `camera=()` removed from the header, and a clipboard write with its
+fallback deleted. All three fired.
+
+### What the accessibility gate found the moment the panel joined it
+
+Adding the report panel as a measured state — same commit as the surface, per hub
+LESSONS §28 — failed immediately: the symptom rows measured 42px against the
+44px touch floor, in all six palette-and-mode combinations.
+
+Two faults, and the second is the general one.
+
+**`.theme-axis` was styled only as a descendant of `.theme-picker`.** The report's
+fieldset carried the class and got none of the rules. Reusing a class name whose
+every rule is scoped to one ancestor gets the name without the styling, silently.
+Those rules are scoped to `.theme-axis` now, since the shape is general and the
+picker was only the first thing to want it.
+
+**`min-height` does nothing to an inline element, and a `<label>` is inline.**
+`.choice` had declared `min-height: var(--touch)` since the first release, and it
+had only ever held where a `.choice` happened to be a flex item of `.choices` —
+because a flex item is blockified and a bare label is not. The floor was inert
+everywhere else and nothing said so. `.choice` now sets `display: flex` first,
+with the reason written above it.
+
+Neither is visible in source review: both files read as though the floor is
+declared. The gate measured resolved pixels, which is the whole reason it
+measures rather than reads.
+
+## The reference, and the two gaps it found by existing
+
+Attribution is the thesis: MoleBridge does not mark an answer wrong, it says
+which mistake produced that exact number. **That is worth nothing if the sentence
+is the last word.** A student who reads "the ratio is upside down" and does not
+already know what the ratio is has been told the name of their problem and
+nothing else — which is the failure this app was built to fix, reappearing one
+level up.
+
+So every class the engine can attribute has a page: what happened, how to spot it
+in your own working, what to do instead, and the lessons that teach it. A wrong
+answer carries a **What does this mean?** button straight to the right page, and
+the Learn screen has a door into the list for somebody who came to look something
+up rather than because they got something wrong.
+
+**A DIALOG, NOT A SCREEN.** It opens mid-step with a half-finished problem
+underneath. A screen would have to unmount the problem, remember where the
+student was and put them back — three chances to lose their place, in the one
+moment they are already stuck. The walk asserts the problem is still there after
+the panel closes, because that is the reason it is a panel.
+
+**It opens AT the entry.** Landing somebody on a contents page of twenty asks
+them to diagnose themselves before they can read the diagnosis, and the app
+already knows which one they need.
+
+**Both directions are gated.** `reference.test.ts` holds the entry list to
+`ERROR_CLASSES` in both directions: a class with no page is a dead end, an
+orphan page is one nobody can reach, and neither shows up by reading either file.
+
+### The lesson link is derived, and the first version of it was a coin toss
+
+`Lesson.answers` already declares which classes each lesson answers. Writing the
+reverse edge by hand would be the same fact in two places, so `lessonsForClass`
+reads it off `LESSONS`.
+
+It returned the FIRST match to begin with. That is a lie the moment two lessons
+legitimately claim the same class — a conversion applied upside down is taught by
+the units lesson AND by percent yield, and which one a particular student needs
+depends on the step they were on, which the reference cannot know. It returns all
+of them now and the page offers every route. **Picking one by array order is a
+coin toss wearing a suit.**
+
+### The eighth lesson, found by a class with nowhere to point
+
+Requiring every class to have a lesson made `E-CONV-FACTOR` fail immediately: no
+lesson claimed it. Following that back, **MoleBridge has always set problems that
+ask for litres of a gas at STP or a number of particles, and nothing taught those
+conversions.** The lesson set went grams, moles, ratio, limiting, percent yield
+and stopped.
+
+"Litres, particles and other units" is the eighth lesson. Its numbers come from
+`STP_MOLAR_VOLUME_L` and `AVOGADRO` — the same constants the grader uses — rather
+than being typed, which is the rule the circular-test finding left behind.
+
+**It cost a progress-code version bump.** The lesson field was seven bits with
+twelve reserved; the eighth came out of reserved, which is what reserved was for.
+But the lesson bits sit ahead of everything else, so widening the field shifts
+every field after it, and a version 1 code read under the new layout would report
+the wrong practice count rather than failing — the worse of the two outcomes.
+`PROGRESS_VERSION` is 2 and a version 1 code is refused by name. Nothing was
+deployed carrying one, so this cost nobody anything; six months from now it would
+have.
+
+### A prose defect in the percent-yield lesson, found while reading it
+
+It said percent yield is "the first divided by the second — actual over
+theoretical", where the first thing named was the theoretical yield. The two
+halves of one sentence gave opposite instructions. Every test passed, because
+nothing tests a lesson's prose against its own arithmetic. Fixed to name the
+quantities rather than their positions.
+
+### The walk was asserting a literal
+
+`check(lessonCount === 7)` went red the moment an eighth lesson landed — a check
+reporting a deliberate change as a defect, which teaches whoever hits it to edit
+the number without reading why. It counts `LESSONS.length` now.
+
+## The calculator, and the line it must not cross
+
+The owner asked for one. The design question is not how to build it — it is what
+it must refuse.
+
+**A calculator that understands chemistry deletes the product.** `E-MM-ARITH`,
+`E-MM-PARSE` and `E-MM-HYDRATE` exist because working out a molar mass is a thing
+a student does and gets wrong in recognisable ways. `E-CONV-FACTOR` and
+`E-CONV-INVERTED` exist because choosing and applying a factor is. A box that
+takes `CuSO4·5H2O` and returns 249.68 does not help a student who cannot do that
+— **it removes the step, and with it every diagnosis MoleBridge could have given
+them about it.** Five of twenty classes, gone, in exchange for a convenience free
+tools already offer.
+
+So it evaluates numbers and the four operations. A letter anywhere in the input
+is an error rather than an identifier, and `calculator.test.ts` feeds it **all
+118 element symbols** and seven real formulas. Structural rather than a
+blocklist: a blocklist is a list somebody forgets to extend.
+
+**No `eval`, no `Function`.** Not primarily for safety — the input is the
+student's own and the CSP forbids both — but because `eval` would ACCEPT exactly
+what this has to refuse. `Math.sqrt`, a bare identifier, a property access: all
+valid JavaScript, none of it belongs in a box meant to do sums. A hand-written
+recursive descent refuses by construction. The grammar is four operators and a
+bracket, so the parser reads like the grammar.
+
+**It does not round to the problem's precision.** Rounding there would make the
+significant-figures decision for the student, which is a graded step and its own
+error class — `E-SIG-FIGS` and `E-ROUND-EARLY` both live on exactly that
+boundary. Ten figures, and nothing said about how many belong.
+
+**Empty on every open**, asserted by the walk. A calculator that remembers is one
+step from a calculator that knows which problem you are on.
+
+**The refusal is walked on a real screen**, not left to the unit test: the walk
+types `CuSO4`, checks the message names what the box is for, and checks the
+refusal itself leaks no number.
+
+The accessibility state measured is the REFUSAL rather than a result — it is the
+longer message, it is where a student who typed a formula lands, and it is text
+on a surface rather than a number in an accent-soft box. Measuring the happy path
+would have measured the easier of the two.
+
+## The periodic table, and two things it found
+
+Atomic weights, and a student who wants a molar mass adds them up — the same line
+the calculator draws, for the same reason. Adding four atomic weights IS the step
+`E-MM-ARITH` and `E-MM-PARSE` are about. `table.test.ts` asserts the module
+exports nothing whose name mentions a formula, a compound or a molar mass.
+
+**The layout is COMPUTED from the atomic number**, not typed out. A hand-written
+grid of 118 positions is 118 chances to put an element in the wrong group, and
+every one of them looks plausible in a diff. The rules are the ones a chemist
+would state — the short periods skip the d-block, the f-block lifts out of
+periods 6 and 7 — and the test checks the landmarks: hydrogen top left, helium
+top right, boron at group 13 rather than 3, hafnium at group 4 rather than 19,
+thirty f-block elements in two rows and nothing else in those rows.
+
+**The DOM is in atomic-number order and the CSS grid does the placing.** Built in
+visual order the markup would match the picture and the reading order would be
+nonsense; built in atomic-number order a screen reader walks hydrogen to
+oganesson, which is the right order to hear them in anyway.
+
+### The CSP gate caught all 118 cells
+
+Each cell was placed with a `style` attribute. `style-src 'self'` blocks inline
+style attributes, so the walk's Content-Security-Policy check went red with three
+violations and a console error — **on a surface that looked completely correct on
+screen**, because the CSP is only enforced by the header the walk now serves.
+
+Placing them through the CSSOM instead — `button.style.gridRow = …` — works,
+because CSP restricts inline style ATTRIBUTES and does not restrict the CSSOM.
+This is what the CSP work in 0.6.0 was for: it found a real violation the first
+time a new surface needed positioning, four releases later.
+
+### A walk check that fired on the copy saying the rule was kept
+
+The molar-mass assertion matched `/molar mass is/` and went red on the panel's
+own sentence — "A molar mass is these added up for everything in the formula" —
+which is the app explaining that it will not do it. **A check on the words fires
+on the explanation; a check on the values fires on the violation.** It matches
+computed values now. Same shape as the report assurance in 0.9.0, twice in four
+releases.
+
+### Element names are lower case in the data, and a heading is not a sentence
+
+`elements.ts` holds `carbon`, not `Carbon`, because the lessons say "how many
+oxygen atoms" mid-sentence. A heading reading "carbon (C)" looks like a typo, so
+the panel capitalises for display — in the visible heading AND in the cell's
+accessible name, which have to agree or SC 2.5.3 is failed by the fix.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
@@ -502,10 +896,20 @@ work a session can finish on its own.
 - **The deploy job takes the GATED build as an artifact** rather than rebuilding.
   Rebuilding would ship a near-identical build that nothing had checked, and
   near-identical is the word that does the damage.
-- **A required reviewer on `production` is worth adding, and is a GitHub step.**
-  The deploy job runs in a dedicated environment — `production` from `main`,
-  `preview` from anything else — so a protection rule can sit on production
-  alone without gating every preview. Nothing protects it today.
+- **A required reviewer on `production` is NOT owed, and this line is the
+  correction.** An earlier version of it said one was "worth adding", and it was
+  then carried on the owner's list for six turns as though it were an
+  obligation. Doctrine §16.5 does not ask for one: a required reviewer appears
+  there only inside the description of the BAD UI, and what §16.5 offers is a
+  protected environment, a typed confirmation, or both. No sibling repo has one.
+  On a single-maintainer repo it means approving your own deploy — a dialog, not
+  a second pair of eyes — and it would stall a promote waiting for a click. The
+  friction §16.5 wants is already present three times: the branch guard refuses
+  a commit on `main` without `MOLEBRIDGE_PROMOTE=1`, promotion is a deliberate
+  merge, and the deploy job cannot start until every gate is green.
+- **The environment split stays** — `production` from `main`, `preview` from
+  anything else. It came from a real zizmor `secrets-outside-env` finding, costs
+  nothing, and leaves a protection rule one click away if one is ever wanted.
 - **Branches are settled, and `staging` exists.** The owner made the call on
   2026-08-25. Work commits to `staging`; `main` is production, because `main` is
   the Cloudflare Pages production branch and a commit landing there is a commit
@@ -540,9 +944,33 @@ work a session can finish on its own.
   cannot run. Once the promote merge puts `tools/` on `main`, the branch rule
   and its escape become the operative pair there. The same commit on `staging`
   went through with the triplet check printing its four lines.
-- **No Content-Security-Policy.** `public/_headers` says so in as many words
-  rather than implying otherwise. The app carries no inline script, so one is
-  reachable; it is a refactor rather than a header and it has not been done.
+- **There is a Content-Security-Policy, and it cost a header rather than a
+  refactor.** Doctrine §16.6 says a CSP is a refactor anywhere a page carries
+  inline script; this app has never carried one, and that was preserved
+  deliberately — it is why `theme.js` is an external blocking file rather than
+  the inline one-liner PALETTES.md suggests. This is what that decision was
+  being kept for. Deny by default, with allowances only for what the app does:
+  its own script, stylesheet, icons, worker and manifest. `form-action 'none'`
+  and `connect-src 'self'` turn the no-network claim into a rule the browser
+  enforces rather than a promise the code makes.
+- **`tools/serve.mjs` parses `public/_headers` and serves what it declares**,
+  which is the change that makes the policy real rather than aspirational. For
+  most of this repository's life `_headers` was a Cloudflare file whose contents
+  existed only in production: every browser-driven gate ran against a server
+  sending none of them. That was survivable while they were headers that cannot
+  break a page. **A CSP breaks a page silently and completely**, so a policy
+  nothing exercises is a policy discovered by a class. Now the journey walk and
+  the accessibility gate both run under it on every run. The parser handles a
+  deliberate subset — exact paths and one trailing wildcard — and THROWS on a
+  line it cannot read, because a header quietly not applied is the same
+  fail-open the file exists to close.
+- **The walk fails on any policy violation**, collected from the browser's own
+  `securitypolicyviolation` event rather than by reading the console, and
+  harvested from the teacher page before navigating away — `window` does not
+  survive a navigation and the decoder is a different module. Planted twice:
+  forbidding the stylesheet took nine checks down with it, and forbidding the
+  module stopped the app booting at all. The edge check in CI asserts the header
+  is actually present on the deployed page.
 - **The on-device pass.** Headless Chromium cannot tell whether a 44px target is
   comfortable to hit with a finger at arm's length, and it has no opinion about
   a software keyboard covering the answer box. Real iPad, real ViewBoard, real

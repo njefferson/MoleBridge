@@ -21,7 +21,13 @@
 import { VERSION } from '../version.ts';
 import type { Session } from '../engine/steps.ts';
 
-/** What the report needs to know about the session, if there is one. */
+/**
+ * What the report needs to know about the session, if there is one.
+ *
+ * `rosterId` is carried on this type because the diagnostic panel shows the
+ * running session and other callers legitimately want it — but it is NEVER
+ * written into the report. See `buildDiagnostic`.
+ */
 export interface SessionFacts {
   readonly assignmentKey: string;
   readonly tier: number;
@@ -118,7 +124,12 @@ export async function buildDiagnostic(nowIso: string, facts: SessionFacts | null
   } else {
     say('  assignment key', facts.assignmentKey);
     say('  set', facts.tier);
-    say('  roster number', facts.rosterId);
+    // THE ROSTER NUMBER IS DELIBERATELY ABSENT. It is not a name, and it was
+    // here on that reasoning — but it is the identifier this whole app is built
+    // around, the one the teacher's own gradebook maps back to a person. A
+    // fault reproduces from the key, the set, the problem and the step; the
+    // roster number adds nothing to reproducing it and everything to
+    // identifying who hit it. `diagnostic.test.ts` asserts it stays out.
     say('  on problem', facts.problemIndex + 1);
     say('  on step', facts.stageIndex + 1);
     say('  finished', facts.attempted);
@@ -127,7 +138,16 @@ export async function buildDiagnostic(nowIso: string, facts: SessionFacts | null
     say('  entries that matched two explanations', facts.collisions);
   }
   lines.push('');
-  lines.push('This report contains no answers and no name.');
+  // SAID AS WHAT IS ACTUALLY IN IT, not as a reassuring shorter sentence. This
+  // read "no answers and no name" while carrying the roster number, which is
+  // true and is not what a student would take from it.
+  lines.push('What this report contains: which version is running, what this device is,');
+  lines.push('whether the app is up to date, and — if a session is going — the assignment');
+  lines.push('key, the set, and which problem and step you are on.');
+  lines.push('');
+  lines.push('What it does NOT contain: your name, your roster number, anything you typed');
+  lines.push('as an answer, and any working. There is nowhere in MoleBridge to put a name,');
+  lines.push('so there has never been one to leave out.');
 
   return lines.join('\n');
 }
