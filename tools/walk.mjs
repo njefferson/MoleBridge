@@ -265,7 +265,19 @@ try {
   check(report.includes('caches'), 'and which caches the device holds');
   check(report.includes('WALK-A'), 'and enough to reproduce the fault');
   check(!report.includes(String(ROSTER === 0 ? -1 : deliberateAnswer)), 'and NOT anything the student typed as an answer');
-  check(report.includes('no answers and no name'), 'and it says so');
+  // NOT THE ROSTER NUMBER EITHER. It is not a name, which is the reasoning it
+  // was here on; it is also the identifier a teacher's gradebook maps back to a
+  // person. The body is checked rather than the whole report, because the
+  // paragraph underneath names it as one of the things left out.
+  check(
+    !/roster/i.test(report.split('does NOT contain')[0] ?? ''),
+    'and NOT the roster number, which is the identifier this app is built around',
+  );
+  // The assurance is checked as the sentence it now IS. It said "no answers and
+  // no name" for four releases while carrying the roster number: true, narrower
+  // than a reader would take it, and this line passed the whole time.
+  check(report.includes('What this report contains'), 'and it says what it carries');
+  check(report.includes('does NOT contain'), 'and what it leaves out, by name');
   await page.locator('#info-close').click();
   check(!(await page.locator('#info-panel').isVisible()), 'and closes again');
 
@@ -458,6 +470,49 @@ try {
     !(await page.locator('#work-reveal').isVisible()),
     'and there is no such offer in a class assignment',
   );
+
+  /* ---- reporting a problem ---- */
+  //
+  // THE ASSURANCE UNDER THE REPORT HAS TO BE TRUE ON A REAL SCREEN, not just in
+  // the pure function a unit test can reach. So this runs a real assignment
+  // session with a known roster number and reads the report the panel actually
+  // renders.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-assignment').click();
+  await page.locator('#setup-roster').fill('1337');
+  await page.locator('#setup-key').fill(KEY);
+  await page.locator('#setup-start').click();
+
+  check(await page.locator('#report-open').isVisible(), 'the report control is in the chrome, on every screen');
+  await page.locator('#report-open').click();
+  check(await page.locator('#report-panel[open]').isVisible(), 'and it opens in one tap');
+
+  // NO FREE-TEXT BOX. This is the design that makes the assurance checkable
+  // rather than a promise about what a student typed, so it is asserted rather
+  // than left to whoever edits the markup next.
+  const writable = await page.locator('#report-panel textarea, #report-panel input[type="text"]').count();
+  check(writable === 0, `there is nowhere to type in the report panel (${writable} boxes)`);
+
+  await page.locator('#report-what input').first().check();
+  // WAITED FOR, NOT READ. The report repaints asynchronously — it asks the
+  // service worker and the cache store about themselves — so reading straight
+  // after the click races the repaint. This is the SECOND time that shape has
+  // bitten in this file; the first was `dialog.close()` firing its event as a
+  // queued task. Anything the app does through a promise needs waiting for, and
+  // an assertion that happens to win the race is a flake wearing a green tick.
+  const gotSymptom = await page
+    .waitForFunction(
+      () => /what went wrong: [A-Z-]+/.test(document.querySelector('#report-body')?.textContent ?? ''),
+      undefined,
+      { timeout: TIMEOUT_MS },
+    )
+    .then(() => true)
+    .catch(() => false);
+  check(gotSymptom, 'the chosen symptom is in the report');
+  const reported = (await page.locator('#report-body').textContent()) ?? '';
+  check(!reported.includes('1337'), 'and the roster number is NOT — that is the whole assurance');
+  check(/does NOT contain/i.test(reported), 'the report says what it leaves out');
+  check(reported.includes(KEY.toUpperCase()) || reported.includes(KEY), 'the assignment key IS there, so a fault can be found');
 
   /* ---- the appearance picker actually changes the appearance ---- */
   //

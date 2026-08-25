@@ -144,6 +144,15 @@ jobs:
       - name: Build the browser bundle
         run: npm run build
 
+      # READ OFF THE BUILT BUNDLE, which is why it sits after the build rather
+      # than with the cheap gates above. This app puts no permission prompt in
+      # front of a student — no camera, no location, no notifications — and that
+      # is a fact about a moment unless something holds it. The header half is
+      # checked here too, because `_headers` is what binds even for code nobody
+      # audited.
+      - name: Nothing here can raise a permission prompt
+        run: node tools/permissions-check.mjs
+
       # Doctrine §6: walk the primary journey from the start screen. It gets one
       # step wrong on purpose, and it drops the network to prove the offline
       # claim rather than asserting it.

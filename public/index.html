@@ -42,6 +42,15 @@
     -->
     <span class="stamp" id="build-stamp" title="The version you are running">…</span>
   </div>
+  <!--
+    RAPID ON PURPOSE: in the app's own chrome, on every screen, one tap away
+    from the moment something went wrong. A bug report buried behind the ⓘ is a
+    bug report nobody files — a fifteen-year-old who hits a fault closes the tab.
+  -->
+  <button type="button" class="icon-button" id="report-open" aria-haspopup="dialog">
+    <span aria-hidden="true">!</span>
+    <span class="visually-hidden">Report a problem with MoleBridge</span>
+  </button>
   <button type="button" class="icon-button" id="info-open" aria-haspopup="dialog">
     <span aria-hidden="true">ⓘ</span>
     <span class="visually-hidden">About MoleBridge, installing it, and what changed</span>
@@ -340,6 +349,59 @@
   </div>
   <div class="welcome-actions">
     <button type="button" class="button button-big" id="welcome-begin">Get started</button>
+  </div>
+</dialog>
+
+<!--
+  ============ report a problem ============
+
+  THERE IS NO FREE-TEXT BOX, AND THAT IS THE WHOLE DESIGN.
+
+  A "describe what happened" field is the obvious thing to build and it is the
+  one thing that would make "this contains nothing about you" a promise about
+  what a student typed rather than a fact about what the app collects. Somebody
+  would put their name in it. Somebody always does.
+
+  So what goes wrong is chosen from a list instead. The report is then generated
+  entirely from things the app already knows, which means the assurance
+  underneath it is CHECKABLE — and `report.test.ts` checks it.
+-->
+<dialog class="info" id="report-panel" aria-labelledby="report-title">
+  <div class="info-head">
+    <h2 id="report-title">Report a problem</h2>
+    <button type="button" class="icon-button" id="report-close">
+      <span aria-hidden="true">✕</span>
+      <span class="visually-hidden">Close</span>
+    </button>
+  </div>
+  <div class="info-body">
+    <p>Pick whatever is closest. You do not have to describe it.</p>
+
+    <fieldset class="theme-axis" id="report-what">
+      <legend>What went wrong</legend>
+    </fieldset>
+
+    <h3>What gets sent</h3>
+    <p class="hint">
+      This is the whole report. Nothing else is collected, and there is nowhere
+      here for you to type anything — so there is nothing in it about you.
+    </p>
+    <pre class="worked" id="report-body">…</pre>
+
+    <button type="button" class="button button-big" id="report-copy">Copy this report</button>
+    <p class="hint" id="report-copy-status" role="status"></p>
+
+    <h3>How to send it</h3>
+    <ol>
+      <li>Press <strong>Copy this report</strong>.</li>
+      <li>Paste it into a message to your teacher — a Canvas message or an email both work.</li>
+      <li>That is all. You do not need to explain it; the report says what MoleBridge was doing.</li>
+    </ol>
+    <p class="hint">
+      MoleBridge cannot send anything itself. It has no way to reach the
+      internet while you use it, which is also why it keeps working when the
+      wifi does not.
+    </p>
   </div>
 </dialog>
 

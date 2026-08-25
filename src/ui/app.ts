@@ -15,6 +15,8 @@ import { need, showOnly } from './dom.ts';
 import { mountSetup } from './setup.ts';
 import { mountPractice } from './practice.ts';
 import { mountLearn } from './learn.ts';
+import { mountReport } from './report.ts';
+import { factsFrom } from './diagnostic.ts';
 import { mountWork } from './work.ts';
 import { mountDone } from './done.ts';
 import { mountInfo } from './info.ts';
@@ -55,6 +57,13 @@ function boot(): void {
   const updates = mountUpdates();
   const info = mountInfo(() => session, updates);
   mountTheme();
+
+  // The report reads the LIVE session each time it opens, so it describes where
+  // the student actually is rather than where they were at boot.
+  mountReport(
+    () => factsFrom(session),
+    () => new Date(systemClock.now()).toISOString(),
+  );
 
   const doneScreen = mountDone(systemClock, {
     onRestart(): void {

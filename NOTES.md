@@ -628,6 +628,91 @@ Nothing has been changed. The icon is an installed identity — it is on a home
 screen — so which one ships is the owner's call, and until it is made the social
 preview should not be uploaded either, because the glyph goes on it.
 
+## Reporting a problem, and what the assurance under it costs
+
+**Two taps, and nowhere to type.** A ⚑ in the chrome on every screen opens a
+panel; the student picks the closest of eight symptoms, written in a student's
+words rather than an engineer's, and copies a report.
+
+**THE MISSING FREE-TEXT BOX IS THE DESIGN.** "Describe what happened" is the
+obvious field and it is the one thing that would turn *this contains nothing
+about you* from a fact about what the app collects into a promise about what a
+fifteen-year-old typed. Somebody puts a name in it. With no box, the report is
+generated entirely from what the app already knows about itself, so the sentence
+printed underneath is checkable — and `test/report.test.ts` checks it, the walk
+checks it against a real session, and the panel is asserted to contain zero text
+inputs so that whoever edits the markup next cannot quietly add one.
+
+**The diagnostic was carrying the roster number while saying it did not.** The
+old sentence was "no answers and no name". That was TRUE — a roster number is
+not a name, and it was in there on exactly that reasoning — and it is narrower
+than any reader would take it. The roster number is the identifier this whole
+app is built around and the one a teacher's gradebook maps back to a person. It
+is out of both surfaces now, and the assurance is written as what the report DOES
+carry followed by what it does not, by name.
+
+Worth noting how it survived: the walk asserted `report.includes('no answers and
+no name')`, so the sentence was gated. **A gate on the wording is not a gate on
+the claim.** What replaced it checks that the body contains no roster number at
+all, which is a fact rather than a phrase.
+
+**`ReportInput` has no field for it.** Not omitted from the output — absent from
+the type, so a report that carried it would have to be a different shape. That
+also meant splitting the deciding from the gathering: `src/report/render.ts` is a
+pure function over plain data with no browser in it, and `src/ui/report.ts` does
+nothing but collect facts and call it. The test needs no `navigator` stub, which
+matters because a stub passes when the GUESS about the browser is right rather
+than when the code is.
+
+### The permissions gate, and its three plants
+
+The other half of the ask was that none of this asks for anything. It does not,
+and *does not* is a fact about a moment: a photo of your working, a notification
+when a new version lands, a wake lock for a long problem are all sentences
+somebody would say in good faith, and each would put a permission prompt in front
+of a student on a school device.
+
+`tools/permissions-check.mjs` reads the BUILT BUNDLE — not the source it came
+from — for twenty-one APIs that can raise a prompt, and reads `public/_headers`
+for twenty features that must stay denied. `Permissions-Policy` now names 28
+denials.
+
+**One allowance, named: `clipboard.writeText`.** Writing from a click prompts in
+no current browser, and `clipboard-read` is denied outright — reading is the half
+that could see something a student never meant to hand over. The gate also
+requires every write to sit inside a `try`, because a copy button that silently
+does nothing reads as the app being broken rather than as the clipboard being
+unavailable.
+
+Planted red three times before it was believed: a `getUserMedia` call added to a
+UI module, `camera=()` removed from the header, and a clipboard write with its
+fallback deleted. All three fired.
+
+### What the accessibility gate found the moment the panel joined it
+
+Adding the report panel as a measured state — same commit as the surface, per hub
+LESSONS §28 — failed immediately: the symptom rows measured 42px against the
+44px touch floor, in all six palette-and-mode combinations.
+
+Two faults, and the second is the general one.
+
+**`.theme-axis` was styled only as a descendant of `.theme-picker`.** The report's
+fieldset carried the class and got none of the rules. Reusing a class name whose
+every rule is scoped to one ancestor gets the name without the styling, silently.
+Those rules are scoped to `.theme-axis` now, since the shape is general and the
+picker was only the first thing to want it.
+
+**`min-height` does nothing to an inline element, and a `<label>` is inline.**
+`.choice` had declared `min-height: var(--touch)` since the first release, and it
+had only ever held where a `.choice` happened to be a flex item of `.choices` —
+because a flex item is blockified and a bare label is not. The floor was inert
+everywhere else and nothing said so. `.choice` now sets `display: flex` first,
+with the reason written above it.
+
+Neither is visible in source review: both files read as though the floor is
+declared. The gate measured resolved pixels, which is the whole reason it
+measures rather than reads.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

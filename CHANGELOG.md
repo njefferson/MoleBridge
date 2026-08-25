@@ -4,6 +4,32 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.9.0 — CAPABILITY
+
+Telling someone it is broken, in two taps.
+
+There is a **⚑ button in the top bar on every screen**. Press it, pick whichever
+line is closest to what went wrong, and it writes a short report you can copy and
+paste into a message to your teacher. You do not have to describe anything.
+
+**There is nowhere in it to type**, and that is on purpose. The report carries
+which version you are running, what the device is, whether the app is up to date,
+and — if you are in the middle of a problem — which problem set and which step.
+It says all of that on the report itself, along with what it does *not* carry:
+your name, your roster number, anything you typed as an answer, and any working.
+
+The same is now true of the diagnostic behind the ⓘ. It used to include the
+roster number and describe itself as having "no answers and no name", which was
+true and was narrower than it sounded. It no longer includes it.
+
+**MoleBridge asks your browser for nothing.** No camera, no microphone, no
+location, no notifications — there is no prompt anywhere in it, and a check now
+runs on every build that fails if anything is added that could raise one.
+
+**What is still missing.** No reference to look things up in yet, no calculator,
+no periodic table. And the same gaps as before: no way to review a problem you
+have already finished, and no running total across sessions.
+
 ## 0.8.0 — CAPABILITY
 
 Lessons. Seven of them, and none is locked.

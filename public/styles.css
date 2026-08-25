@@ -344,6 +344,15 @@ input[type="text"] {
 .choices { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 
 .choice {
+  /*
+    DISPLAY FIRST, AND IT IS LOAD-BEARING. `min-height` does nothing at all to a
+    non-replaced INLINE element, and a <label> is inline — so this floor only
+    ever held where a .choice happened to be a flex item of `.choices`, and was
+    silently ignored anywhere else. The report panel's symptom list was that
+    anywhere else, and measured 42px against a 44px floor.
+  */
+  display: flex;
+  align-items: center;
   min-height: var(--touch);
   padding: 0.6rem 1.1rem;
   font: inherit;
@@ -592,25 +601,31 @@ textarea {
 }
 
 /*
-  ---- the appearance picker ----
+  ---- a stacked radio group (the appearance picker, the symptom list) ----
 
   Radios rather than a select: one tap per option, and a native select on a
   board at the front of a room opens a list nobody at the back can read. The
   label is the target, so it clears --touch by containing the control rather
   than by being sized next to one.
+
+  SCOPED TO `.theme-axis`, NOT TO THE PICKER. Every rule here used to be a
+  descendant of `.theme-picker`, which read as tidy and meant that the second
+  fieldset to use this markup — the report panel's symptom list — got the class
+  name, none of the styling, and rows two pixels under the touch floor. The
+  shape is general; the picker was only the first one to want it.
 */
-.theme-picker .theme-axis {
+.theme-axis {
   border: 1px solid var(--hairline);
   border-radius: var(--radius);
   padding: var(--step) calc(var(--step) * 1.5) calc(var(--step) * 1.5);
   margin: 0 0 var(--step);
 }
-.theme-picker legend {
+.theme-axis legend {
   padding: 0 calc(var(--step) * 0.5);
   color: var(--text-2);
   font-size: 0.9rem;
 }
-.theme-picker .choice {
+.theme-axis .choice {
   display: flex;
   align-items: center;
   gap: calc(var(--step) * 1.25);
@@ -619,14 +634,14 @@ textarea {
   border-radius: var(--radius);
   cursor: pointer;
 }
-.theme-picker .choice:hover { background: var(--accent-soft); }
-.theme-picker input[type="radio"] {
+.theme-axis .choice:hover { background: var(--accent-soft); }
+.theme-axis input[type="radio"] {
   width: 1.25rem;
   height: 1.25rem;
   accent-color: var(--accent);
   flex: 0 0 auto;
 }
-.theme-picker input[type="radio"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.theme-axis input[type="radio"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
 /*
   ---- the first-run dialog ----

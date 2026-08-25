@@ -249,6 +249,28 @@ const STATES = [
     },
   },
   {
+    // ONE STATE, NOT TWO. The panel before a symptom is chosen and the panel
+    // after it differ by a checked radio and one line of generated text —
+    // nothing this gate measures moves between them, and each state costs six
+    // measured passes (three palettes, two modes). The chosen one is the one
+    // kept because it is the state a student is in when they read the report.
+    name: 'the report panel, with a symptom chosen',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+      await page.locator('#report-open').click();
+      await page.locator('#report-what input').first().check();
+      // The report is awaited — it asks the service worker and the cache store
+      // about themselves — so the panel is not finished painting when the click
+      // returns. Measuring it mid-paint measures a shorter panel than a student
+      // sees.
+      await page.waitForFunction(
+        () => /what went wrong: [A-Z-]+/.test(document.querySelector('#report-body')?.textContent ?? ''),
+      );
+    },
+  },
+  {
     name: 'the decoder, before anything is pasted',
     async reach(page) {
       await page.goto(`${page.__origin}/teacher/`, { waitUntil: 'load' });
