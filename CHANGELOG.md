@@ -4,6 +4,31 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.8.0 — CAPABILITY
+
+Lessons. Seven of them, and none is locked.
+
+Reading a formula, molar mass, grams and moles, balancing, the mole ratio, the
+limiting reactant, percent yield — in the order they build on each other. **Open
+any of them in any order.** If you already know one, skip it. If you jump ahead
+and it makes no sense, come back. Nothing is held shut behind anything else.
+
+Each lesson explains the thing, shows it worked through, and gives you a few to
+try. **The answer only appears after you have had a go** — same as everywhere
+else in MoleBridge — and when you get one wrong it tells you the answer and why,
+rather than just marking it.
+
+**Your place is kept on this device.** You do not need to do anything for that.
+And if you are moving to another computer, or you use a shared one, there is a
+short code under "Moving to another device" that carries your progress: write it
+down, type it in on the other machine. It only ever adds — using an old code
+cannot un-finish a lesson you have already done.
+
+**What is still missing.** No reference to look things up in yet, no calculator,
+no periodic table. The tile is green whichever colour you choose in the app. And
+the same gaps as before: no way to review a problem you have already finished,
+and no running total across sessions.
+
 ## 0.7.0 — CAPABILITY
 
 MoleBridge opens on a menu now, and practice is the point of it.

@@ -14,6 +14,7 @@
 import { need, showOnly } from './dom.ts';
 import { mountSetup } from './setup.ts';
 import { mountPractice } from './practice.ts';
+import { mountLearn } from './learn.ts';
 import { mountWork } from './work.ts';
 import { mountDone } from './done.ts';
 import { mountInfo } from './info.ts';
@@ -42,10 +43,12 @@ function boot(): void {
   const welcomePanel = need<HTMLDialogElement>('#welcome-panel');
   const home = need('#screen-home');
   const practice = need('#screen-practice');
+  const learn = need('#screen-learn');
+  const lesson = need('#screen-lesson');
   const setup = need('#screen-setup');
   const work = need('#screen-work');
   const done = need('#screen-done');
-  const screens = [home, practice, setup, work, done];
+  const screens = [home, learn, lesson, practice, setup, work, done];
 
   let session: Session | null = null;
 
@@ -88,6 +91,20 @@ function boot(): void {
     },
   });
 
+  mountLearn(
+    {
+      onBack(): void {
+        showOnly(screens, home);
+      },
+    },
+    (screen) => {
+      showOnly(screens, screen);
+    },
+  );
+
+  need<HTMLButtonElement>('#door-learn').addEventListener('click', () => {
+    showOnly(screens, learn);
+  });
   need<HTMLButtonElement>('#door-practice').addEventListener('click', () => {
     showOnly(screens, practice);
     need<HTMLInputElement>('#practice-seed').focus();

@@ -88,12 +88,62 @@
         </button>
       </li>
       <li>
+        <button type="button" class="door" id="door-learn">
+          <span class="door-name">Learn</span>
+          <span class="door-what">Seven short lessons, from reading a formula to percent yield. Open any of them in any order — nothing is locked.</span>
+        </button>
+      </li>
+      <li>
         <button type="button" class="door" id="door-assignment">
           <span class="door-name">Class assignment</span>
           <span class="door-what">The problems your teacher set. Answers stay hidden, and you finish with a code to type into Canvas.</span>
         </button>
       </li>
     </ul>
+  </section>
+
+  <!-- ============ learn ============ -->
+  <section class="screen" id="screen-learn" aria-labelledby="learn-title" hidden>
+    <h1 id="learn-title">Learn</h1>
+    <p class="lede">Seven lessons, in the order they build on each other. <strong>None of them is locked</strong> — if you already know one, skip it; if you jump ahead and it makes no sense, come back.</p>
+
+    <ol class="lessons" id="learn-list"></ol>
+
+    <!--
+      Progress is kept on this device automatically. This is for when it cannot
+      be: a shared Chromebook, a new device, cleared site data. It is a backup
+      and a transfer, never the way to keep your place.
+    -->
+    <details class="card" id="learn-progress">
+      <summary>Moving to another device</summary>
+      <p class="hint" id="learn-storage"></p>
+      <p>Write this down to carry your progress somewhere else:</p>
+      <p class="code" id="learn-code" tabindex="0" aria-label="Your progress code"></p>
+      <button type="button" class="button-small" id="learn-copy">Copy it</button>
+      <p class="hint" id="learn-copy-status" role="status"></p>
+
+      <label class="field">
+        <span class="field-label">Or type one in</span>
+        <input type="text" id="learn-restore" inputmode="latin" autocomplete="off" spellcheck="false">
+      </label>
+      <button type="button" class="button-small" id="learn-restore-go">Use this code</button>
+      <p class="hint" id="learn-restore-status" role="status"></p>
+    </details>
+
+    <button type="button" class="button-small" id="learn-back">Back</button>
+  </section>
+
+  <!-- ============ one lesson ============ -->
+  <section class="screen" id="screen-lesson" aria-labelledby="lesson-title" hidden>
+    <h1 id="lesson-title"></h1>
+    <p class="lede" id="lesson-promise"></p>
+    <div id="lesson-body"></div>
+
+    <h2>Try it</h2>
+    <ol class="drills" id="lesson-drills"></ol>
+
+    <button type="button" class="button button-big" id="lesson-done">I have got this</button>
+    <button type="button" class="button-small" id="lesson-back">Back to the lessons</button>
   </section>
 
   <!-- ============ practice ============ -->

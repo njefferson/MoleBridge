@@ -116,6 +116,37 @@ const STATES = [
     },
   },
   {
+    name: 'the lesson list',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-learn').click();
+    },
+  },
+  {
+    // One lesson WITH a drill answered, so the verdict is on screen and
+    // measured. A state that only ever showed the prose would leave the one
+    // element a student actually reads after trying entirely unchecked.
+    name: 'a lesson, with a drill answered',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-learn').click();
+      await page.locator('.lesson-row').first().click();
+      await page.locator('.drill input').first().fill('12');
+      await page.locator('.drill button').first().click();
+    },
+  },
+  {
+    name: 'the progress code',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-learn').click();
+      await page.locator('#learn-progress').evaluate((node) => node.setAttribute('open', ''));
+    },
+  },
+  {
     name: 'practice setup',
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });

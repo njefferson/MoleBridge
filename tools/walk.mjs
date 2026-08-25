@@ -352,6 +352,75 @@ try {
   const bars = await page.locator('.histogram-row').count();
   check(bars === 6, `the histogram covers all six stages (${bars})`);
 
+  /* ---- the learn door, and the progress code's round trip ---- */
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-learn').click();
+  const lessonCount = await page.locator('.lesson-row').count();
+  check(lessonCount === 7, `all seven lessons are listed (${lessonCount})`);
+
+  // NOTHING IS LOCKED, and this is the assertion that says so. Every row must
+  // be a live control on a first run — a disabled one would be a promise that
+  // the lesson before it is required, which is not true here.
+  const enabled = await page.locator('.lesson-row:not([disabled])').count();
+  check(enabled === lessonCount, `and every one of them opens (${enabled} of ${lessonCount})`);
+
+  await page.locator('.lesson-row').first().click();
+  check((await page.locator('.drill').count()) > 0, 'a lesson has something to try');
+
+  // THE ANSWER ARRIVES ONLY AFTER AN ATTEMPT, in a lesson as much as in an
+  // assignment. Asserted by looking before answering, not by reading the code.
+  const beforeAnswering = await page.locator('.drill-verdict').first().isVisible();
+  check(!beforeAnswering, 'and it does not show the answer before you have tried');
+
+  await page.locator('.drill input').first().fill('13');
+  await page.locator('.drill button').first().click();
+  const wrong = (await page.locator('.drill-verdict').first().textContent()) ?? '';
+  check(/not that one/i.test(wrong), 'a wrong answer is corrected, with the reason');
+
+  await page.locator('.drill input').first().fill('12');
+  await page.locator('.drill button').first().click();
+  const right = (await page.locator('.drill-verdict').first().textContent()) ?? '';
+  check(/^yes/i.test(right.trim()), 'and a right one is confirmed');
+
+  await page.locator('#lesson-done').click();
+  const state = (await page.locator('.lesson-row .lesson-state').first().textContent())?.trim() ?? '';
+  check(state === 'Finished', `finishing a lesson is recorded in words (${state})`);
+
+  // THE ROUND TRIP. Take the code, wipe the device, type the code back, and the
+  // lesson must still be finished. Everything else here would pass on a
+  // progress code that encoded nothing at all.
+  await page.locator('#learn-progress').evaluate((node) => node.setAttribute('open', ''));
+  const savedCode = (await page.locator('#learn-code').textContent())?.trim() ?? '';
+  check(/^[0-9A-Z]{4}(-[0-9A-Z]{4}){3}$/.test(savedCode), `the progress code is four groups of four (${savedCode})`);
+
+  await page.evaluate(() => {
+    window.localStorage.removeItem('molebridge.progress');
+    window.localStorage.removeItem('molebridge.progress.tally');
+  });
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-learn').click();
+  const wiped = (await page.locator('.lesson-row .lesson-state').first().textContent())?.trim() ?? '';
+  check(wiped === 'Not finished yet', 'clearing the device really does clear it');
+
+  await page.locator('#learn-progress').evaluate((node) => node.setAttribute('open', ''));
+  await page.locator('#learn-restore').fill(savedCode);
+  await page.locator('#learn-restore-go').click();
+  const restored = (await page.locator('.lesson-row .lesson-state').first().textContent())?.trim() ?? '';
+  check(restored === 'Finished', 'and the code brings the finished lesson back');
+
+  // An older code must ADD NOTHING rather than take something away.
+  await page.locator('#learn-restore').fill(savedCode);
+  await page.locator('#learn-restore-go').click();
+  const stillThere = (await page.locator('.lesson-row .lesson-state').first().textContent())?.trim() ?? '';
+  check(stillThere === 'Finished', 'and using it twice takes nothing away');
+
+  // A mistyped code is refused rather than silently loading something else.
+  const mistyped = savedCode.slice(0, -1) + (savedCode.endsWith('Z') ? 'Y' : 'Z');
+  await page.locator('#learn-restore').fill(mistyped);
+  await page.locator('#learn-restore-go').click();
+  const refused = (await page.locator('#learn-restore-status').textContent()) ?? '';
+  check(/did not check out|does not look like/i.test(refused), `a mistyped code is refused (${refused.slice(0, 40)}...)`);
+
   /* ---- the practice door ---- */
   //
   // THE OTHER HALF OF THE CODE WALL. The assignment journey above ended holding

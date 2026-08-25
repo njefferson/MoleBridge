@@ -19,7 +19,7 @@
   perfectly until somebody is offline.
 */
 
-const CACHE_NAME = 'molebridge-0.7.0';
+const CACHE_NAME = 'molebridge-0.8.0';
 
 /** Where the generated file list lives. */
 const PRECACHE_MANIFEST = '/precache.json';

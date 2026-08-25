@@ -702,3 +702,57 @@ textarea {
   border-left: 4px solid var(--rail);
   border-radius: var(--radius);
 }
+
+/*
+  ---- the lesson list and one lesson ----
+
+  EVERY ROW IS A LIVE CONTROL, including the ones not yet finished and the ones
+  already done. Nothing is locked here, and a greyed-out row would promise
+  otherwise — the state is said in words instead, which a screen reader can also
+  read and which does not depend on noticing a colour.
+*/
+.lessons { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--step); }
+.lesson-row {
+  width: 100%;
+  min-height: var(--touch);
+  display: block;
+  text-align: left;
+  padding: calc(var(--step) * 1.5);
+  color: var(--text-1);
+  background: var(--surface-1);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font: inherit;
+}
+.lesson-row:hover { background: var(--surface-2); }
+.lesson-row:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.lesson-name { display: block; font-size: 1.15rem; font-weight: 650; }
+.lesson-promise { display: block; margin-top: calc(var(--step) * 0.4); color: var(--text-2); }
+.lesson-state { display: block; margin-top: calc(var(--step) * 0.5); color: var(--text-3); font-size: 0.9rem; }
+.lesson-done { background: var(--accent-soft); }
+
+/* Worked lines align on purpose — the units sit under each other, and that
+   alignment is part of the explanation rather than decoration. */
+.worked {
+  margin: var(--step) 0;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  color: var(--text-1);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.drills { list-style: decimal; margin: 0; padding-left: 1.5rem; display: grid; gap: calc(var(--step) * 1.5); }
+.drill input { width: 100%; min-height: var(--touch); }
+.drill-verdict {
+  margin-top: calc(var(--step) * 0.75);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  border-left: 4px solid var(--rail);
+  background: var(--accent-soft);
+  color: var(--text-1);
+}
