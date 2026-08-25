@@ -4,6 +4,26 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.4.1 — FIX
+
+The mole on the icon actually looks like a mole now.
+
+The first attempt was an animal-shaped lump: no legs to speak of, a nose that
+was a bump rather than a point, and the big digging paw hidden inside the body
+outline. It also merged into the bridge it was standing on, because both were
+the same white and nothing separated them.
+
+It is redrawn: the nose comes to a point out in front of everything else, the
+back humps, the tail is clear of the body, one front leg reaches down to the
+bridge and ends in the broad digging paw a mole is known for, and the whole
+animal has a thin green outline so it stands on the bridge instead of melting
+into it.
+
+**What is still missing.** The tile is green whichever colour you choose in the
+app; a home-screen icon cannot follow a setting. And the same gaps as before: no
+way to review a problem you have already finished, and no running total across
+sessions.
+
 ## 0.4.0 — CAPABILITY
 
 MoleBridge has a mole on it. The icon is a mole crossing a bridge, left to
