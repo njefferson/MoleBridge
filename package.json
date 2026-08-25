@@ -2,7 +2,7 @@
   "name": "molebridge",
   "version": "0.0.0",
   "private": true,
-  "description": "Step-gated stoichiometry trainer — domain engine and completion-code codec.",
+  "description": "Step-gated stoichiometry trainer \u2014 domain engine and completion-code codec.",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -20,6 +20,7 @@
     "doctrine": "node ../noahjefferson/doctrine-sync.mjs --repo .",
     "walk": "npm run build && node tools/walk.mjs",
     "a11y": "node tools/a11y.mjs",
+    "og": "node tools/render-og.mjs",
     "palette": "node ../noahjefferson/palette-check.mjs palettes/molebridge.json",
     "branch": "node ../noahjefferson/branch-guard.mjs --repo .",
     "generate": "node tools/changelog.mjs",

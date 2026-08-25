@@ -8,3 +8,8 @@ public/app/
 public/precache.json
 public/icon-*.png
 src/ui/releases.ts
+
+# The social preview card, from `npm run og`. Regenerated rather than kept: a
+# PNG in the tree outlives the markup it came from, and the one image most
+# people ever see of this app is a poor thing to let go stale silently.
+og.png

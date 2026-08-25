@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MoleBridge — social preview</title>
+<!--
+  The SOURCE of the social preview card. `tools/render-og.mjs` drives a real
+  browser over this file and writes og.png at 1280x640, which is what GitHub
+  asks for.
+
+  Doctrine §3: the artwork is wordless and the lettering is REAL TYPE laid over
+  it, never drawn into the drawing. That is why this is HTML rather than an SVG
+  with paths for letters — a path cannot be re-set at another size, cannot be
+  read by anything, and goes wrong the first time a word changes.
+
+  Every colour here is a token from palettes/molebridge.json, taken rather than
+  picked, and the renderer MEASURES the contrast of each piece of text against
+  what is actually behind it. A card is looked at more than it is read, which is
+  exactly why nobody notices it failing.
+-->
+<style>
+  :root {
+    --page: #1a1a1a;
+    --page-alt: #232323;
+    --surface: #3a3a3a;
+    --hairline: rgba(255, 255, 255, 0.17);
+    --text-1: #eaeaea;
+    --text-3: #c1c1c1;
+    --accent: #9fc2f5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1280px; height: 640px; }
+  body {
+    background:
+      radial-gradient(900px 620px at 88% 116%, rgba(159, 194, 245, 0.14) 0%, rgba(159, 194, 245, 0) 68%),
+      linear-gradient(180deg, var(--page-alt), var(--page));
+    color: var(--text-1);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    align-items: center;
+    gap: 64px;
+    padding: 0 88px;
+    overflow: hidden;
+  }
+  .words { flex: 1 1 auto; min-width: 0; }
+
+  /* The REAL app icon, whole and uncropped — the tile a student ends up with on
+     a home screen, so the repository page and the installed thing are visibly
+     the same object.
+
+     An earlier version put a huge ghost of the glyph bleeding off the corner
+     instead. Cropped, the arc and its centre post closed into a circle with a
+     stem and read as a peace symbol. A decorative shape is not decorative if it
+     resolves into some other symbol; there is no way to measure that, so the
+     rule is simply that the glyph appears once and appears whole. */
+  .mark { flex: 0 0 auto; width: 264px; height: 264px; }
+
+  h1 {
+    font-size: 84px;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    line-height: 1;
+  }
+
+  .rule {
+    width: 148px;
+    height: 6px;
+    border-radius: 6px;
+    margin: 28px 0 26px;
+    background: var(--accent);
+  }
+
+  .tag {
+    font-size: 33px;
+    line-height: 1.3;
+    color: var(--text-3);
+  }
+
+  /* ONE ROW, and nowrap rather than wrap. A wrapped chip row on a card reads as
+     a layout that ran out of space, and `flex-wrap: wrap` hides that by
+     succeeding quietly — the renderer asserts the row fits instead. */
+  .chips { display: flex; flex-wrap: nowrap; gap: 13px; margin-top: 42px; }
+  .chip {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    color: var(--text-1);
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 12px 22px;
+  }
+
+</style>
+</head>
+<body>
+  <div class="words">
+    <h1>MoleBridge</h1>
+    <div class="rule"></div>
+    <p class="tag">A stoichiometry trainer that names the mistake, not just the answer.</p>
+
+    <div class="chips">
+      <span class="chip">six gated steps</span>
+      <span class="chip">works offline</span>
+      <span class="chip">no student data</span>
+    </div>
+  </div>
+
+  <svg class="mark" viewBox="0 0 512 512" aria-hidden="true">
+    <rect width="512" height="512" rx="112" fill="#17458f"/>
+    <g fill="none" stroke="#eef3fb" stroke-width="30" stroke-linecap="round">
+      <path d="M96 344 Q256 176 416 344"/>
+      <path d="M96 344 v56"/>
+      <path d="M256 260 v140"/>
+      <path d="M416 344 v56"/>
+    </g>
+    <g fill="#eef3fb">
+      <circle cx="150" cy="150" r="30"/>
+      <circle cx="256" cy="112" r="30"/>
+      <circle cx="362" cy="150" r="30"/>
+    </g>
+  </svg>
+</body>
+</html>

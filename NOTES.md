@@ -294,6 +294,46 @@ MoleBridge. A gate rather than a manual step handed over.
 the front of the room is further away and runs a Chromium nobody here can test
 against.
 
+## The social preview, and what drawing it found
+
+`npm run og` renders `tools/og-card.html` at 1280x640 and writes `og.png`. The
+card is HTML rather than an SVG with letter paths, because Doctrine §3 wants the
+artwork wordless and the lettering set in real type over it — a path cannot be
+re-set at another size and goes wrong the first time a word changes. The PNG is
+not committed, for the same reason the icons are not.
+
+**The renderer measures rather than looks.** Every run of text is checked
+against the colour actually behind it and the render fails below 4.6:1. One
+place is a BOUND rather than a reading, and it is written into the tool: the
+page is a gradient, and `getComputedStyle().backgroundColor` reports transparent
+for a gradient — a compositing walk would climb straight past it, end at white,
+and pass everything. So reaching `<body>` substitutes the lightest the gradient
+can reach with the accent tint over it. Every piece of text here is light on
+dark, so the lightest backdrop is the worst case.
+
+It also asserts the chip row fits on ONE line. `flex-wrap: wrap` would have hidden
+an overflow by succeeding quietly; the row is `nowrap` so overflow is visible,
+and the renderer turns visible into failing. It caught a real one immediately.
+
+**And then the card found something about the icon.** Drawn at 264px next to
+type, `public/icon.svg` reads as a FROWNING FACE: three particles become two eyes
+and a brow, the centre post becomes a nose, and the arch under them becomes a
+downturned mouth. It is worst at 32 and 16 pixels, where it is unambiguous. On an
+app whose entire purpose is telling a student they got something wrong, an
+accidental sad face is the single worst symbol available.
+
+Rearranging the particles does not fix it and made it worse in both attempts —
+moving them into a diagonal produced a winking face, and putting them on a deck
+above an arch produced a grin with teeth. **The rule is the composition, not the
+arrangement: small shapes above a curve inside a rounded square IS a face
+schema.** The fix has to remove the row of shapes, not reposition it. Three
+bridge silhouettes without floating shapes were drawn and none reads as a face;
+a suspension bridge among them reads as the letter M, which is its own accident.
+
+Nothing has been changed. The icon is an installed identity — it is on a home
+screen — so which one ships is the owner's call, and until it is made the social
+preview should not be uploaded either, because the glyph goes on it.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
