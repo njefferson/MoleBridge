@@ -1,0 +1,386 @@
+/*
+  styles.css — MoleBridge.
+
+  THE PALETTE IS THE `Instrument` FAMILY, taken verbatim from the hub's
+  palettes/families.json rather than derived here. Those values have been
+  measured against every hard floor in PALETTES.md in both modes; picking
+  colours by eye and hoping is how a build stamp ends up at 2.54:1 while its
+  gate reads 4.79 and passes.
+
+  The roles, and what each is for:
+    --page / --page-alt     the ground the app sits on
+    --surface-1/2/3         the fill ladder, monotonically away from the page
+    --rail                  every 1px edge that has to be seen
+    --hairline              separators that need not be
+    --text-1/2/3            primary, secondary, tertiary — strictly ordered
+    --accent                the focus ring and the one loud thing
+
+  §7b: the build stamp is dimmed with --text-3, a COLOUR TOKEN. Never opacity —
+  an opacity is invisible to a contrast gate, and the stamp is the one element
+  whose entire job is being readable in a screenshot nobody composed.
+*/
+
+:root {
+  color-scheme: dark light;
+
+  --page: #1a1a1a;
+  --page-alt: #232323;
+  --surface-1: #3a3a3a;
+  --surface-2: #414141;
+  --surface-3: #484848;
+  --rail: rgba(255, 255, 255, 0.62);
+  --hairline: rgba(255, 255, 255, 0.17);
+  --text-1: #eaeaea;
+  --text-2: #d2d2d2;
+  --text-3: #c1c1c1;
+  --accent: #9fc2f5;
+  --accent-soft: rgba(159, 194, 245, 0.15);
+
+  --step: 0.5rem;
+  --radius: 0.6rem;
+  /* Every pressable thing clears this. A finger on a board at the front of a
+     room is not a mouse pointer, and 44px is the floor rather than the target. */
+  --touch: 3rem;
+  --measure: 42rem;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --page: #c4bcab;
+    --page-alt: #ccc4b3;
+    --surface-1: #eee6d6;
+    --surface-2: #f4ecdd;
+    --surface-3: #faf3e5;
+    --rail: rgba(39, 33, 25, 0.68);
+    --hairline: rgba(39, 33, 25, 0.22);
+    --text-1: #272119;
+    --text-2: #363026;
+    --text-3: #4a4436;
+    --accent: #17458f;
+    --accent-soft: rgba(23, 69, 143, 0.12);
+  }
+}
+
+* { box-sizing: border-box; }
+
+/*
+  `hidden` HAS TO WIN. A `display` rule on a class beats the hidden attribute's
+  user-agent style, so `.update-strip { display: flex }` showed the stale-app
+  strip on every load — the one element whose whole point is that it appears
+  only when there is genuinely a new version waiting. Caught by looking at the
+  screen; nothing else would have.
+*/
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-1);
+  font: 1.125rem/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding-bottom: 4rem;
+}
+
+/* A focus ring on everything, from one rule, so nothing can be missed. */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/*
+  The skip link is a KEYBOARD route and is kept as one. It is not the only route
+  to anything — every screen's first control is reachable by tabbing forward —
+  because a control revealed only by focus is unreachable by finger, and an
+  affordance nobody can reach is worse than a missing one.
+*/
+.skip {
+  position: absolute;
+  left: var(--step); top: -4rem;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--surface-2);
+  color: var(--text-1);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: top 120ms ease;
+}
+.skip:focus { top: var(--step); }
+
+/* ---------------- chrome ---------------- */
+
+.chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--step);
+  padding: 0.75rem 1rem;
+  background: var(--page-alt);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.chrome-left { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.brand { font-weight: 650; letter-spacing: 0.01em; }
+
+/* §7b: always on screen, quiet, and selectable so it can be pasted. */
+.stamp {
+  color: var(--text-3);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  user-select: text;
+}
+
+.icon-button {
+  min-width: var(--touch);
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: transparent;
+  color: var(--text-1);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.icon-button:hover { background: var(--surface-1); border-color: var(--hairline); }
+
+/* ---------------- the stale-app strip (§7h) ---------------- */
+
+.update-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--accent-soft);
+  border-bottom: 1px solid var(--rail);
+  color: var(--text-1);
+}
+
+/* ---------------- layout ---------------- */
+
+main { padding: 1.25rem 1rem 0; }
+
+.screen {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+.screen[hidden] { display: none; }
+
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 0.5rem; }
+h2 { font-size: 1.25rem; line-height: 1.3; margin: 1.75rem 0 0.5rem; }
+h3 { font-size: 1.0625rem; margin: 1.25rem 0 0.4rem; }
+p { margin: 0 0 0.9rem; }
+ul, ol { margin: 0 0 0.9rem; padding-left: 1.4rem; }
+li { margin: 0.3rem 0; }
+
+.lede { color: var(--text-2); }
+.hint { color: var(--text-3); font-size: 0.9375rem; }
+.error { color: var(--text-1); background: var(--accent-soft); border-left: 4px solid var(--rail); padding: 0.75rem 1rem; border-radius: var(--radius); }
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  margin: 0 0 1.25rem;
+}
+
+/* ---------------- the problem ---------------- */
+
+.progress { color: var(--text-2); font-size: 0.9375rem; margin-bottom: 0.5rem; }
+
+.equation {
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.6rem;
+  overflow-x: auto;
+}
+
+.prompt { margin-bottom: 0.4rem; }
+
+/* ---------------- the step rail ---------------- */
+
+.rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.rail-step {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  font-size: 0.875rem;
+  color: var(--text-3);
+  background: var(--page-alt);
+}
+.rail-done { color: var(--text-2); }
+.rail-here {
+  color: var(--text-1);
+  border-color: var(--rail);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+.rail-tick { font-weight: 700; }
+
+/* ---------------- entering an answer ---------------- */
+
+.stage-card { background: var(--surface-2); }
+.stage-prompt { font-size: 1.1875rem; margin: 0 0 0.75rem; }
+
+.field { margin: 0 0 1.5rem; border: 0; padding: 0; }
+.field > label, .field > legend { display: block; font-weight: 600; margin-bottom: 0.25rem; padding: 0; }
+
+input[type="text"] {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-size: 1.1875rem;
+  color: var(--text-1);
+  background: var(--surface-3);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+}
+
+.answer { font-variant-numeric: tabular-nums; }
+
+.coefficients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.coefficient { display: flex; flex-direction: column; gap: 0.2rem; min-width: 6rem; flex: 1 1 6rem; }
+.coefficient label { font-weight: 600; font-size: 0.9375rem; }
+.coefficient input { text-align: center; }
+
+.choices { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+.choice {
+  min-height: var(--touch);
+  padding: 0.6rem 1.1rem;
+  font: inherit;
+  color: var(--text-1);
+  background: var(--surface-3);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.choice-on { background: var(--accent-soft); font-weight: 650; box-shadow: inset 0 0 0 2px var(--rail); }
+
+.button {
+  min-height: var(--touch);
+  padding: 0.7rem 1.3rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--page);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.button:hover { filter: brightness(1.06); }
+.button-big { width: 100%; font-size: 1.1875rem; min-height: 3.5rem; }
+.button-small { min-height: 2.5rem; padding: 0.4rem 0.9rem; font-size: 0.9375rem; }
+.button-quiet { color: var(--text-1); background: transparent; border-color: var(--rail); }
+
+/* ---------------- feedback ---------------- */
+
+.feedback { max-width: var(--measure); margin: 0 auto 2rem; }
+.feedback:empty { margin: 0 auto; }
+
+.note { font-weight: 650; margin-bottom: 0.4rem; }
+.note-good { color: var(--text-1); }
+.note-wrong { color: var(--text-1); }
+
+.why {
+  background: var(--surface-1);
+  border-left: 4px solid var(--rail);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.remediation {
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+.remediation h3 { margin-top: 0; }
+.remediation ol { margin-bottom: 0.6rem; }
+.check { font-weight: 600; margin-bottom: 0; }
+
+/* ---------------- the code ---------------- */
+
+.code-card { background: var(--surface-2); text-align: center; }
+
+.code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: clamp(1.25rem, 6vw, 2rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  user-select: all;
+  margin: 0.25rem 0 1rem;
+  overflow-wrap: anywhere;
+}
+
+.summary { list-style: none; padding: 0; }
+.summary li { padding: 0.4rem 0; border-bottom: 1px solid var(--hairline); }
+.summary li:last-child { border-bottom: 0; }
+
+/* ---------------- the ⓘ panel ---------------- */
+
+.info {
+  width: min(46rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 4rem);
+  padding: 0;
+  color: var(--text-1);
+  background: var(--surface-1);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+}
+.info::backdrop { background: rgba(0, 0, 0, 0.6); }
+
+.info-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--step);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--hairline);
+  position: sticky;
+  top: 0;
+  background: var(--surface-1);
+}
+.info-head h2 { margin: 0; font-size: 1.25rem; }
+
+.info-body { padding: 1rem 1.25rem 1.5rem; overflow-y: auto; }
+.info-section { margin-bottom: 1.5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

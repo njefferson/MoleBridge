@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>MoleBridge</title>
+<meta name="description" content="A step-gated stoichiometry trainer. Enter every value along the way, and find out which mistake produces the number you got.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to the problem</a>
+
+<header class="chrome">
+  <div class="chrome-left">
+    <span class="brand">MoleBridge</span>
+    <!--
+      Doctrine §7b: the running version, always on screen in the normal working
+      view, written at boot from the one constant, selectable, and dimmed with a
+      colour token rather than opacity so a contrast gate can see it.
+    -->
+    <span class="stamp" id="build-stamp" title="The version you are running">…</span>
+  </div>
+  <button type="button" class="icon-button" id="info-open" aria-haspopup="dialog">
+    <span aria-hidden="true">ⓘ</span>
+    <span class="visually-hidden">About MoleBridge, installing it, and what changed</span>
+  </button>
+</header>
+
+<!--
+  Doctrine §7h. A new version WAITS rather than taking over under the open page,
+  and the reader is told in words they can see. Hidden until a worker is
+  actually waiting; never a silent reload.
+-->
+<div class="update-strip" id="update-strip" role="status" hidden>
+  <span id="update-message">A new version of MoleBridge is ready.</span>
+  <button type="button" class="button button-small" id="update-apply">Use it now</button>
+  <button type="button" class="button button-small button-quiet" id="update-later">Not yet</button>
+</div>
+
+<main id="main">
+
+  <!-- ============ welcome ============ -->
+  <section class="screen" id="screen-welcome" aria-labelledby="welcome-title">
+    <h1 id="welcome-title">MoleBridge</h1>
+
+    <!--
+      §7e: ONE orientation block. It is shown here on a first run and then MOVED
+      into the ⓘ panel — moved, never copied, so the two can never drift apart
+      and so it survives whatever the reader presses to begin.
+    -->
+    <div id="orientation">
+      <h2>What this is</h2>
+      <p>
+        A stoichiometry problem, worked one step at a time. You enter every value
+        along the way — the balanced coefficients, the molar mass, the moles, the
+        ratio — and you cannot move on until the step in front of you is right.
+      </p>
+      <p>
+        When a step is wrong, MoleBridge works out which mistake produces that
+        exact number and tells you, instead of just marking it wrong. If the
+        mistake is an algebra one, it shows you three lines of the algebra using
+        your own numbers.
+      </p>
+
+      <h2>What this is not</h2>
+      <ul>
+        <li>It is <strong>not a solver</strong>. It will not do a problem for you, and it never shows you an answer before you have tried it.</li>
+        <li>It is <strong>not a grade</strong>. The code at the end records how far you got and where you got stuck. Your teacher decides what that is worth.</li>
+        <li>It <strong>does not know who you are</strong>. It asks for the roster number your teacher gave you and nothing else — no name, no email, no account.</li>
+      </ul>
+
+      <h2>How a session goes</h2>
+      <ol>
+        <li>Type in the roster number and assignment key your teacher put on the board.</li>
+        <li>Work each problem stage by stage. Getting one wrong costs you nothing except that the problem stops counting as first-try.</li>
+        <li>At the end you get a short code. Type it into the Canvas assignment.</li>
+      </ol>
+
+      <h2>Nothing is stored and nothing is sent</h2>
+      <p>
+        MoleBridge has no account and no server. Nothing you type leaves the
+        device, and nothing is kept after you close the tab — so if you stop
+        halfway, you start again. That is the trade for it working with no
+        connection and holding nothing about you.
+      </p>
+    </div>
+
+    <button type="button" class="button button-big" id="welcome-begin">Get started</button>
+  </section>
+
+  <!-- ============ setup ============ -->
+  <section class="screen" id="screen-setup" aria-labelledby="setup-title" hidden>
+    <h1 id="setup-title">Start a session</h1>
+    <p class="lede">Your teacher has put these on the board.</p>
+
+    <form id="setup-form" novalidate>
+      <div class="field">
+        <label for="setup-roster">Your roster number</label>
+        <p class="hint" id="setup-roster-hint">A number from 1 to 4095. Not your name — MoleBridge never asks for that.</p>
+        <input type="text" inputmode="numeric" autocomplete="off" id="setup-roster"
+               aria-describedby="setup-roster-hint" required>
+      </div>
+
+      <div class="field">
+        <label for="setup-key">Assignment key</label>
+        <p class="hint" id="setup-key-hint">Capitals, spaces and hyphens do not matter. Everyone with the same key gets the same problems.</p>
+        <input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" id="setup-key"
+               aria-describedby="setup-key-hint" required>
+      </div>
+
+      <fieldset class="field">
+        <legend>Which set</legend>
+        <p class="hint" id="setup-tier-hint">Your teacher will say which one.</p>
+        <div class="choices" id="setup-tier" role="radiogroup" aria-describedby="setup-tier-hint"></div>
+      </fieldset>
+
+      <fieldset class="field">
+        <legend>How many problems</legend>
+        <div class="choices" id="setup-count" role="radiogroup"></div>
+      </fieldset>
+
+      <p class="error" id="setup-error" role="alert" hidden></p>
+      <button type="submit" class="button button-big" id="setup-start">Start</button>
+    </form>
+  </section>
+
+  <!-- ============ work ============ -->
+  <section class="screen" id="screen-work" aria-labelledby="work-title" hidden>
+    <h1 class="visually-hidden" id="work-title">Working a problem</h1>
+
+    <p class="progress" id="work-progress"></p>
+
+    <div class="card problem-card">
+      <p class="equation" id="work-equation"></p>
+      <p class="prompt" id="work-prompt"></p>
+      <p class="hint" id="work-figures"></p>
+    </div>
+
+    <ol class="rail" id="work-rail" aria-label="Steps in this problem"></ol>
+
+    <form class="card stage-card" id="work-form" novalidate>
+      <h2 class="stage-prompt" id="work-stage-prompt"></h2>
+      <div id="work-inputs"></div>
+      <button type="submit" class="button button-big" id="work-submit">Check this step</button>
+    </form>
+
+    <!--
+      Everything about a wrong answer lands here, in one live region, so a screen
+      reader hears the diagnosis without having to go looking for it.
+    -->
+    <div class="feedback" id="work-feedback" role="status" aria-live="polite"></div>
+  </section>
+
+  <!-- ============ done ============ -->
+  <section class="screen" id="screen-done" aria-labelledby="done-title" hidden>
+    <h1 id="done-title">Finished</h1>
+    <p class="lede">Type this code into the Canvas assignment. It is the same every time for this session, so you can come back to it.</p>
+
+    <div class="card code-card">
+      <p class="code" id="done-code" tabindex="0" aria-label="Your completion code"></p>
+      <button type="button" class="button" id="done-copy">Copy the code</button>
+      <p class="hint" id="done-copy-status" role="status"></p>
+    </div>
+
+    <h2>How it went</h2>
+    <ul class="summary" id="done-summary"></ul>
+
+    <p class="hint">
+      The code carries counts only — how many problems you attempted, how many
+      you got right first time, and which steps went wrong. It does not carry
+      your answers, and it does not carry your name.
+    </p>
+
+    <button type="button" class="button" id="done-restart">Start another session</button>
+  </section>
+
+</main>
+
+<!-- ============ the ⓘ surface ============ -->
+<dialog class="info" id="info-panel" aria-labelledby="info-title">
+  <div class="info-head">
+    <h2 id="info-title">About MoleBridge</h2>
+    <button type="button" class="icon-button" id="info-close">
+      <span aria-hidden="true">✕</span>
+      <span class="visually-hidden">Close</span>
+    </button>
+  </div>
+  <div class="info-body" id="info-body">
+    <p class="hint">
+      Version <span id="info-version">…</span>. <span id="info-offline"></span>
+    </p>
+    <!-- The orientation block is MOVED in here after the first run. -->
+    <div id="info-orientation-slot"></div>
+    <div id="info-sections"></div>
+  </div>
+</dialog>
+
+<noscript>
+  <div class="screen">
+    <h1>MoleBridge needs JavaScript</h1>
+    <p>
+      Everything MoleBridge does happens on your own device — there is no server
+      to do it instead, which is also why it works with no connection and keeps
+      nothing about you. With JavaScript switched off there is nothing to show.
+    </p>
+  </div>
+</noscript>
+
+<script type="module" src="/app/ui/app.js"></script>
+</body>
+</html>

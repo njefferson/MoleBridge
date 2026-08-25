@@ -34,9 +34,11 @@ import {
   LIMITING_MARGIN,
   MAX_ANSWER_SIG_FIGS,
   MAX_GENERATION_ATTEMPTS,
-  MAX_PHYSICAL_QUANTITY,
+  MAX_MASS_G,
+  MAX_MOL,
   MIN_ANSWER_SIG_FIGS,
-  MIN_PHYSICAL_QUANTITY,
+  MIN_MASS_G,
+  MIN_MOL,
   WHOLE_NUMBER_FRIENDLY,
   CONVERSION_SEPARATION_ULPS,
 } from './tolerance.ts';
@@ -437,19 +439,26 @@ export function checkGuarantees(problem: Problem): Guarantee[] {
   // one, and an earlier version of this check silently rejected every
   // MASS_TO_PARTICLES problem the generator drew — the tier looked healthy and
   // had quietly lost a whole problem kind.
-  const bounded = [
-    solution.mmGiven,
-    solution.molGiven,
-    solution.molWanted,
-    problem.given.value,
-  ];
-  if (problem.wantedUnit !== 'particles') bounded.push(solution.converted, solution.finalValue);
-  if (bounded.some((v) => !Number.isFinite(v) || Math.abs(v) < MIN_PHYSICAL_QUANTITY || Math.abs(v) > MAX_PHYSICAL_QUANTITY)) {
-    failures.push('QUANTITIES_PHYSICAL');
-  }
-  if (problem.wantedUnit === 'particles' && !Number.isFinite(solution.converted)) {
-    failures.push('QUANTITIES_PHYSICAL');
-  }
+  const inRange = (value: number, low: number, high: number): boolean =>
+    Number.isFinite(value) && Math.abs(value) >= low && Math.abs(value) <= high;
+
+  // Masses and volumes are what a balance and a gas syringe can show. Moles are
+  // a count and run far smaller. Particle counts are ~1e23 and are held only to
+  // being finite. Three kinds, three ranges — see MIN_MOL's note.
+  const masses = [problem.given.value, solution.mmGiven];
+  if (problem.wantedUnit === 'g' || problem.wantedUnit === 'L') masses.push(solution.converted);
+  if (problem.secondGiven !== null) masses.push(problem.secondGiven.value);
+  if (problem.actualYield !== null) masses.push(problem.actualYield.value);
+
+  const moles = [solution.molGiven, solution.molWanted];
+  if (solution.molSecond !== null) moles.push(solution.molSecond);
+
+  const bad =
+    masses.some((value) => !inRange(value, MIN_MASS_G, MAX_MASS_G)) ||
+    moles.some((value) => !inRange(value, MIN_MOL, MAX_MOL)) ||
+    !Number.isFinite(solution.converted) ||
+    !Number.isFinite(solution.finalValue);
+  if (bad) failures.push('QUANTITIES_PHYSICAL');
   if (solution.mmGiven <= 0 || solution.mmWanted <= 0 || solution.convertFactor <= 0) {
     failures.push('NO_ZERO_DENOMINATOR');
   }
@@ -620,13 +629,22 @@ function promptFor(problem: Omit<Problem, 'prompt'>): string {
   return `${problem.given.text} g of ${given} reacts. ${unitWord[0]?.toUpperCase()}${unitWord.slice(1)} of ${wanted} does it make?`;
 }
 
-/** Pick a mass that reads unambiguously at the significant figures asked for. */
+/** Decades a stated mass may sit in: a tenth of a gram up to a few hundred. */
+const MASS_DECADES: readonly number[] = [-1, 0, 1, 2];
+
+/**
+ * Pick a mass that reads unambiguously at the significant figures asked for,
+ * and that somebody could actually put on a balance.
+ *
+ * The digits and the decade are drawn separately so the significant figure
+ * count is independent of the size — otherwise a four-figure mass is always a
+ * thousand-gram one, and every hard problem comes with an unreal quantity.
+ */
 function drawMass(rng: Rng, sigFigs: number): StatedQuantity {
-  // Draw the digits, then place the decimal point so the value sits in a range
-  // a classroom balance would show.
   const digits = nextInt(rng, 10 ** (sigFigs - 1), 10 ** sigFigs - 1);
-  const scale = pick(rng, [0.01, 0.1, 1]);
-  return stateQuantity(digits * scale, sigFigs, 'g');
+  const mantissa = digits / 10 ** (sigFigs - 1);
+  const value = mantissa * 10 ** pick(rng, MASS_DECADES);
+  return stateQuantity(value, sigFigs, 'g');
 }
 
 interface Draw {

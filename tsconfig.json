@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
     "target": "es2023",
-    "lib": ["es2023"],
+    "lib": [
+      "es2023"
+    ],
     "module": "nodenext",
     "moduleResolution": "nodenext",
-
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,
-
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -20,8 +20,16 @@
     "useUnknownInCatchVariables": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "tools/**/*.ts"]
+  "include": [
+    "src/chem/**/*.ts",
+    "src/code/**/*.ts",
+    "src/engine/**/*.ts",
+    "src/version.ts",
+    "test/**/*.ts",
+    "tools/**/*.ts"
+  ]
 }

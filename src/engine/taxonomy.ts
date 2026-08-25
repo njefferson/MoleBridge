@@ -40,6 +40,7 @@ import { molarMass } from '../chem/molarmass.ts';
 import { parseEquation, solveBalance, checkBalance } from '../chem/balance.ts';
 import { parseFormula } from '../chem/formula.ts';
 import {
+  formatSigFigs,
   magnitudeOf,
   parseQuantity,
   roundToSigFigs,
@@ -1131,8 +1132,12 @@ export function buildRemediation(
   if (stage.id === 'S4') return ratioRemediation(skill, problem, solution);
   const sf = REMEDIATION_SIG_FIGS;
   const relation = relationFor(problem, solution, stage);
-  const from = round(relation.fromValue, sf);
-  const factor = round(relation.factorValue, sf);
+  // FORMATTED, not rounded-then-interpolated. A number carries no trailing
+  // zeros through `${}`, so oxygen's molar mass printed as `32` in a worked line
+  // about significant figures — in an app whose entire subject is how many
+  // digits a value has. It reads as 32.00 now, which is what it is.
+  const from = show(relation.fromValue, sf);
+  const factor = show(relation.factorValue, sf);
   // The check question restates the relation with a DIFFERENT starting amount.
   // Doubling it was the obvious choice and was wrong: where the factor is
   // exactly 2 — which is most of a chemistry course — `from × 2` is the stage's
@@ -1140,13 +1145,13 @@ export function buildRemediation(
   // multiplier is chosen to collide with neither the stage's answer nor its
   // own, and 10 is first because it is the one a student can do in their head.
   const checkFactor = pickCheckMultiplier(relation, problem.answerSigFigs);
-  const checkFrom = round(relation.fromValue * checkFactor, sf);
+  const checkFrom = show(relation.fromValue * checkFactor, sf);
   const wanted = problem.species[problem.wantedIndex] as string;
 
   switch (skill) {
     case 'A1': {
-      const fromFirst = round(solution.molGiven * solution.ratio, sf);
-      const fromSecond = round(solution.molWantedFromSecond ?? 0, sf);
+      const fromFirst = show(solution.molGiven * solution.ratio, sf);
+      const fromSecond = show(solution.molWantedFromSecond ?? 0, sf);
       return {
         skill,
         title: ALGEBRA_SKILLS.A1,
@@ -1335,6 +1340,11 @@ export function decadeName(value: number): string {
 
 function capitalise(text: string): string {
   return text.length === 0 ? text : `${text[0]?.toUpperCase() ?? ''}${text.slice(1)}`;
+}
+
+/** A value written for a student to read, trailing zeros and all. */
+function show(value: number, sigFigs: number): string {
+  return formatSigFigs(value, Math.max(1, Math.min(21, sigFigs)));
 }
 
 function round(value: number, sigFigs: number): number {

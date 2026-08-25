@@ -52,10 +52,34 @@ export const MIN_ANSWER_SIG_FIGS = 2;
 /** ...and this many. */
 export const MAX_ANSWER_SIG_FIGS = 4;
 
-/** §6.3: nothing physically absurd. The smallest quantity a problem may state or ask for. */
-export const MIN_PHYSICAL_QUANTITY = 1e-3;
-/** The largest. */
-export const MAX_PHYSICAL_QUANTITY = 1e4;
+/**
+ * §6.3: nothing physically absurd, judged against the balance in the room
+ * rather than against what a number can hold.
+ *
+ * The first pair here were 1e-3 and 1e4, which are the limits of arithmetic and
+ * not of a school laboratory — they let the generator pose "980 g of O2 reacts
+ * with 627 g of C3H8", which is a kilogram of propane and reads as unreal to
+ * anybody who has actually weighed something out. Seen on the screen; no test
+ * would have objected, because every one of those problems was correct.
+ */
+export const MIN_MASS_G = 0.05;
+/** The largest mass or volume. */
+export const MAX_MASS_G = 2000;
+
+/**
+ * And the same for MOLES, which are a different kind of quantity and need
+ * their own range.
+ *
+ * Tightening the mass band to a school laboratory's and applying it to mole
+ * counts as well starved the generator: a tenth of a gram of anything heavy is
+ * a thousandth of a mole, so whole seeds became unsatisfiable and the sweep
+ * failed outright. That is LESSONS 140 — one rule applied across categories
+ * that differ in kind — recurring in the code of the repository that wrote it,
+ * about three weeks later. The shape really does keep coming back.
+ */
+export const MIN_MOL = 1e-4;
+/** The largest mole count. */
+export const MAX_MOL = 1e4;
 
 /**
  * In a limiting-reagent problem the two reactants must differ in what they

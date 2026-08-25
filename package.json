@@ -2,7 +2,7 @@
   "name": "molebridge",
   "version": "0.0.0",
   "private": true,
-  "description": "Step-gated stoichiometry trainer \u2014 domain engine and completion-code codec.",
+  "description": "Step-gated stoichiometry trainer — domain engine and completion-code codec.",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -12,7 +12,7 @@
     "build": "tsc -p tsconfig.build.json",
     "clean": "rm -rf public/app",
     "test": "node --test 'test/**/*.test.ts'",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.ui.json",
     "version:check": "node tools/version-check.mjs",
     "cli": "node tools/cli.ts",
     "check": "npm run typecheck && npm run version:check && npm test",
@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "22.19.4",
+    "playwright-core": "^1.62.1",
     "typescript": "7.0.2"
   }
 }
