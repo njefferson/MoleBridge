@@ -75,15 +75,44 @@ try {
   console.log('=== the primary journey ===\n');
   await page.goto(`${server.origin}/`, { waitUntil: 'domcontentloaded' });
 
-  /* ---- the welcome screen, and the build stamp ---- */
-  check(await page.locator('#screen-welcome').isVisible(), 'the welcome screen is the first thing shown');
-  check(await page.locator('#orientation').isVisible(), 'the orientation is on it');
+  /* ---- the first-run orientation, and the build stamp ---- */
+  check(await page.locator('#welcome-panel[open]').isVisible(), 'the orientation opens over the app on a first run');
+  check(await page.locator('#orientation').isVisible(), 'the orientation is in it');
+  check(await page.locator('#screen-setup').isVisible(), 'and the app is behind it, not replaced by it');
+
+  // THE BUTTON IS ON SCREEN. This is the defect that made it a dialog: as a
+  // full-height screen the content pushed "Get started" below the fold, so the
+  // one control that mattered was the one nobody could see. Asserting it exists
+  // would have passed then too — what has to be asserted is that it is inside
+  // the viewport.
+  //
+  // AT THE SIZES WHERE IT ACTUALLY BROKE. This walk runs at 1280x900, which is
+  // roomy enough that the old full-height screen fitted — so a check here alone
+  // would have passed throughout the defect's life. The sizes below are a phone
+  // held upright, a phone on its side, and a small Chromebook window.
+  const SIZES = [
+    { width: 390, height: 664, what: 'a phone upright' },
+    { width: 740, height: 380, what: 'a phone on its side' },
+    { width: 1024, height: 500, what: 'a short Chromebook window' },
+    { width: 1280, height: 900, what: 'a full window' },
+  ];
+  for (const size of SIZES) {
+    await page.setViewportSize({ width: size.width, height: size.height });
+    const box = await page.locator('#welcome-begin').boundingBox();
+    check(
+      box !== null && box.y >= 0 && box.y + box.height <= size.height + 1,
+      `Get started is on screen on ${size.what} — ${
+        box === null ? 'not found' : `bottom at ${Math.round(box.y + box.height)} of ${size.height}`
+      }`,
+    );
+  }
   const stamp = (await page.locator('#build-stamp').textContent())?.trim() ?? '';
   check(/^\d+\.\d+\.\d+$/.test(stamp), `the build stamp reads a version at boot (${stamp})`);
 
   /* ---- §7e: the orientation MOVES, it is not copied ---- */
   await page.locator('#welcome-begin').click();
-  check(await page.locator('#screen-setup').isVisible(), 'pressing Get started reaches the setup screen');
+  check(!(await page.locator('#welcome-panel[open]').isVisible()), 'pressing Get started closes it');
+  check(await page.locator('#screen-setup').isVisible(), 'and the setup screen is ready underneath');
   check(
     (await page.locator('#orientation').count()) === 1,
     'there is exactly ONE orientation block after the move, never a copy',

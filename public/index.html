@@ -61,55 +61,6 @@
 
 <main id="main">
 
-  <!-- ============ welcome ============ -->
-  <section class="screen" id="screen-welcome" aria-labelledby="welcome-title">
-    <h1 id="welcome-title">MoleBridge</h1>
-
-    <!--
-      §7e: ONE orientation block. It is shown here on a first run and then MOVED
-      into the ⓘ panel — moved, never copied, so the two can never drift apart
-      and so it survives whatever the reader presses to begin.
-    -->
-    <div id="orientation">
-      <h2>What this is</h2>
-      <p>
-        A stoichiometry problem, worked one step at a time. You enter every value
-        along the way — the balanced coefficients, the molar mass, the moles, the
-        ratio — and you cannot move on until the step in front of you is right.
-      </p>
-      <p>
-        When a step is wrong, MoleBridge works out which mistake produces that
-        exact number and tells you, instead of just marking it wrong. If the
-        mistake is an algebra one, it shows you three lines of the algebra using
-        your own numbers.
-      </p>
-
-      <h2>What this is not</h2>
-      <ul>
-        <li>It is <strong>not a solver</strong>. It will not do a problem for you, and it never shows you an answer before you have tried it.</li>
-        <li>It is <strong>not a grade</strong>. The code at the end records how far you got and where you got stuck. Your teacher decides what that is worth.</li>
-        <li>It <strong>does not know who you are</strong>. It asks for the roster number your teacher gave you and nothing else — no name, no email, no account.</li>
-      </ul>
-
-      <h2>How a session goes</h2>
-      <ol>
-        <li>Type in the roster number and assignment key your teacher put on the board.</li>
-        <li>Work each problem stage by stage. Getting one wrong costs you nothing except that the problem stops counting as first-try.</li>
-        <li>At the end you get a short code. Type it into the Canvas assignment.</li>
-      </ol>
-
-      <h2>Nothing is stored and nothing is sent</h2>
-      <p>
-        MoleBridge has no account and no server. Nothing you type leaves the
-        device, and nothing is kept after you close the tab — so if you stop
-        halfway, you start again. That is the trade for it working with no
-        connection and holding nothing about you.
-      </p>
-    </div>
-
-    <button type="button" class="button button-big" id="welcome-begin">Get started</button>
-  </section>
-
   <!-- ============ setup ============ -->
   <section class="screen" id="screen-setup" aria-labelledby="setup-title" hidden>
     <h1 id="setup-title">Start a session</h1>
@@ -197,6 +148,72 @@
   </section>
 
 </main>
+
+<!--
+  ============ first run ============
+
+  A MODAL OVER THE APP RATHER THAN A SCREEN IN FRONT OF IT. This was a
+  full-height screen, and on a real device the button that dismissed it sat
+  below the fold — so the one control that mattered was the one thing a reader
+  could not see. Nobody scrolls a wall of text they did not ask for to look for
+  a button they do not know is there.
+
+  As a dialog the body scrolls INSIDE the panel and the action bar is pinned to
+  the bottom of it, so "Get started" is on screen at every height. The app is
+  visible behind, which also answers "what is this thing" better than a page of
+  prose does.
+
+  §7e still holds: this is the ONE orientation block, and pressing past it MOVES
+  it into the ⓘ panel rather than copying it — including when the reader
+  dismisses with Escape or the backdrop, which is handled on `close` rather than
+  on the button, so there is no way past this that loses it.
+-->
+<dialog class="info welcome-dialog" id="welcome-panel" aria-labelledby="welcome-title">
+  <div class="info-head">
+    <h2 id="welcome-title">Welcome to MoleBridge</h2>
+  </div>
+  <div class="info-body">
+    <div id="orientation">
+      <h2>What this is</h2>
+      <p>
+        A stoichiometry problem, worked one step at a time. You enter every value
+        along the way — the balanced coefficients, the molar mass, the moles, the
+        ratio — and you cannot move on until the step in front of you is right.
+      </p>
+      <p>
+        When a step is wrong, MoleBridge works out which mistake produces that
+        exact number and tells you, instead of just marking it wrong. If the
+        mistake is an algebra one, it shows you three lines of the algebra using
+        your own numbers.
+      </p>
+
+      <h2>What this is not</h2>
+      <ul>
+        <li>It is <strong>not a solver</strong>. It will not do a problem for you, and it never shows you an answer before you have tried it.</li>
+        <li>It is <strong>not a grade</strong>. The code at the end records how far you got and where you got stuck. Your teacher decides what that is worth.</li>
+        <li>It <strong>does not know who you are</strong>. It asks for the roster number your teacher gave you and nothing else — no name, no email, no account.</li>
+      </ul>
+
+      <h2>How a session goes</h2>
+      <ol>
+        <li>Type in the roster number and assignment key your teacher put on the board.</li>
+        <li>Work each problem stage by stage. Getting one wrong costs you nothing except that the problem stops counting as first-try.</li>
+        <li>At the end you get a short code. Type it into the Canvas assignment.</li>
+      </ol>
+
+      <h2>Nothing is stored and nothing is sent</h2>
+      <p>
+        MoleBridge has no account and no server. Nothing you type leaves the
+        device, and nothing is kept after you close the tab — so if you stop
+        halfway, you start again. That is the trade for it working with no
+        connection and holding nothing about you.
+      </p>
+    </div>
+  </div>
+  <div class="welcome-actions">
+    <button type="button" class="button button-big" id="welcome-begin">Get started</button>
+  </div>
+</dialog>
 
 <!-- ============ the ⓘ surface ============ -->
 <dialog class="info" id="info-panel" aria-labelledby="info-title">

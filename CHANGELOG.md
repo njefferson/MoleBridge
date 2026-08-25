@@ -4,6 +4,26 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.5.0 — CAPABILITY
+
+The first-run explanation opens over the app instead of in front of it.
+
+It used to be a full page, and on a phone or a small window the **Get started**
+button sat below the bottom of the screen — so the one thing you needed to press
+was the one thing you could not see. That was wrong, and it was wrong from the
+first release.
+
+It is a panel now. The text scrolls inside it and the button stays pinned at the
+bottom where you can always reach it, and the app is visible behind, so you can
+see what you are about to use rather than reading about it first. Escape closes
+it too, and the explanation still moves into the ⓘ where it always was — there
+is no way past it that loses it.
+
+**What is still missing.** The tile is green whichever colour you choose in the
+app; a home-screen icon cannot follow a setting. And the same gaps as before: no
+way to review a problem you have already finished, and no running total across
+sessions.
+
 ## 0.4.4 — ITERATION
 
 The mole has claws now.

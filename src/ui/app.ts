@@ -38,11 +38,11 @@ function boot(): void {
   // rule exists for.
   need('#build-stamp').textContent = VERSION;
 
-  const welcome = need('#screen-welcome');
+  const welcomePanel = need<HTMLDialogElement>('#welcome-panel');
   const setup = need('#screen-setup');
   const work = need('#screen-work');
   const done = need('#screen-done');
-  const screens = [welcome, setup, work, done];
+  const screens = [setup, work, done];
 
   let session: Session | null = null;
 
@@ -75,21 +75,26 @@ function boot(): void {
     },
   });
 
-  need<HTMLButtonElement>('#welcome-begin').addEventListener('click', () => {
-    // The move, once, on the way past. From here the orientation lives behind
-    // the ⓘ and there is only ever one of it.
+  // THE MOVE HAPPENS ON `close`, NOT ON THE BUTTON. A dialog can also be
+  // dismissed with Escape or by the backdrop, and §7e's requirement is that the
+  // orientation survives whatever the reader presses to begin — so every route
+  // out of this panel goes through one place.
+  welcomePanel.addEventListener('close', () => {
     info.adoptOrientation();
-    showOnly(screens, setup);
     need<HTMLInputElement>('#setup-roster').focus();
   });
+  need<HTMLButtonElement>('#welcome-begin').addEventListener('click', () => {
+    welcomePanel.close();
+  });
 
-  // A returning reader has already had the orientation, so the app opens on
-  // setup and the explanation waits behind the ⓘ where they left it.
+  // The app opens on SETUP either way, with the orientation laid over it on a
+  // first run. Behind a modal there is still an app to see, which answers "what
+  // is this" better than a page of prose in front of it does.
+  showOnly(screens, setup);
   if (info.hasBeenSeen()) {
     info.adoptOrientation();
-    showOnly(screens, setup);
   } else {
-    showOnly(screens, welcome);
+    welcomePanel.showModal();
   }
 }
 

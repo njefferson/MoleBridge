@@ -627,3 +627,37 @@ textarea {
   flex: 0 0 auto;
 }
 .theme-picker input[type="radio"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+/*
+  ---- the first-run dialog ----
+
+  THE ACTION BAR IS PINNED, and that is the whole point of the change. As a
+  full-height screen this content pushed its own "Get started" below the fold on
+  a real device, so the one control that mattered was the one thing nobody could
+  see. Here the body scrolls inside the panel and the button stays put at every
+  height.
+
+  `100dvh` rather than `100vh`: on a phone browser `vh` is the height WITHOUT
+  the address bar, so a panel sized against it is taller than the visible area
+  and puts the bar back off screen — which is the same defect wearing a
+  different hat.
+*/
+.welcome-dialog {
+  display: none;
+  max-height: min(calc(100dvh - 2rem), 52rem);
+  flex-direction: column;
+}
+.welcome-dialog[open] { display: flex; }
+.welcome-dialog .info-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.welcome-actions {
+  flex: 0 0 auto;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--hairline);
+  background: var(--surface-1);
+}
+.welcome-actions .button { width: 100%; }

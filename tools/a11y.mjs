@@ -94,9 +94,15 @@ const TIER = 3;
  */
 const STATES = [
   {
-    name: 'welcome',
+    // The first-run orientation, which is a MODAL over the setup screen rather
+    // than a screen of its own. Measured with the dialog open, so the pinned
+    // action bar and the scrolling body are both under the gate — the defect
+    // that made it a dialog was a button below the fold, and a state that only
+    // measured the prose would not have seen it.
+    name: 'the first-run orientation',
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-panel[open]').waitFor();
     },
   },
   {

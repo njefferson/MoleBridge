@@ -294,6 +294,48 @@ MoleBridge. A gate rather than a manual step handed over.
 the front of the room is further away and runs a Chromium nobody here can test
 against.
 
+## The first run is a modal, because its button was below the fold
+
+The orientation was a full-height screen, and on a real device the **Get
+started** button that dismissed it sat below the bottom of the viewport. The one
+control that mattered was the one thing a reader could not see, and nobody
+scrolls a wall of text they did not ask for looking for a button they do not
+know is there. It shipped that way from the first release and was found by the
+owner on a device, not by any gate.
+
+It is a `<dialog>` now: the body scrolls INSIDE the panel and the action bar is
+pinned to the bottom of it, so the button is on screen at every height. The app
+is behind it rather than replaced by it, which answers "what is this thing"
+better than a page of prose in front of it does.
+
+**Every route out goes through `close`, not through the button.** A dialog can
+also be dismissed with Escape or the backdrop, and §7e requires the orientation
+to survive whatever the reader presses to begin — so the move into the ⓘ panel
+is wired to the dialog's `close` event and there is no path past it that loses
+the block.
+
+**`100dvh`, not `100vh`.** On a phone browser `vh` is the height WITHOUT the
+address bar, so a panel sized against it is taller than the visible area and
+puts the action bar back off screen — the same defect wearing a different hat.
+
+### The gate could not have caught this, and now can
+
+The journey walk ran at 1280x900, which is roomy enough that the old full-height
+screen fitted. A check there would have passed throughout the defect's entire
+life. It now asserts that the button's box lies inside the viewport at four
+sizes: a phone upright, a phone on its side, a small Chromebook window, and a
+full window.
+
+Planted by taking away the scrolling body so the action bar scrolls with the
+content — the original failure exactly. Three of the four sizes went red, the
+button landing at 1609 on a 664-high phone, **and the full window passed**,
+which is the whole reason this survived as long as it did.
+
+A first attempt at planting removed the panel's `max-height` and everything
+stayed green: a `<dialog>` carries its own user-agent height cap, so that rule
+was not the load-bearing one. Worth recording — a plant that fails to break
+anything is evidence about the plant, not about the gate.
+
 ## The icon, three drawings later — and a gate that lied about it
 
 **The first icon read as a frowning face**, and shipped that way for three
