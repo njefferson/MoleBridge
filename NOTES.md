@@ -297,15 +297,40 @@ work a session can finish on its own.
   The deploy job runs in a dedicated environment — `production` from `main`,
   `preview` from anything else — so a protection rule can sit on production
   alone without gating every preview. Nothing protects it today.
-- **Branches.** This repository has `main` and the harness branch. The family
-  convention is `staging` and `main`, with `staging` a hard release gate. The
-  harness's standing instruction here is to push only to its designated branch,
-  which conflicts with creating and pushing `staging`, so that call is the
-  owner's.
-- **`.branch-guard` and the generated pre-commit hook** are owed in the same
-  change that creates `staging`. `tools/version-check.mjs` is written to be an
-  `also=` entry when that happens, so the release triplet is held on every
-  commit rather than when somebody remembers.
+- **Branches are settled, and `staging` exists.** The owner made the call on
+  2026-08-25. Work commits to `staging`; `main` is production, because `main` is
+  the Cloudflare Pages production branch and a commit landing there is a commit
+  landing on the address a class opens. Promotion is a merge, and a commit made
+  directly on `main` needs `MOLEBRIDGE_PROMOTE=1` in front of it. The harness's
+  own `claude/*` branch is kept pointing at the same commit so nothing is
+  stranded on it, but it is no longer where work belongs.
+- **The pre-commit hook is generated, not written.** `.branch-guard` declares
+  the whole configuration and the hub's `branch-guard.mjs --install` generates
+  `.githooks/pre-commit` from it — the copy here is an artefact like
+  CHANGELOG.md, and `npm run branch` fails on drift. It installs into
+  `.git/hooks`, which no branch owns: the hub's first attempt pointed
+  `core.hooksPath` at the tracked directory and failed open, because checking
+  out an older branch deletes the hook with it, and the branch most in need of
+  protecting is the one most likely to be older.
+- **`tools/version-check.mjs` is an `also=` entry**, so the release triplet is
+  held on every commit including a promote rather than when somebody remembers.
+  A declared `also` script that is missing or not executable is a FAILURE and
+  never a skip.
+- **CI runs the guard as `--artefact`.** The plain check also asserts that
+  `.git/hooks/pre-commit` is installed, which is a fact about one clone;
+  `actions/checkout` leaves `.git/hooks` empty by definition, so the plain
+  spelling would fail on every push forever. `--artefact` checks the tracked
+  hook against `.branch-guard` and prints the two checks it skipped.
+- **The guard was planted before it was believed**, and the two plants fired
+  different rules. On the harness branch a commit was refused by the BRANCH
+  rule, naming `staging` and printing the promote escape. On `main` it was
+  refused by the `also` rule instead — `main` is still the initial commit and
+  carries no `tools/`, so the declared check was missing, which is a failure and
+  never a skip. Setting `MOLEBRIDGE_PROMOTE=1` did not get past that, correctly:
+  the escape permits a commit on production, it does not excuse a check that
+  cannot run. Once the promote merge puts `tools/` on `main`, the branch rule
+  and its escape become the operative pair there. The same commit on `staging`
+  went through with the triplet check printing its four lines.
 - **No Content-Security-Policy.** `public/_headers` says so in as many words
   rather than implying otherwise. The app carries no inline script, so one is
   reachable; it is a refactor rather than a header and it has not been done.

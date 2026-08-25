@@ -1,0 +1,13 @@
+# MoleBridge commits to `staging`. `main` is production: it is the Cloudflare
+# Pages production branch, so a commit landing there is a commit landing on the
+# address a class opens. Promotion is a merge, said out loud.
+work=staging
+promote=main
+escape=MOLEBRIDGE_PROMOTE
+
+# Run on EVERY commit, including a promote, because it is about what is being
+# committed rather than where. The release triplet — src/version.ts, the top of
+# CHANGELOG.md, and the service worker's cache name — is three places holding
+# one number, and the failure mode is a new release served out of a cache named
+# for the old one, which is invisible until a reader is stuck on a stale build.
+also=tools/version-check.mjs

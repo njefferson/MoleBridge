@@ -2,7 +2,7 @@
   "name": "molebridge",
   "version": "0.0.0",
   "private": true,
-  "description": "Step-gated stoichiometry trainer \u2014 domain engine and completion-code codec.",
+  "description": "Step-gated stoichiometry trainer — domain engine and completion-code codec.",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -16,12 +16,14 @@
     "version:check": "node tools/version-check.mjs",
     "cli": "node tools/cli.ts",
     "check": "npm run typecheck && npm run version:check && npm test",
-    "gates": "node ../noahjefferson/privacy-check.mjs --repo . && node ../noahjefferson/quote-check.mjs --repo . && node ../noahjefferson/docs-check.mjs . && node ../noahjefferson/pin-check.mjs --repo .",
+    "gates": "node ../noahjefferson/branch-guard.mjs --repo . && node ../noahjefferson/privacy-check.mjs --repo . && node ../noahjefferson/quote-check.mjs --repo . && node ../noahjefferson/docs-check.mjs . && node ../noahjefferson/pin-check.mjs --repo .",
     "doctrine": "node ../noahjefferson/doctrine-sync.mjs --repo .",
     "walk": "npm run build && node tools/walk.mjs",
     "a11y": "node tools/a11y.mjs",
     "palette": "node ../noahjefferson/palette-check.mjs palettes/molebridge.json",
-    "generate": "node tools/changelog.mjs"
+    "branch": "node ../noahjefferson/branch-guard.mjs --repo .",
+    "generate": "node tools/changelog.mjs",
+    "prepare": "node ../noahjefferson/branch-guard.mjs --repo . --install >/dev/null 2>&1 || true"
   },
   "devDependencies": {
     "@types/node": "22.19.4",

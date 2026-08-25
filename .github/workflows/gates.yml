@@ -86,6 +86,17 @@ jobs:
       - name: npm hygiene
         run: node .hub/pin-check.mjs --repo .
 
+      # --artefact, NOT the plain check. The plain check also asserts that
+      # `.git/hooks/pre-commit` is installed, which is a fact about ONE CLONE,
+      # and `actions/checkout` leaves `.git/hooks` empty by definition — so a
+      # runner can never satisfy it and the step would fail on every push. What
+      # a runner CAN check is that the tracked hook still matches what
+      # `.branch-guard` declares, which is the drift that matters. Never
+      # `--install` here instead: that WRITES the tracked file and repairs the
+      # one defect the step exists to find. (Hub LESSONS 107.)
+      - name: The branch guard has not drifted from what it declares
+        run: node .hub/branch-guard.mjs --repo . --artefact
+
       - name: The palette clears every hard floor
         run: node .hub/palette-check.mjs palettes/molebridge.json
 

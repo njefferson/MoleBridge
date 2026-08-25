@@ -87,10 +87,23 @@ student surface**: it prints answers.
 
 ## Branches
 
-`main`, and the harness's own `claude/*` branch. The family convention is
-`staging` and `main` with `staging` as a hard release gate (Doctrine §7); that
-is owed before session 2 ships anything, along with `.branch-guard` and the
-generated pre-commit hook.
+**Work commits to `staging`. `main` is production** — it is the Cloudflare Pages
+production branch, so a commit landing on it is a commit landing on the address
+a class opens. Promotion is a merge; a commit made directly on `main` needs
+`MOLEBRIDGE_PROMOTE=1` in front of it. The harness's own `claude/*` branch is
+kept pointing at the same commit so nothing is stranded on it.
+
+**This is a hook, not a paragraph.** `.branch-guard` is the whole configuration
+and the hub GENERATES `.githooks/pre-commit` from it — never edit that file:
+
+```
+node ../noahjefferson/branch-guard.mjs --repo . --install
+```
+
+`npm ci` runs the install through `prepare`, because a fresh clone has no
+`.git/hooks` and the tracked copy is not the one git runs. `npm run branch`
+fails on drift. CI runs it as `--artefact`, which is the only spelling a runner
+can satisfy — see NOTES.md.
 
 ## Repo metadata (manual, confirm — Doctrine §10)
 
