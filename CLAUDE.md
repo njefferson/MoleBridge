@@ -70,6 +70,16 @@ that to the teacher.
   theme reaches the picker only after the hub's gate has cleared it in both
   modes. `npm run palette` measures all six. The neutrals are the Instrument
   family in every theme; only the accent moves.
+- **A NEW COLOUR SET NEEDS `npm run palette` AND NOTHING ELSE — because two
+  gates make that true, and breaking either one breaks it.** The app paints only
+  role tokens, which `npm run a11y` asserts by reverse-mapping every rendered
+  colour to the token it came from; and `_renders` in `palettes/molebridge.json`
+  records the pairings the app actually makes, which the same run holds
+  identical to what it just saw. **Never type into `_renders`** — it comes out
+  of a run, and the failure message names the exact string. The default sweep is
+  one palette; **CI runs `--all-palettes`, and that spelling is the only one the
+  recorded list is authoritative from**, because two roles sharing a value in
+  one palette mask a pairing. PALETTES.md §7b is the whole argument.
 - **`public/theme.js` is a blocking, non-module, external script and must stay
   all three.** Non-module because a module is deferred and would run after the
   paint it prevents; external because this app has no inline script at all,

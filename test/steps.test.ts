@@ -14,6 +14,7 @@ import {
   completionPayload,
   controllableClock,
   correctEntryFor,
+  revealValueFor,
   currentProblem,
   currentStage,
   numericAnswer,
@@ -311,4 +312,126 @@ test('a practice session has no completion code, and asking for one throws', () 
     completionPayload(assigned, controllableClock(START)).assignmentKeyId >= 0,
     'assignment mode is unaffected',
   );
+});
+
+test('every revealed intermediate carries the figures its data supports', () => {
+  /*
+    THE OWNER READ THESE ON A REAL DEVICE AND SAID SO. Asking for the moles of
+    8.135 g of KClO3 was answered "0.0663836 mol" — six figures out of a
+    four-figure mass, and every intermediate in every problem was wrong the same
+    way, because the reveal formatted at a constant instead of asking the engine
+    what the quantity's precision was.
+
+    `solve` carried precision for the final answer only, so there was nothing to
+    ask. `quantityAt` is what closed that.
+  */
+  for (const seed of ['REVEAL-A', 'REVEAL-B', 'REVEAL-C']) {
+    for (const tier of [1, 2, 3, 4]) {
+      const problem = generateProblem(seed, tier, 0);
+      const solution = solve(problem);
+      for (const stage of stagesFor(problem)) {
+        const shown = revealValueFor(problem, solution, stage);
+        if (shown === null) continue;
+        if (shown.sigFigs === null) {
+          // Exact: a mole ratio comes from counted coefficients, and it must
+          // claim no precision at all rather than a wrong amount of it.
+          assert.equal(shown.carry, null, `${stage.id} offers digits to carry past an exact value`);
+          continue;
+        }
+        const written = sigFigsWritten(shown.shown);
+        assert.equal(
+          written,
+          shown.sigFigs,
+          `${seed}/${tier}/${stage.id} shows "${shown.shown}" — ${written} figures where the data supports ${shown.sigFigs}`,
+        );
+      }
+    }
+  }
+});
+
+/** Significant figures a written number actually claims. */
+function sigFigsWritten(text: string): number {
+  const [mantissa] = text.split(/[eE]/);
+  const digits = (mantissa ?? '').replace(/[^0-9.]/g, '');
+  const hasPoint = digits.includes('.');
+  const bare = digits.replace('.', '').replace(/^0+/, '');
+  return hasPoint ? bare.length : bare.replace(/0+$/, '').length;
+}
+
+test('the carried digits get a whole problem home without rounding early', () => {
+  /*
+    THE REASON THE REVEAL SHOWS TWO NUMBERS. An intermediate at exactly its
+    significant figures is correct AND is a trap: typing it into the next step
+    is rounding early, which E-ROUND-EARLY predicts precisely — the app would
+    diagnose a student for doing what it just told them.
+
+    So this walks whole problems submitting the CARRIED value at every stage and
+    requires the grader to take each one, which is the property the guard digits
+    exist for.
+  */
+  for (const seed of ['CARRY-A', 'CARRY-B', 'CARRY-C', 'CARRY-D']) {
+    for (const tier of [1, 2, 3, 4]) {
+      const clock = controllableClock(START);
+      let session = startSession(
+        config({ mode: 'practice', assignmentKey: seed, tier, problemCount: 1 }),
+        clock,
+      );
+      for (let guard = 0; guard < 12 && !session.finished; guard += 1) {
+        const problem = currentProblem(session);
+        const solution = solve(problem);
+        const stage = currentStage(session);
+        const shown = revealValueFor(problem, solution, stage);
+        let entry;
+        if (shown === null) entry = correctEntryFor(problem, solution, stage);
+        else {
+          const text = shown.carry ?? shown.shown;
+          entry = {
+            kind: 'text' as const,
+            text: shown.unit === null ? text : `${text} ${shown.unit}`,
+          };
+        }
+        const result = submit(session, entry, clock);
+        assert.ok(
+          result.advanced || result.sessionComplete,
+          `${seed}/${tier}/${stage.id}: the grader rejected what the reveal told a student to carry ` +
+            `(${JSON.stringify(entry)}) as ${result.classification.errorClass}`,
+        );
+        session = result.session;
+      }
+      assert.ok(session.finished, `${seed}/${tier} did not finish on the carried values`);
+    }
+  }
+});
+
+test('what the reveal SHOWS and what the grader ACCEPTS are the same value', () => {
+  // The reveal reformats; it must never re-derive. A student who types back
+  // exactly what they were shown has to be right.
+  const problem = generateProblem('REVEAL-A', 3, 0);
+  const solution = solve(problem);
+  const clock = controllableClock(START);
+  let session = startSession(
+    config({ mode: 'practice', assignmentKey: 'REVEAL-A', tier: 3, problemCount: 1 }),
+    clock,
+  );
+  for (let guard = 0; guard < 12 && !session.finished; guard += 1) {
+    const stage = currentStage(session);
+    const problem = currentProblem(session);
+    const solution = solve(problem);
+    const value = revealValueFor(problem, solution, stage);
+    const shown =
+      value === null
+        ? correctEntryFor(problem, solution, stage)
+        : {
+            kind: 'text' as const,
+            text: value.unit === null ? (value.carry ?? value.shown) : `${value.carry ?? value.shown} ${value.unit}`,
+          };
+    const result = submit(session, shown, clock);
+    assert.ok(
+      result.advanced || result.sessionComplete,
+      `the reveal showed something the grader rejected at ${stage.id}: ${JSON.stringify(shown)}`,
+    );
+    session = result.session;
+  }
+  void problem;
+  void solution;
 });

@@ -18,6 +18,7 @@ import { solve, type Problem, type Solution } from '../engine/problem.ts';
 import { stagesFor, type ErrorClass, type Stage, type StudentEntry } from '../engine/taxonomy.ts';
 import {
   correctEntryFor,
+  revealValueFor,
   currentProblem,
   currentStage,
   submit,
@@ -39,6 +40,8 @@ export interface WorkHost {
    * fix, reappearing one level up.
    */
   onExplain(errorClass: ErrorClass): void;
+  /** Abandon the set and go back to the three doors. */
+  onLeave(): void;
 }
 
 interface Elements {
@@ -130,7 +133,7 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     graded session refusing to answer is a program fact, and the second one
     survives somebody styling the page differently.
 
-    It shows one stage. `correctEntryFor` is the grader's own function, which is
+    It shows one stage. `revealEntryFor` is the grader's own value, which is
     the point: what a student sees revealed is exactly what they would have been
     marked against, rather than a second rendering that could disagree with it.
   */
@@ -139,13 +142,34 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     if (session.config.mode !== 'practice') return;
     const problem = currentProblem(session);
     const stage = currentStage(session);
-    const entry = correctEntryFor(problem, solve(problem), stage);
-    nodes.revealed.textContent =
-      entry.kind === 'text'
-        ? `This step is ${entry.text}. Work out where it comes from before you move on.`
-        : entry.kind === 'coefficients'
+    const solution = solve(problem);
+    const shown = revealValueFor(problem, solution, stage);
+    if (shown === null) {
+      const entry = correctEntryFor(problem, solution, stage);
+      nodes.revealed.textContent =
+        entry.kind === 'coefficients'
           ? `The coefficients are ${entry.values.join(', ')}. Check them against the atoms on each side.`
-          : `The limiting reactant is the one numbered ${entry.speciesIndex + 1}. Work out why.`;
+          : `The limiting reactant is the one numbered ${(entry as { speciesIndex: number }).speciesIndex + 1}. Work out why.`;
+      nodes.revealed.hidden = false;
+      return;
+    }
+    /*
+      BOTH NUMBERS, and the second one is why this is not just a rounding fix.
+
+      Showing an intermediate at exactly its significant figures is correct and
+      is a trap: type that into the next step and you have rounded early, which
+      is `E-ROUND-EARLY` — so the app would diagnose a student for doing what it
+      had just told them. Saying "keep these digits, round at the end" is the
+      rule a course teaches anyway, and it is the one thing a reveal is well
+      placed to say.
+    */
+    const withUnit = (text: string): string => (shown.unit === null ? text : `${text} ${shown.unit}`);
+    nodes.revealed.textContent =
+      shown.sigFigs === null
+        ? `This step is ${withUnit(shown.shown)}. It comes from the balanced coefficients, so it is exact — significant figures do not apply to it.`
+        : shown.carry === null
+          ? `This step is ${withUnit(shown.shown)}, to ${shown.sigFigs} significant figures. Work out where it comes from before you move on.`
+          : `This step is ${withUnit(shown.shown)}, to ${shown.sigFigs} significant figures. Carry ${withUnit(shown.carry)} into the next step and round once, at the end.`;
     nodes.revealed.hidden = false;
   });
 
@@ -201,15 +225,57 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
       return;
     }
     showWrong(nodes.feedback, result, solve(problem));
-    const field = nodes.inputs.querySelector<HTMLInputElement>('input');
-    if (field !== null) {
-      field.select();
-      focusFirst(field);
+    /*
+      FOCUS GOES TO THE DIAGNOSIS, NOT BACK INTO THE BOX.
+
+      This used to call select() and focus() on the field, which is the reflex —
+      "they got it wrong, let them retype" — and on a tablet it put the keyboard
+      straight back up over the sentence explaining what they did wrong. The
+      whole product is that sentence, and a student saw "Not that one." with the
+      rest below the fold.
+
+      Moving focus to the message is also the standard place for it after a
+      rejection: a keyboard user lands on the reason rather than on the input
+      they just came from, and a screen reader reads it whether or not the live
+      region fired. Retyping costs one tap on the field, which is the tap they
+      were about to make anyway.
+    */
+    nodes.feedback.focus({ preventScroll: true });
+    nodes.feedback.scrollIntoView({ block: 'nearest' });
+  });
+
+  /*
+    TWO STEPS IN AN ASSIGNMENT, ONE IN PRACTICE. Leaving an assignment throws
+    away the completion code, which is the whole reason the student is there, so
+    it is worth one deliberate second tap. Practice has nothing to lose and a
+    confirmation there is friction for its own sake.
+
+    Inline rather than a dialog: this app already opens four of them, and a
+    confirmation is the one kind of question that should not arrive as another
+    thing to dismiss.
+  */
+  const leave = need<HTMLButtonElement>('#work-leave');
+  let armed = false;
+  const disarm = (): void => {
+    armed = false;
+    leave.textContent = 'Leave this set';
+    leave.classList.remove('work-leave-armed');
+  };
+  leave.addEventListener('click', () => {
+    if (session === null) return;
+    if (session.config.mode === 'practice' || armed) {
+      disarm();
+      host.onLeave();
+      return;
     }
+    armed = true;
+    leave.textContent = 'Leave — you will not get a code';
+    leave.classList.add('work-leave-armed');
   });
 
   return {
     begin(started: Session): void {
+      disarm();
       session = started;
       clear(nodes.feedback);
       render();

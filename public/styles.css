@@ -222,6 +222,27 @@ body {
 }
 .icon-button:hover { background: var(--surface-1); border-color: var(--hairline); }
 
+/*
+  The chrome's icons. STROKED IN currentColor so they inherit the button's own
+  text token — nothing here declares a colour, which is what keeps every pixel
+  in the app inside the role system the theme swap depends on.
+
+  `round` caps are what make the three keypad dots and the (i)'s tittle read as
+  dots at all: they are zero-length lines, so a butt cap would draw nothing.
+*/
+/* The one icon drawn as solid cells rather than strokes. */
+.glyph-cells rect { fill: currentColor; stroke: none; }
+
+.glyph {
+  width: 1.375rem;
+  height: 1.375rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* ---------------- the stale-app strip (§7h) ---------------- */
 
 .update-strip {
@@ -377,15 +398,61 @@ input[type="text"] {
 }
 .button:hover { filter: brightness(1.06); }
 .button-big { width: 100%; font-size: 1.1875rem; min-height: 3.5rem; }
+/*
+  A COMPLETE BUTTON, not a size modifier — and it was a size modifier for
+  fifteen releases. Every `class="button-small"` in the app carries that class
+  ALONE, so none of the `.button` rule above applied to any of them and they
+  were painted by the browser's own default button styling: #6b6b6b with white
+  text in dark, #efefef with black in light, in both cases a cold grey against
+  a warm palette and completely unmoved by which theme was chosen.
+
+  It passed every gate. Contrast was fine — the UA colours are legible — and
+  nothing else was looking. What found it was reverse-mapping each rendered
+  colour to the role token it came from: 144 measurements resolved to no token
+  at all, which is the shape of a colour arriving from outside the theme.
+
+  These are SECONDARY buttons — Back, Copy it, Check, Look up a mistake — so
+  they are painted as one rather than given the accent fill of the primary.
+*/
 .button-small {
   /* 2.75rem, not 2.5. A 40px control is under the 44px floor a finger on a
      board at the front of a room needs, and "small" is about how loud it looks
      rather than how hard it is to hit. */
   min-height: 2.75rem;
   padding: 0.5rem 0.9rem;
+  font: inherit;
   font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-1);
+  background: var(--surface-2);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  cursor: pointer;
 }
+.button-small:hover { background: var(--surface-3); }
 .button-quiet { color: var(--text-1); background: transparent; border-color: var(--rail); }
+
+/*
+  The work screen's head: how far through, and the way out. They share a row so
+  the exit is beside the progress rather than hunted for at the bottom of a
+  scrolling page.
+*/
+.work-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--step);
+  flex-wrap: wrap;
+}
+.work-head .progress { margin: 0; }
+/* The armed state is a WORD CHANGE, not a colour change: "Leave — you will not
+   get a code" says what the second tap does, and a red button only says that
+   something is dangerous. */
+.work-leave-armed { background: var(--accent-soft); font-weight: 700; }
+
+/* Focus lands here after a rejection, so it needs a ring like anything else
+   that takes focus — a container with tabindex="-1" gets none by default. */
+.feedback:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: var(--radius); }
 
 /* ---------------- feedback ---------------- */
 

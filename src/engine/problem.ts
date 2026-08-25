@@ -336,6 +336,91 @@ export function solve(problem: Problem): Solution {
   };
 }
 
+/**
+ * The precision of the value one stage asks for.
+ *
+ * ## Why this had to exist
+ *
+ * `solve` carried precision for the FINAL answer only — `finalQuantity` — and
+ * every intermediate came out as a bare number. So anything showing a student an
+ * intermediate had nothing to round it to, and the practice reveal picked a
+ * constant: six figures for everything. A student who asked for the moles of
+ * 8.135 g of KClO3 was told "0.0663836 mol", which claims six figures of
+ * precision from a four-figure mass. **Every revealed intermediate was wrong in
+ * the same way**, and it was the owner reading them on a real device who said so.
+ *
+ * The rules are the ordinary ones and the engine already implements them:
+ * multiplication and division take the fewest significant figures among the
+ * operands, an exact quantity constrains nothing, and a molar mass carries
+ * whatever `molarmass.ts` decided — which is its own documented argument, since
+ * the addition rule and the specification's rule disagree and both are reported.
+ *
+ * Returns null where the stage is not a number: coefficients and the
+ * limiting-reactant choice have no precision to speak of.
+ */
+export function quantityAt(problem: Problem, solution: Solution, stageId: string): Quantity | null {
+  const given = measured(problem.given.value, problem.given.sigFigs);
+  const mmGiven = molarMass(problem.species[problem.givenIndex] as string).quantity;
+  const secondIndex = problem.secondGivenIndex;
+  const second =
+    problem.secondGiven === null ? null : measured(problem.secondGiven.value, problem.secondGiven.sigFigs);
+  const mmSecond =
+    secondIndex === null ? null : molarMass(problem.species[secondIndex] as string).quantity;
+
+  /** The operands behind "moles of the wanted substance", by whichever route. */
+  const molWantedChain = (): Quantity[] => {
+    const fromGiven = [given, mmGiven, exact(solution.ratio)];
+    if (second === null || mmSecond === null || solution.limitingIndex === null) return fromGiven;
+    // The limiting reactant is the one the answer actually comes from, so its
+    // measurement is the one that constrains the figures.
+    return solution.limitingIndex === problem.givenIndex
+      ? fromGiven
+      : [second, mmSecond, exact(solution.ratioSecond as number)];
+  };
+
+  switch (stageId) {
+    case 'S2':
+      return mmGiven;
+    case 'S3':
+      return multiplyDivide(solution.molGiven, [given, mmGiven]);
+    case 'S3b':
+      return second === null || mmSecond === null
+        ? null
+        : multiplyDivide(solution.molSecond as number, [second, mmSecond]);
+    case 'S4':
+    case 'S4b':
+      // A mole ratio comes from the balanced coefficients, which are counts.
+      // EXACT, and saying "to three significant figures" about it would be
+      // teaching the opposite of what the ratio is.
+      return stageId === 'S4'
+        ? exact(solution.ratio)
+        : second === null || mmSecond === null
+          ? null
+          : multiplyDivide(solution.molWantedFromSecond as number, [
+              second,
+              mmSecond,
+              exact(solution.ratioSecond as number),
+            ]);
+    case 'S5':
+      return multiplyDivide(solution.molWanted, molWantedChain());
+    case 'S6':
+      return multiplyDivide(solution.converted, [
+        ...molWantedChain(),
+        conversionFactor(problem, solution.mmWanted).quantity,
+      ]);
+    case 'S7':
+      return problem.actualYield === null
+        ? null
+        : multiplyDivide(solution.percentYield as number, [
+            measured(problem.actualYield.value, problem.actualYield.sigFigs),
+            ...molWantedChain(),
+            conversionFactor(problem, solution.mmWanted).quantity,
+          ]);
+    default:
+      return null;
+  }
+}
+
 /** The S6 factor: what moles of the wanted substance get multiplied by. */
 function conversionFactor(
   problem: Problem,

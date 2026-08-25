@@ -4,6 +4,91 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.0.0 — VERSION
+
+Version 1. Everything MoleBridge was for is in it.
+
+**Learn** takes you from reading a formula to percent yield in eight lessons.
+Nothing is locked; open any of them in any order, and your place is kept on the
+device. **Practice** gives you problems whenever you want them, shows the answer
+if you ask, and tells you what went wrong when you get one wrong. **Class
+assignment** is the graded route, with a code for Canvas at the end.
+
+A **reference** with a page for every mistake MoleBridge can recognise, opening
+straight from the wrong answer that produced it. A **calculator** that does
+arithmetic and refuses to do the chemistry. A **periodic table** with atomic
+weights. A **flag** in the top bar to report a problem in two taps, with nothing
+in the report about you.
+
+Three colour themes, light, dark or matching your device. It installs to a home
+screen and works with no connection.
+
+**What is still missing.** There is no way to review a problem you have already
+finished, and no running total across sessions.
+
+## 0.14.0 — CAPABILITY
+
+Revealed answers have the right number of significant figures now.
+
+They did not. Every one of them was shown to six figures whatever the question
+gave you — asking for the moles in 8.135 g of KClO₃ answered `0.0663836 mol`,
+which claims six figures out of a four-figure mass. **Every intermediate in every
+problem was wrong the same way.**
+
+Each step now shows the figures its own data supports, and says how many: *"This
+step is 0.06638 mol, to 4 significant figures."* A mole ratio says it is exact
+and that significant figures do not apply to it, because it comes from counted
+coefficients.
+
+**And it tells you what to carry.** Typing a properly rounded intermediate into
+the next step is rounding early — which MoleBridge marks — so the reveal gives
+you both: *"Carry 0.0663836 mol into the next step and round once, at the end."*
+That is the rule anyway, and this is the place to say it.
+
+**Learn is the first thing on the menu now**, then Practice, then your class
+assignment.
+
+## 0.13.0 — CAPABILITY
+
+You can leave a set now, and you can read what you got wrong.
+
+**There is a way out.** Once a set started there was no exit — you finished all
+twelve steps or you closed the tab. **Leave this set** now sits next to "Problem
+1 of 3". In practice it goes straight back. In a class assignment it asks twice,
+because leaving one means no code.
+
+**The explanation is where you can see it.** When a step was wrong, the sentence
+saying *which* mistake you made was rendered below the whole form — so on a
+tablet with the keyboard up, you saw "Not that one." and nothing else. It now
+appears directly under the button you pressed, and the app stops putting the
+keyboard back over it.
+
+**Revealed answers are written like a person would write them.** Asking for the
+molar mass of glucose said `180.156000000 g/mol`. It says `180.156 g/mol`. A
+mole ratio says `1.5`, not `1.50000`. Where the number of figures is being
+marked, the answer is still shown to exactly that many — there the trailing
+zeros are the point.
+
+## 0.12.2 — ITERATION
+
+The buttons along the top are pictures now.
+
+They were single characters — `He`, `=`, `!`, `ⓘ` — and sitting in a row
+they read as one nonsense equation rather than as four separate controls. Each
+made sense on its own. Together they did not.
+
+There is now a little periodic table, a calculator, a flag for reporting a
+problem, and the same circled i for information. They say what they open.
+
+## 0.12.1 — ITERATION
+
+Every small button in the app now uses your colour theme.
+
+Back, Copy it, Check, Look up a mistake and the rest were being painted by the
+browser rather than by MoleBridge — a flat grey that stayed the same whichever
+of the three themes you picked, and looked wrong against all of them. They were
+legible, so nothing caught it. They match now.
+
 ## 0.12.0 — CAPABILITY
 
 A periodic table, in the top bar, next to the calculator.

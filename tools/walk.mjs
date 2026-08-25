@@ -479,6 +479,87 @@ try {
     'and there is no such offer in a class assignment',
   );
 
+  /* ---- the way out of a set, and where the verdict lands ---- */
+  //
+  // BOTH FOUND ON A REAL TABLET, not here. A set had no exit at all — finish it
+  // or reload the page — and the diagnosis rendered below the whole form, so
+  // with the keyboard up a student saw "Not that one." and nothing else. The
+  // sentence underneath is the entire product.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-start').click();
+
+  check(await page.locator('#work-leave').isVisible(), 'a set can be left, and the way out is on screen');
+
+  // THE ORDER OF THE DOORS IS THE OWNER'S CALL and is asserted rather than left
+  // to whoever edits the markup: learning first, practice second, the class
+  // assignment last.
+  const doorOrder = await page.evaluate(() =>
+    [...document.querySelectorAll('.door')].map((node) => node.id));
+  check(
+    JSON.stringify(doorOrder) === JSON.stringify(['door-learn', 'door-practice', 'door-assignment']),
+    `the doors are in the order the owner asked for (${doorOrder.join(', ')})`,
+  );
+
+  {
+    const inputs = page.locator('#work-inputs input');
+    const count = await inputs.count();
+    for (let at = 0; at < count; at += 1) await inputs.nth(at).fill('9');
+    await page.locator('#work-form button[type="submit"]').click();
+    await page.locator('#work-feedback .note-wrong').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  }
+
+  // THE VERDICT IS ABOVE THE REVEAL, in document order, so an opened reveal
+  // cannot push the diagnosis further down the page.
+  const order = await page.evaluate(() => {
+    const feedback = document.querySelector('#work-feedback');
+    const reveal = document.querySelector('#work-reveal');
+    if (feedback === null || reveal === null) return 'missing';
+    return (feedback.compareDocumentPosition(reveal) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+      ? 'verdict first'
+      : 'reveal first';
+  });
+  check(order === 'verdict first', `the verdict comes before the reveal (${order})`);
+
+  // AND FOCUS IS ON IT, not back in the box. Re-focusing the field is what put
+  // the keyboard over the diagnosis on a tablet.
+  const focused = await page.evaluate(() => document.activeElement?.id ?? '(none)');
+  check(focused === 'work-feedback', `focus lands on the diagnosis after a rejection (${focused})`);
+
+  // IN VIEW, measured rather than assumed, on a viewport the size of a phone
+  // with a keyboard taking half of it.
+  await page.setViewportSize({ width: 390, height: 380 });
+  await page.locator('#work-form button[type="submit"]').click();
+  await page.locator('#work-feedback .note-wrong').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  const seen = await page.evaluate(() => {
+    const why = document.querySelector('#work-feedback .why') ?? document.querySelector('#work-feedback .note-wrong');
+    if (why === null) return null;
+    const box = why.getBoundingClientRect();
+    return { top: Math.round(box.top), bottom: Math.round(box.bottom), height: innerHeight };
+  });
+  check(
+    seen !== null && seen.top >= 0 && seen.bottom <= seen.height,
+    `the reason a step was wrong is on screen at 390x380 (${JSON.stringify(seen)})`,
+  );
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  // Practice leaves in one tap; there is nothing to lose.
+  await page.locator('#work-leave').click();
+  check(await page.locator('#screen-home').isVisible(), 'and leaving practice takes one tap');
+
+  // An assignment takes two, because leaving throws the code away.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-assignment').click();
+  await page.locator('#setup-roster').fill(String(ROSTER));
+  await page.locator('#setup-key').fill(KEY);
+  await page.locator('#setup-start').click();
+  await page.locator('#work-leave').click();
+  check(await page.locator('#screen-work').isVisible(), 'leaving an assignment does not happen on one tap');
+  const armedText = (await page.locator('#work-leave').textContent()) ?? '';
+  check(/code/i.test(armedText), `and the second tap says what it costs (${armedText.trim()})`);
+  await page.locator('#work-leave').click();
+  check(await page.locator('#screen-home').isVisible(), 'and the second tap leaves');
+
   /* ---- the periodic table ---- */
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });
   await page.locator('#door-practice').click();

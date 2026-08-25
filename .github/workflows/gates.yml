@@ -31,7 +31,15 @@ concurrency:
 env:
   # The hub commit this repository has reconciled with. Moved by
   # `doctrine-sync.mjs --adopt`, and this pin moves with it.
-  HUB_SHA: 2181454773e702bc2437f338d6117916fdccc5cc
+  #
+  # MOVED WITH 0.12.1, AND IT HAD TO BE. That release's whole argument — that a
+  # colour set clears every screen once the palette gate clears it — depends on
+  # `onAccent` and `_renders` being IN the palette gate, and CI runs the hub's
+  # canonical copy at this pin. Left at the old SHA, every gate would have gone
+  # green while running a palette check that had never heard of either, which is
+  # the stale-mirror shape in hub LESSONS 53: not a smaller gate, a different
+  # one.
+  HUB_SHA: 5cbee300c2c11ef900048375ef8d0d43828aaa15
 
 jobs:
   gates:
@@ -67,6 +75,16 @@ jobs:
 
       - name: Tests
         run: npm test
+
+      # FROM OUTSIDE THE ENGINE, which is the point. `npm test` is thorough and
+      # self-referential in one way: solve() produces the answer, the test
+      # submits it, and submit() accepts it — all three could share a mistake
+      # and stay green, which is the shape of the circular drill test this
+      # repository was already caught by once. This recomputes molar masses
+      # against values typed from published tables, balances every generated
+      # equation by counting atoms, and works out every answer by hand.
+      - name: The chemistry, checked without asking the engine to mark its own work
+        run: npm run chemistry
 
       - name: The release triplet is written once
         run: npm run version:check
@@ -161,8 +179,17 @@ jobs:
 
       # Doctrine §4, and it exits non-zero. Every state, both themes, measured
       # from the pixels the browser resolved rather than from the declarations.
+      #
+      # --all-palettes, AND CI IS THE ONLY PLACE THAT SPELLING BELONGS. The
+      # default run sweeps one palette, because contrast for the others is
+      # carried by `npm run palette` plus the role invariant this same run
+      # asserts — but the RECORDED PAIRING LIST is only authoritative from a
+      # full sweep: two roles can share a value in one palette and mask a
+      # pairing, which is exactly what the print palette does when it collapses
+      # everything to black on white. A one-palette run checks the list as a
+      # subset; this checks it for equality.
       - name: Accessibility
-        run: node tools/a11y.mjs
+        run: node tools/a11y.mjs --all-palettes
 
       # THE GATED BYTES, handed to the deploy job. Rebuilding there would deploy
       # a build nothing had checked — near-identical, and near-identical is the

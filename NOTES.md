@@ -881,6 +881,307 @@ oxygen atoms" mid-sentence. A heading reading "carbon (C)" looks like a typo, so
 the panel capitalises for display — in the visible heading AND in the cell's
 accessible name, which have to agree or SC 2.5.3 is failed by the fix.
 
+## D1: can a colour set be swapped wholesale? Yes, once two gates exist
+
+The question was whether a set that already clears every floor in the hub's
+palette gate can replace the current one without re-running this app's
+accessibility gate against it — so adding a theme stops multiplying the browser
+work by the number of themes.
+
+**The answer is yes, and it was NOT true when the question was asked.** Two
+things had to become true first, and finding that out found a defect that had
+been on production for fifteen releases.
+
+### One: the app paints only role tokens
+
+This is the half that feels obviously true. It was not, and grep cannot settle
+it — a literal reaches a screen from a browser default, an inherited value, or a
+script writing `.style`, none of which is in the stylesheet.
+
+So `tools/a11y.mjs` resolves every role token through the browser, builds a map
+from colour to token, and reverse-maps every colour it measures. **A colour that
+maps to nothing came from outside the palette, and fails the run.**
+
+**On its first honest run it found every secondary button in the app.**
+`.button-small` set a height, a padding and a font size — it was written as a
+modifier for `.button`, which carries the colour. Every element used it ALONE,
+so `.button` never applied and Chromium painted them with its own defaults:
+`#6b6b6b` on white text in dark, `#efefef` on black in light. Cold grey against
+a warm palette, unmoved by which theme was chosen, on Back, Copy it, Check and
+Look up a mistake — fifteen sites across the markup and four modules.
+
+Fifteen releases. Every gate green, including a contrast gate measuring resolved
+pixels in three palettes and both modes. **Nothing was wrong with the contrast**
+— UA button colours are legible, which is why browsers picked them. No gate had
+ever asked whether the colour came from the theme.
+
+Three details separate an instrument from a confident liar, and each cost a run:
+
+- **Resolve tokens through the browser, not by parsing the declaration.** The
+  first version read the custom property off the root, got hex where the parser
+  wanted `rgb()`, and reported all 8,949 measurements as unmapped. A broken
+  instrument at full confidence looks exactly like a catastrophic finding.
+- **Composite alpha tokens over every fill, and keep the fill in the name.**
+  Without compositing, every hairline reads as unmapped. Without the fill in the
+  name, a tint over the page and the same tint over the top surface are the same
+  key — and that turned three genuine near-misses on screens nobody has built
+  into three reported defects.
+- **Token order decides collisions.** The print palette collapses everything to
+  black on white, so `--rail` and `--text-1` are both `#000` there; with edges
+  registered first, every heading on the printed decoder reported itself as a
+  rail. Foregrounds first.
+
+### Two: the pairings the app makes are recorded from a run
+
+The palette gate measures the full cross product of roles, which is what makes a
+palette PORTABLE — cleared against every pairing it can go into any app. This app
+paints **nineteen** of them.
+
+Both facts are worth having and they are not the same severity, so a spec may now
+carry `_renders`. A floor missed on a recorded pairing is a failure; one missed
+off the list is a forecast — true about the palette, about a screen nobody built.
+
+**`_renders` is never typed.** It comes out of a run, and the same run fails when
+the recorded list and the observed one differ, in both directions. A stale list
+is not a smaller gate, it is a gate pointed at the wrong screens (hub LESSONS
+§53's shape).
+
+**It is only authoritative from `--all-palettes`**, because two roles sharing a
+value in one palette mask a pairing — which is exactly what print does. The
+default run checks it as a subset; CI checks it for equality.
+
+### What the widened palette gate found
+
+Adding `onAccent` to the hub's gate was the other half. **`--on-accent` was
+declared in the stylesheet, painted on every primary button, and measured by
+nothing** — the spec had no field for it, so the only thing checking the loudest
+pairing in the app was a per-palette browser run. Widening check 6 to the whole
+text ladder rather than `text[0]` came from the same list.
+
+Together they raised 13 hard failures across the six palettes. Filtered against
+what the app actually paints: **zero defects and ten forecasts**, the useful ones
+being that text-3 on an accent-tinted fill misses the floor in five of six
+palettes — so if a hint is ever put on a highlighted row, that is where it will
+fail.
+
+### The payoff
+
+The default accessibility run went from 16,586 measurements to 5,526 — one
+palette instead of three — and gave up nothing, because the two thirds dropped
+were re-measuring what `npm run palette` proves without a browser. Adding a
+fourth theme is now a palette-gate run.
+
+**Planted red three times before it was believed**: a literal colour on the build
+stamp (44 unmapped), a pairing removed from `_renders` (the app paints it and the
+gate is not flooring it), and a pairing added that nothing renders, caught only
+by `--all-palettes`.
+
+## The chrome read as an equation, and no gate could have seen it
+
+The four controls along the top were single characters: `He` for the periodic
+table, `=` for the calculator, `!` for reporting a problem, `ⓘ` for information.
+**Read left to right they say "He = !".** In a chemistry app, next to a
+calculator, that is an equation.
+
+Every one of them was defensible alone. **The SET was the defect** — which is
+the same shape as the icon's four faults and, like those, was found by a person
+looking at the bar rather than by anything mechanical. There is nothing to gate
+here: no check can know that four accessible names are fine and the four glyphs
+above them compose into a sentence.
+
+They are inline SVG now, stroked in `currentColor`, with the same
+visually-hidden names. The (i) stays a circled i because Doctrine §7e names that
+control by its shape and a reader who has used another of these apps knows it.
+
+**The first table icon was wrong and the render said so.** It was the periodic
+table's stepped silhouette as three stroked blocks — correct in outline, and at
+22px a bar chart with a short middle bar. What reads as a periodic table before
+anything on it is legible is the TEXTURE of a grid of little cells, with the
+notch at the top left to stop it being a calendar. Second drawing, checked at
+scale in both modes.
+
+### Moving to SVG opened a hole in the role invariant, in the same commit
+
+The invariant collects the colours of elements **with text in them**. A glyph is
+text and was collected; an `<svg>` is neither, so the four icons left the
+instrument's sight the moment they stopped being characters — **a place a
+literal colour could live unseen, created by the change that fixed the bar.**
+
+That is the ordinary way a gate's coverage narrows: not by anyone weakening it,
+but by the app moving out from under it. Stroke and fill on every SVG node are
+collected now, and a literal planted on the table icon's cells fired 720 times.
+
+## Three defects in one screenshot, none of which any gate could see
+
+All three came from a photograph of the app running on a real iPad. Every gate
+in this repository was green at the time.
+
+### The whole product was below the fold
+
+A wrong answer rendered `Not that one.` and, underneath it, the sentence saying
+WHICH mistake produced that exact number. On a tablet with the keyboard up, the
+second part was off the bottom of the screen. **Attribution is the thesis; the
+student was getting the "wrong" and not the "why".**
+
+Two causes, and the second is the ugly one.
+
+**The feedback lived after the whole form**, below the reveal box — so a student
+who had opened the reveal pushed the diagnosis further down every time. It is
+inside the form now, directly under the button that produced it, and above the
+reveal: the reveal is what a student asked for, the verdict is what they need
+whether they asked or not.
+
+**And the code was actively putting the keyboard back over it.** On a wrong
+answer it called `select()` and `focus()` on the field — the reflex, *they got it
+wrong, let them retype* — which on iOS re-raises the keyboard and scrolls the
+field into view, taking the diagnosis with it. **The fix was to stop.** Focus
+moves to the message instead, which is the standard place for it after a
+rejection, is better for a keyboard user, and is what lets the keyboard drop.
+Retyping costs one tap, which is the tap they were about to make.
+
+The walk now measures this rather than asserting it: it gets a step wrong at
+390x380 and requires the reason to be inside the viewport.
+
+### There was no way out of a set
+
+Once started, the only exits were finishing twelve steps or reloading the page.
+A student who picked the wrong tier, or wanted to go and read a lesson, was
+stuck. **Nothing in this repository had ever asked the question "can you get out
+of here", and no gate asks it now either** — the walk checks the control exists
+and works, which is a check somebody had to think to write.
+
+Two taps in an assignment, one in practice: leaving an assignment throws away the
+completion code, which is worth one deliberate second tap, and practice has
+nothing to lose. The armed state changes the WORDS — "Leave — you will not get a
+code" — rather than the colour, because a red button says only that something is
+dangerous.
+
+### The reveal was printing the simulation's precision
+
+`Show me this step's answer` said **180.156000000 g/mol**.
+
+`correctEntryFor` formats at `SCRATCH_SIG_FIGS`, which is twelve, and its comment
+says exactly why: it exists to DRIVE a session — the tests and the harness submit
+its result — and a simulated student has to carry full precision or it trips
+E-ROUND-EARLY by accident. **Twelve figures is load-bearing there and is not a
+number to show a person.** The UI borrowed the grader's function because it is
+the grader's function, which is the right instinct about the VALUE and the wrong
+one about the FORMAT.
+
+`revealEntryFor` is the display side: same value, same solution, formatted for
+reading. And the formatting splits, on purpose:
+
+- **Where figures are graded**, `formatUnambiguous` still pads to the problem's
+  precision, because there the trailing zeros ARE the answer — writing 1.5 where
+  1.50 was asked is E-SIG-FIGS, and a reveal that hid that would teach against
+  the thing being marked.
+- **Where they are not**, padding is machine output. A mole ratio of three over
+  two came out as `1.50000`.
+
+The test that caught the second case is worth keeping in mind: its first version
+demanded at least four figures of every intermediate and failed on `1.5`, an
+exact ratio whose extra digits would be the padding the test exists to forbid.
+**A character count was the wrong measure.** What matters is that the value is
+rounded to `REVEAL_SIG_FIGS`, and the test beside it checks that directly — it
+types the revealed text back in and requires the grader to accept it.
+
+## Every revealed intermediate had the wrong significant figures
+
+The owner read them on a real device and said so, and it was true of all of
+them. 0.13.0 had fixed the padding — `180.156000000` became `180.156` — which was
+the visible half of a deeper fault and, on its own, still wrong.
+
+**`solve` carried precision for the FINAL answer only.** `finalQuantity` is a
+`Quantity`; every intermediate came out of `solve` as a bare number. So anything
+showing a student an intermediate had nothing to round it to, and the reveal
+picked a constant: six figures for everything. Asking for the moles in 8.135 g of
+KClO₃ answered `0.0663836 mol` — six figures out of a four-figure mass.
+
+`quantityAt(problem, solution, stageId)` is what closed it. The rules are the
+ordinary ones and `sigfig.ts` already implemented them; nobody had ever asked it
+about a middle step. Multiplication and division take the fewest significant
+figures among the operands, an exact quantity constrains nothing, and where two
+reactants are given the LIMITING one's measurement is what constrains the
+answer — its route is the one the number actually came from.
+
+### The correct number is a trap, which is why the reveal shows two
+
+Showing an intermediate at exactly its significant figures is right, and a
+student who types it into the next step has rounded early. `E-ROUND-EARLY`
+predicts precisely the value you get by rounding intermediates to the answer's
+figures — **so the app would have diagnosed a student for doing what it had just
+told them.**
+
+So the reveal says both: the value to its real figures, and the digits to carry.
+Two guard digits, which is the rule a course teaches anyway. `steps.test.ts`
+walks sixteen whole problems submitting the CARRIED value at every stage and
+requires the grader to take each one, which is the property the guard digits
+exist for rather than an assertion that they are there.
+
+**A mole ratio says it is exact and claims no figures at all.** It comes from
+counted coefficients; "1.5, to two significant figures" would teach the opposite
+of what a ratio is.
+
+### What this was NOT
+
+The first suspicion was that `molarMass` used the wrong rule — the multiplication
+rule where a sum wants the addition rule, which for KClO₃ is the difference
+between 122.5 and 122.55. **It does not.** `molarmass.ts` computes BOTH, names
+the element that set each, and its header says the disagreement is real and that
+the project specification asked for the least-precise-element rule. The engine
+knew; only the screen did not. Worth recording because the cost of the check was
+five minutes and the cost of "fixing" a correct rule would have been a grading
+change nobody asked for.
+
+### The menu order
+
+Learning first, then practice, then the class assignment — the owner's call,
+reversing the earlier one. The two places that focus "the first door" now name a
+constant rather than an id, because the order moved once and a hard-coded
+`#door-practice` in two handlers is two chances to leave focus in the middle of
+the menu next time. The walk asserts the order.
+
+## What "sure about the chemistry" was made to mean, before V1
+
+The owner asked for certainty about the maths, the significant figures and the
+chemistry before promoting. `npm test` was already green, and green there was
+not the same as sure.
+
+**`npm test` asks the engine whether the engine agrees with itself.** `solve()`
+produces the answer, the test submits it, `submit()` accepts it. All three could
+share one mistake and the suite would stay green — which is exactly the shape of
+the circular drill test this repository was already caught by once.
+
+`tools/verify-chemistry.mjs` recomputes the chemistry from OUTSIDE:
+
+- **Twenty molar masses against values typed by hand** from published tables.
+  This is the only check in the repository that can see a wrong atomic weight,
+  because everything else derives from `elements.ts`. Worst disagreement:
+  Al₂(SO₄)₃, 0.019 g/mol.
+- **960 generated equations balanced by counting atoms here**, from the formulas
+  and the coefficients, and checked for lowest terms with a gcd written here.
+- **960 answers worked out by hand** — grams to moles, mole ratio, the smaller
+  of the two routes where a reactant limits, moles to grams or litres or
+  particles, percent yield — and compared with what the app claims. All matched.
+- **4560 revealed values** checked to WRITE the figures they CLAIM, and to be
+  the true value rounded to them.
+
+Planted red four times before it was believed: oxygen's atomic weight moved by
+one, the answer comparison scaled by 1%, the reveal's figure count raised by
+one, and the balancer's lowest-terms reduction doubled. Every one fired.
+
+### The check committed the error the app exists to diagnose
+
+Its first version compared each revealed value against the CARRIED value
+re-rounded. That is double rounding: 0.0148497 carried at five figures is
+0.01485, and rounding THAT to three gives 0.0149 where the true value gives
+0.0148. **It reported eleven defects and every one was the check's own mistake**
+— the same mistake `E-ROUND-EARLY` exists to catch, made by the thing auditing
+the catcher. Round from the truth, once.
+
+Worth keeping in mind next time a verification script disagrees with the code it
+is auditing: the script is newer, and newer code is likelier to be wrong.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
