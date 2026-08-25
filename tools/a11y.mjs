@@ -29,6 +29,7 @@
  */
 
 import { chromium } from 'playwright-core';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serve, chromiumPath } from './serve.mjs';
@@ -36,6 +37,27 @@ import { generateProblem, solve } from '../src/engine/problem.ts';
 import { stagesFor } from '../src/engine/taxonomy.ts';
 import { formatUnambiguous } from '../src/chem/sigfig.ts';
 import { encodeCompletionCode } from '../src/code/codec.ts';
+
+/**
+ * The colour themes, READ from the measured palette file rather than retyped.
+ * A fourth theme added there and forgotten here would ship unmeasured, which is
+ * the shape hub LESSONS 28 records: a surface that joins the app without
+ * joining the gate's list.
+ */
+const PALETTES = [
+  ...new Set(
+    Object.keys(
+      JSON.parse(
+        readFileSync(
+          join(dirname(dirname(fileURLToPath(import.meta.url))), 'palettes', 'molebridge.json'),
+          'utf8',
+        ),
+      ),
+    )
+      .filter((key) => !key.startsWith('_'))
+      .map((key) => key.split('-')[1]),
+  ),
+];
 import { BUILD_SECRET } from '../src/code/secret.ts';
 import { assignmentKeyIdFor } from '../src/engine/assignment.ts';
 
@@ -347,6 +369,17 @@ const MEASURE = `(() => {
       const forLabel = document.querySelector('label[for="' + CSS.escape(node.id) + '"]');
       if (forLabel !== null && (forLabel.textContent ?? '').trim() !== '') return forLabel.textContent.trim();
     }
+    /* THE IMPLICIT LABEL — a label element wrapping its input. It is a naming
+       mechanism the HTML accessibility mapping defines, every browser
+       implements it, and this gate did not know about it, because until the
+       appearance picker existed the app had never used one. Green here for
+       thirteen states meant "no wrapping labels", not "wrapping labels are
+       fine". */
+    const wrapping = node.closest('label');
+    if (wrapping !== null && wrapping !== node) {
+      const text = (wrapping.textContent ?? '').trim();
+      if (text !== '') return text;
+    }
     const own = (node.textContent ?? '').trim();
     if (own !== '') return own;
     const title = node.getAttribute('title');
@@ -413,9 +446,24 @@ const MEASURE = `(() => {
 
   for (const node of document.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])')) {
     if (!visible(node)) continue;
-    const box = node.getBoundingClientRect();
+    /* A CONTROL'S TARGET IS WHAT ACTIVATES IT, not what is painted. Clicking
+       anywhere in a label activates the control it wraps, so the label's
+       box IS the target — which is the standard way to give a 20px radio a
+       44px reach without drawing an absurd 44px circle.
+
+       Narrow on purpose: only a label that actually CONTAINS the control, and
+       the substitution is named in the output rather than applied quietly. A
+       gate that silently starts measuring something else is worth less than one
+       that fails. A bare input with no label is measured as itself and still
+       fails, which is planted rather than assumed. */
+    const activator = node.closest('label');
+    const measured = activator !== null && activator !== node ? activator : node;
+    const box = measured.getBoundingClientRect();
     targets.push({
-      selector: node.tagName.toLowerCase() + (node.id ? '#' + node.id : ''),
+      selector:
+        node.tagName.toLowerCase() +
+        (node.id ? '#' + node.id : '') +
+        (measured === node ? '' : ' (via its label)'),
       width: Math.round(box.width),
       height: Math.round(box.height),
     });
@@ -451,9 +499,15 @@ const browser = await chromium.launch(executablePath === null ? {} : { executabl
 try {
   console.log('=== accessibility gate · MoleBridge ===\n');
 
-  for (const scheme of ['dark', 'light']) {
-    console.log(`  ${scheme} theme`);
-    for (const state of STATES) {
+  // EVERY COLOUR THEME, IN BOTH MODES. The palette is a second axis now, and a
+  // theme nobody measures is a theme that ships unmeasured — which is hub
+  // LESSONS 28's shape exactly: a surface added without joining the gate's list.
+  // Reading the list from the palette file rather than retyping it means adding
+  // a fourth theme cannot forget this step.
+  for (const palette of PALETTES) {
+    for (const scheme of ['dark', 'light']) {
+      console.log(`  ${palette} · ${scheme}`);
+      for (const state of STATES) {
       // A FRESH CONTEXT PER STATE. Sharing one carries localStorage from the
       // state before, and this app remembers that the orientation has been
       // read — so every state after the first opened straight on setup and
@@ -464,6 +518,22 @@ try {
         colorScheme: scheme,
         viewport: { width: 900, height: 1000 },
       });
+      // The theme is CHOSEN rather than inferred: seeded into localStorage
+      // before any page script runs, so theme.js reads it on its first pass and
+      // the page is painted in the theme being measured from the very first
+      // frame. Emulating the operating system alone would only ever exercise
+      // `auto`, and the two explicit modes are what the picker actually sets.
+      await context.addInitScript(
+        ([mode, name]) => {
+          try {
+            window.localStorage.setItem('molebridge.theme', mode);
+            window.localStorage.setItem('molebridge.palette', name);
+          } catch (_) {
+            /* A context that refuses storage still renders the default. */
+          }
+        },
+        [scheme, palette],
+      );
       // SHORT, deliberately. Playwright's default is thirty seconds, so a state
       // whose hook was renamed costs half a minute of waiting for something
       // that is never going to appear — with twenty state visits that is ten
@@ -478,7 +548,7 @@ try {
       } catch (error) {
         // A state that cannot be REACHED is a failure, not a skip. Silently
         // skipping a renamed hook removes coverage with no signal at all.
-        fail(`${scheme}/${state.name}: could not be reached — ${String(error).split('\n')[0]}`);
+        fail(`${palette}/${scheme}/${state.name}: could not be reached — ${String(error).split('\n')[0]}`);
         await context.close();
         continue;
       }
@@ -487,27 +557,27 @@ try {
 
       for (const item of measured.text) {
         const floor = item.large ? LARGE_TEXT_FLOOR : TEXT_FLOOR;
-        const what = `${scheme}/${state.name}: "${item.sample}" on ${item.selector} at ${item.ratio}:1`;
+        const what = `${palette}/${scheme}/${state.name}: "${item.sample}" on ${item.selector} at ${item.ratio}:1`;
         if (item.ratio + 1e-9 < floor) fail(`${what} — below ${floor}`);
         else pass(what);
       }
 
       for (const item of measured.rails) {
         if (!item.isRail) continue;
-        const what = `${scheme}/${state.name}: rail on ${item.selector} at ${item.ratio}:1`;
+        const what = `${palette}/${scheme}/${state.name}: rail on ${item.selector} at ${item.ratio}:1`;
         if (item.ratio + 1e-9 < RAIL_FLOOR) fail(`${what} — below ${RAIL_FLOOR}`);
         else pass(what);
       }
 
       for (const item of measured.targets) {
-        const what = `${scheme}/${state.name}: ${item.selector} is ${item.width}x${item.height}`;
+        const what = `${palette}/${scheme}/${state.name}: ${item.selector} is ${item.width}x${item.height}`;
         if (item.height + 0.5 < TARGET_FLOOR_PX) fail(`${what} — shorter than ${TARGET_FLOOR_PX}px`);
         else pass(what);
       }
 
       for (const item of measured.names) {
-        if (item.name === '') fail(`${scheme}/${state.name}: ${item.selector} has no accessible name`);
-        else pass(`${scheme}/${state.name}: ${item.selector} is called "${item.name.slice(0, 34)}"`);
+        if (item.name === '') fail(`${palette}/${scheme}/${state.name}: ${item.selector} has no accessible name`);
+        else pass(`${palette}/${scheme}/${state.name}: ${item.selector} is called "${item.name.slice(0, 34)}"`);
       }
 
       // REACHABLE BY TABBING FORWARD. A control that only focus reveals is a
@@ -530,10 +600,11 @@ try {
           await page.keyboard.press('Tab');
         }
       }
-      if (reachable > 0 && seen === 0) fail(`${scheme}/${state.name}: nothing takes keyboard focus`);
-      else pass(`${scheme}/${state.name}: ${reachable} control(s), keyboard focus moves`);
+      if (reachable > 0 && seen === 0) fail(`${palette}/${scheme}/${state.name}: nothing takes keyboard focus`);
+      else pass(`${palette}/${scheme}/${state.name}: ${reachable} control(s), keyboard focus moves`);
 
       await context.close();
+      }
     }
   }
 } finally {
@@ -546,4 +617,7 @@ if (failures.length > 0) {
   console.error(`${failures.length} accessibility failure(s) across ${measurements + failures.length} measurements.\n`);
   process.exit(1);
 }
-console.log(`PASS — ${measurements} measurements across ${STATES.length} states in both themes.\n`);
+console.log(
+  `PASS — ${measurements} measurements across ${STATES.length} states, ` +
+    `${PALETTES.length} colour theme(s), both modes.\n`,
+);

@@ -286,6 +286,73 @@ try {
   const bars = await page.locator('.histogram-row').count();
   check(bars === 6, `the histogram covers all six stages (${bars})`);
 
+  /* ---- the appearance picker actually changes the appearance ---- */
+  //
+  // Asserting the attribute alone would pass on a picker wired to nothing but
+  // itself, so the PAINTED page colour is read back each time. And the choice
+  // is checked across a RELOAD, because a preference that does not survive one
+  // is not a preference — it is a toggle that forgets.
+
+  // Back to the student app: the walk finished on the teacher page, which has
+  // no ⓘ and therefore no picker.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+
+  const themePage = await page.evaluate(() => {
+    const root = document.documentElement;
+    return {
+      mode: root.getAttribute('data-theme'),
+      pref: root.getAttribute('data-theme-pref'),
+      palette: root.getAttribute('data-palette'),
+      page: getComputedStyle(root).getPropertyValue('--page').trim(),
+      bar: document.querySelector('meta[name="theme-color"]')?.getAttribute('content') ?? '',
+    };
+  });
+  check(themePage.palette === 'moss', `the default colour theme is moss (${themePage.palette})`);
+  check(themePage.pref === 'auto', `the default mode is auto (${themePage.pref})`);
+  check(
+    themePage.bar === themePage.page,
+    `the status-bar colour equals the page (${themePage.bar} / ${themePage.page})`,
+  );
+
+  await page.locator('#info-open').click();
+  await page.locator('#theme-palette input[value="clay"]').check();
+  const afterColour = await page.evaluate(() => ({
+    palette: document.documentElement.getAttribute('data-palette'),
+    mode: document.documentElement.getAttribute('data-theme'),
+    accent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+  }));
+  check(afterColour.palette === 'clay', 'choosing Clay sets the palette attribute');
+  // MODE-AWARE ON PURPOSE. The mode here is still `auto`, so it depends on what
+  // the machine running this prefers — and a check hard-coded to one of the two
+  // accents passes or fails on the runner's operating-system setting rather
+  // than on the app. That is a flake with a plausible-looking cause, which is
+  // the worst kind. The first version of this line was exactly that.
+  const wantAccent = afterColour.mode === 'light' ? '#6d3410' : '#eab896';
+  check(
+    afterColour.accent.toLowerCase() === wantAccent,
+    `and repaints the accent for ${afterColour.mode} (${afterColour.accent})`,
+  );
+
+  await page.locator('#theme-mode input[value="light"]').check();
+  const afterMode = await page.evaluate(() => ({
+    mode: document.documentElement.getAttribute('data-theme'),
+    page: getComputedStyle(document.documentElement).getPropertyValue('--page').trim(),
+    bar: document.querySelector('meta[name="theme-color"]')?.getAttribute('content') ?? '',
+  }));
+  check(afterMode.mode === 'light', 'choosing Light sets the resolved mode');
+  check(afterMode.page.toLowerCase() === '#c4bcab', `and repaints the page (${afterMode.page})`);
+  check(afterMode.bar === afterMode.page, 'and the status bar follows it');
+
+  await page.reload({ waitUntil: 'load' });
+  const afterReload = await page.evaluate(() => ({
+    mode: document.documentElement.getAttribute('data-theme'),
+    palette: document.documentElement.getAttribute('data-palette'),
+  }));
+  check(
+    afterReload.mode === 'light' && afterReload.palette === 'clay',
+    `both choices survive a reload (${afterReload.mode}/${afterReload.palette})`,
+  );
+
   /* ---- nothing went wrong quietly ---- */
   check(consoleErrors.length === 0, `no console errors (${consoleErrors.slice(0, 2).join(' | ')})`);
 } finally {

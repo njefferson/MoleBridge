@@ -64,6 +64,17 @@ that to the teacher.
 - **No third-party runtime dependencies for domain logic**, and no network calls
   at runtime. Element data is embedded. Build tooling only — today that is the
   type checker and nothing else.
+- **NEVER ADD A COLOUR THEME THAT HAS NOT BEEN MEASURED.** Three files declare
+  the palette — `palettes/molebridge.json`, `public/styles.css` and
+  `public/theme.js` — and `npm run tokens` refuses to let them disagree, so a
+  theme reaches the picker only after the hub's gate has cleared it in both
+  modes. `npm run palette` measures all six. The neutrals are the Instrument
+  family in every theme; only the accent moves.
+- **`public/theme.js` is a blocking, non-module, external script and must stay
+  all three.** Non-module because a module is deferred and would run after the
+  paint it prevents; external because this app has no inline script at all,
+  which is what keeps a Content-Security-Policy reachable without
+  `unsafe-inline`; after the stylesheet because it reads `--page` back out.
 - **Every numeric tolerance is a named constant** in
   `src/engine/tolerance.ts`, with the judgement behind it written beside it.
   Never an inline literal.

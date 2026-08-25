@@ -4,12 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
+<!-- Written by theme.js from the stylesheet's own --page, so it is right in
+     whichever mode is showing rather than in the one it was typed for. -->
+<meta name="theme-color" content="#1a1a1a">
 <title>MoleBridge</title>
 <meta name="description" content="A step-gated stoichiometry trainer. Enter every value along the way, and find out which mistake produces the number you got.">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icon-180.png">
 <link rel="stylesheet" href="/styles.css">
+<!--
+  BLOCKING, AFTER THE STYLESHEET, AND NOT A MODULE. It sets the theme
+  attributes before the first paint, so there is no flash of the wrong one; a
+  module script is deferred by definition and would run after that paint. It
+  comes after the stylesheet because it reads --page back out of the CSSOM for
+  the status-bar colour. It is a separate file rather than inline because this
+  app has no inline script at all, which is what keeps a Content-Security-Policy
+  reachable without unsafe-inline.
+-->
+<script src="/theme.js"></script>
 </head>
 <body>
 
@@ -196,6 +209,41 @@
     </p>
     <!-- The orientation block is MOVED in here after the first run. -->
     <div id="info-orientation-slot"></div>
+
+    <!--
+      THE APPEARANCE PICKER. Two independent axes, which is what PALETTES.md §6
+      prescribes: the mode a person is in, and the colour they like.
+
+      EVERY OPTION IS LABELLED BY NAME. A row of coloured swatches would make
+      colour the sole carrier of meaning, which Doctrine §4 forbids outright —
+      and it is the picker for colour that is likeliest to be built that way.
+
+      Radios rather than a select, because a radio group is one tap per option
+      on a board at the front of a room, and a native select on a ViewBoard
+      opens a list nobody at the back can read.
+    -->
+    <section class="info-section theme-picker">
+      <h3>Appearance</h3>
+
+      <fieldset class="theme-axis" id="theme-mode">
+        <legend>Light or dark</legend>
+        <label class="choice"><input type="radio" name="molebridge-mode" value="auto"> Match my device</label>
+        <label class="choice"><input type="radio" name="molebridge-mode" value="light"> Light</label>
+        <label class="choice"><input type="radio" name="molebridge-mode" value="dark"> Dark</label>
+      </fieldset>
+
+      <fieldset class="theme-axis" id="theme-palette">
+        <legend>Colour</legend>
+        <label class="choice"><input type="radio" name="molebridge-palette" value="moss"> Moss</label>
+        <label class="choice"><input type="radio" name="molebridge-palette" value="harbour"> Harbour</label>
+        <label class="choice"><input type="radio" name="molebridge-palette" value="clay"> Clay</label>
+      </fieldset>
+
+      <p class="hint">
+        Kept on this device only, in this browser. It is not sent anywhere and it
+        does not follow you to another machine.
+      </p>
+    </section>
     <div id="info-sections"></div>
   </div>
 </dialog>

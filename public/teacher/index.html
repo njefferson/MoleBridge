@@ -4,11 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
+<!-- Written by theme.js from the stylesheet's own --page, so it is right in
+     whichever mode is showing rather than in the one it was typed for. -->
+<meta name="theme-color" content="#1a1a1a">
 <title>MoleBridge — decode a class</title>
 <meta name="description" content="Paste a gradebook column of MoleBridge completion codes and see where the class got stuck.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/styles.css">
+<!--
+  BLOCKING, AFTER THE STYLESHEET, AND NOT A MODULE. It sets the theme
+  attributes before the first paint, so there is no flash of the wrong one; a
+  module script is deferred by definition and would run after that paint. It
+  comes after the stylesheet because it reads --page back out of the CSSOM for
+  the status-bar colour. It is a separate file rather than inline because this
+  app has no inline script at all, which is what keeps a Content-Security-Policy
+  reachable without unsafe-inline.
+-->
+<script src="/theme.js"></script>
 </head>
 <body class="teacher">
 

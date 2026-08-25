@@ -4,6 +4,36 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.3.0 — CAPABILITY
+
+You can choose how MoleBridge looks. Open the ⓘ and there are two settings:
+light or dark, and a colour.
+
+**Light or dark.** It follows your device unless you tell it otherwise. Pick
+Light or Dark and it stays that way on this device, including next time you open
+it. "Match my device" puts it back to following along, and it changes over the
+moment your device does.
+
+**Colour.** Three to pick from, named rather than shown as coloured squares so
+they are still tellable apart if colours are hard for you: **Moss**, which is
+green and is what you get if you choose nothing; **Harbour**, the blue this app
+used to be; and **Clay**, which is warm and orange-brown.
+
+Every one of the six combinations has been measured against the same contrast
+floor as the rest of the app, in both light and dark, rather than picked because
+it looked nice. Two greens and an orange were tried and rejected for being too
+faint on the light background.
+
+What is kept, and where: your choice is stored in this browser on this device
+only. It is not sent anywhere, it is not part of your completion code, and it
+does not follow you to another computer — so a school machine you share will
+show whatever the last person picked.
+
+**What is still missing.** The app's icon is still the old blue one and is being
+redrawn; the colour you pick changes the app, not the icon on your home screen
+yet. And the same gaps as before: no way to review a problem you have already
+finished, and no running total across sessions.
+
 ## 0.2.0 — CAPABILITY
 
 Your teacher can decode a whole class at once now. Nothing has changed about how

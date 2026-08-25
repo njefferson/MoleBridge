@@ -1,6 +1,48 @@
 {
-  "_readme": "MoleBridge's palette, in the ROLE terms PALETTES.md defines. Taken from the Instrument family verbatim rather than derived here \u2014 those values are measured against every hard floor in both modes, and picking colours by eye and hoping is how a build stamp ships at 2.54:1 under a gate reading 4.79. Check with: node ../noahjefferson/palette-check.mjs palettes/molebridge.json",
-  "molebridge-night": {
+  "_readme": "MoleBridge's palettes, in the ROLE terms PALETTES.md defines. THE NEUTRALS ARE THE Instrument FAMILY, VERBATIM from the hub \u2014 they are the same in all three and only accents.primary differs, because PALETTES.md's four families vary chrome WARMTH rather than hue, and a person asking for a green app is asking about the accent. Every one of the six entries below is a real palette the hub's gate checks: `npm run palette`. Two greens and one ember were rejected here at 4.12, 4.15 and 4.43 against the day page, which is why these values are measured rather than chosen. `moss` is the default.",
+  "molebridge-moss-night": {
+    "kind": "app",
+    "page": "#1a1a1a",
+    "pageAlt": "#232323",
+    "surfaces": [
+      "#3a3a3a",
+      "#414141",
+      "#484848"
+    ],
+    "rail": "rgba(255,255,255,.62)",
+    "hairline": "rgba(255,255,255,.17)",
+    "text": [
+      "#eaeaea",
+      "#d2d2d2",
+      "#c1c1c1"
+    ],
+    "accents": {
+      "primary": "#9fd8b0"
+    },
+    "accentSoftAlpha": 0.15
+  },
+  "molebridge-moss-day": {
+    "kind": "app",
+    "page": "#c4bcab",
+    "pageAlt": "#ccc4b3",
+    "surfaces": [
+      "#eee6d6",
+      "#f4ecdd",
+      "#faf3e5"
+    ],
+    "rail": "rgba(39,33,25,.68)",
+    "hairline": "rgba(39,33,25,.22)",
+    "text": [
+      "#272119",
+      "#363026",
+      "#4a4436"
+    ],
+    "accents": {
+      "primary": "#14532d"
+    },
+    "accentSoftAlpha": 0.12
+  },
+  "molebridge-harbour-night": {
     "kind": "app",
     "page": "#1a1a1a",
     "pageAlt": "#232323",
@@ -21,7 +63,7 @@
     },
     "accentSoftAlpha": 0.15
   },
-  "molebridge-day": {
+  "molebridge-harbour-day": {
     "kind": "app",
     "page": "#c4bcab",
     "pageAlt": "#ccc4b3",
@@ -39,6 +81,48 @@
     ],
     "accents": {
       "primary": "#17458f"
+    },
+    "accentSoftAlpha": 0.12
+  },
+  "molebridge-clay-night": {
+    "kind": "app",
+    "page": "#1a1a1a",
+    "pageAlt": "#232323",
+    "surfaces": [
+      "#3a3a3a",
+      "#414141",
+      "#484848"
+    ],
+    "rail": "rgba(255,255,255,.62)",
+    "hairline": "rgba(255,255,255,.17)",
+    "text": [
+      "#eaeaea",
+      "#d2d2d2",
+      "#c1c1c1"
+    ],
+    "accents": {
+      "primary": "#eab896"
+    },
+    "accentSoftAlpha": 0.15
+  },
+  "molebridge-clay-day": {
+    "kind": "app",
+    "page": "#c4bcab",
+    "pageAlt": "#ccc4b3",
+    "surfaces": [
+      "#eee6d6",
+      "#f4ecdd",
+      "#faf3e5"
+    ],
+    "rail": "rgba(39,33,25,.68)",
+    "hairline": "rgba(39,33,25,.22)",
+    "text": [
+      "#272119",
+      "#363026",
+      "#4a4436"
+    ],
+    "accents": {
+      "primary": "#6d3410"
     },
     "accentSoftAlpha": 0.12
   }

@@ -33,13 +33,6 @@
   --text-1: #eaeaea;
   --text-2: #d2d2d2;
   --text-3: #c1c1c1;
-  --accent: #9fc2f5;
-  --accent-soft: rgba(159, 194, 245, 0.15);
-  /* Text ON the accent. Its own token rather than reusing --page: in day mode
-     the page is a warm tan, and tan lettering on a dark blue button is a pairing
-     nobody chose — it just fell out of borrowing a token for a job it was not
-     for. PALETTES.md §2: text on an accent-tinted fill is a real background. */
-  --on-accent: #10233d;
 
   --step: 0.5rem;
   --radius: 0.6rem;
@@ -49,22 +42,88 @@
   --measure: 42rem;
 }
 
+/*
+  THE LIGHT MODE IS DECLARED ONCE, HERE. `theme.js` resolves the reader's
+  preference — auto, light or dark — into `data-theme` before first paint, so
+  this stylesheet never has to ask the operating system anything and the values
+  are not written twice.
+*/
+:root[data-theme="light"] {
+  --page: #c4bcab;
+  --page-alt: #ccc4b3;
+  --surface-1: #eee6d6;
+  --surface-2: #f4ecdd;
+  --surface-3: #faf3e5;
+  --rail: rgba(39, 33, 25, 0.68);
+  --hairline: rgba(39, 33, 25, 0.22);
+  --text-1: #272119;
+  --text-2: #363026;
+  --text-3: #4a4436;
+}
+
+/*
+  ...except once, and only for a reader with JavaScript off, where `data-theme`
+  is never set and nothing above fires. This block is held character-identical
+  to the one above by `tools/tokens-check.mjs`; PALETTES.md is explicit that a
+  must-change-together pair which nothing checks is a drift factory.
+*/
 @media (prefers-color-scheme: light) {
-  :root {
-    --page: #c4bcab;
-    --page-alt: #ccc4b3;
-    --surface-1: #eee6d6;
-    --surface-2: #f4ecdd;
-    --surface-3: #faf3e5;
-    --rail: rgba(39, 33, 25, 0.68);
-    --hairline: rgba(39, 33, 25, 0.22);
-    --text-1: #272119;
-    --text-2: #363026;
-    --text-3: #4a4436;
-    --accent: #17458f;
-    --accent-soft: rgba(23, 69, 143, 0.12);
-    --on-accent: #f7f3ea;
+  :root:not([data-theme]) {
+  --page: #c4bcab;
+  --page-alt: #ccc4b3;
+  --surface-1: #eee6d6;
+  --surface-2: #f4ecdd;
+  --surface-3: #faf3e5;
+  --rail: rgba(39, 33, 25, 0.68);
+  --hairline: rgba(39, 33, 25, 0.22);
+  --text-1: #272119;
+  --text-2: #363026;
+  --text-3: #4a4436;
   }
+}
+
+/*
+  ---- the accent, which is the axis a person means by "colour" ----
+
+  PALETTES.md's four families vary chrome WARMTH rather than hue, so the
+  neutrals above are the Instrument family in every theme and only these change.
+  Each is a real palette in palettes/molebridge.json and `npm run palette`
+  checks all six against every hard floor. `moss` is the default and is set by
+  theme.js, so a reader who has chosen nothing still gets a complete palette.
+
+  `--on-accent` is text ON the accent fill and is its own token: in light mode
+  the page is a warm tan, and tan lettering on a dark green button is a pairing
+  nobody chose — it just falls out of borrowing a token for a job it was not for.
+*/
+[data-palette="moss"] {
+  --accent: #9fd8b0;
+  --accent-soft: rgba(159, 216, 176, 0.15);
+  --on-accent: #0e2a1a;
+}
+[data-palette="moss"][data-theme="light"] {
+  --accent: #14532d;
+  --accent-soft: rgba(23, 83, 45, 0.12);
+  --on-accent: #f7f3ea;
+}
+[data-palette="harbour"] {
+  --accent: #9fc2f5;
+  --accent-soft: rgba(159, 194, 245, 0.15);
+  --on-accent: #10233d;
+}
+[data-palette="harbour"][data-theme="light"] {
+  --accent: #17458f;
+  --accent-soft: rgba(23, 69, 143, 0.12);
+  --on-accent: #f7f3ea;
+}
+[data-palette="clay"] {
+  --accent: #eab896;
+  --accent-soft: rgba(234, 184, 150, 0.15);
+  --on-accent: #3a1f0a;
+}
+[data-palette="clay"][data-theme="light"] {
+  --accent: #6d3410;
+  --accent-soft: rgba(109, 52, 16, 0.12);
+  --on-accent: #f7f3ea;
 }
 
 * { box-sizing: border-box; }
@@ -531,3 +590,40 @@ textarea {
 
   a[href]::after { content: ""; }
 }
+
+/*
+  ---- the appearance picker ----
+
+  Radios rather than a select: one tap per option, and a native select on a
+  board at the front of a room opens a list nobody at the back can read. The
+  label is the target, so it clears --touch by containing the control rather
+  than by being sized next to one.
+*/
+.theme-picker .theme-axis {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: var(--step) calc(var(--step) * 1.5) calc(var(--step) * 1.5);
+  margin: 0 0 var(--step);
+}
+.theme-picker legend {
+  padding: 0 calc(var(--step) * 0.5);
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+.theme-picker .choice {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--step) * 1.25);
+  min-height: var(--touch);
+  padding: 0 calc(var(--step) * 1.25);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.theme-picker .choice:hover { background: var(--accent-soft); }
+.theme-picker input[type="radio"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--accent);
+  flex: 0 0 auto;
+}
+.theme-picker input[type="radio"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }

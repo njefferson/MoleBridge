@@ -71,6 +71,15 @@ jobs:
       - name: The release triplet is written once
         run: npm run version:check
 
+      # THREE FILES DECLARE THE PALETTE and no build step joins them, so this is
+      # the join: the stylesheet must say what the hub's palette gate measured,
+      # the picker must not offer a theme nobody measured, and the one
+      # unavoidable duplicate — the no-JavaScript light block — must be
+      # character-identical to the real one. All three were planted red before
+      # this step was believed.
+      - name: The three files that declare the palette agree
+        run: npm run tokens
+
       # ---- the doctrine gates ----
       #
       # AHEAD OF THE BROWSER WORK, deliberately. A step that fails stops the job,
@@ -102,7 +111,7 @@ jobs:
       - name: The branch guard has not drifted from what it declares
         run: node .hub/branch-guard.mjs --repo . --artefact
 
-      - name: The palette clears every hard floor
+      - name: Every colour theme clears every hard floor, in both modes
         run: node .hub/palette-check.mjs palettes/molebridge.json
 
       - name: Install zizmor (version- and hash-pinned by the hub)

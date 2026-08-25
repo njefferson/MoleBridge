@@ -16,6 +16,7 @@ import { mountSetup } from './setup.ts';
 import { mountWork } from './work.ts';
 import { mountDone } from './done.ts';
 import { mountInfo } from './info.ts';
+import { mountTheme } from './theme.ts';
 import { mountUpdates } from './updates.ts';
 import { VERSION } from '../version.ts';
 import { startSession, type Clock, type Session, type SessionConfig } from '../engine/steps.ts';
@@ -47,6 +48,7 @@ function boot(): void {
 
   const updates = mountUpdates();
   const info = mountInfo(() => session, updates);
+  mountTheme();
 
   const doneScreen = mountDone(systemClock, {
     onRestart(): void {

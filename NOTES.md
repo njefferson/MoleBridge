@@ -294,6 +294,75 @@ MoleBridge. A gate rather than a manual step handed over.
 the front of the room is further away and runs a Chromium nobody here can test
 against.
 
+## Themes: two axes, six palettes, and a gate holding three files together
+
+The owner asked for green as the default and for selectable light, dark and auto
+in different colours. PALETTES.md §6 already prescribes the shape — palette and
+mode as INDEPENDENT axes — so this follows it rather than inventing one.
+
+**Colour means the accent, and that is not a dodge.** The four families in
+PALETTES.md vary chrome WARMTH rather than hue; all four are neutral pages. A
+person asking for a green app is asking about the accent, so the neutrals stay
+the Instrument family in every theme and only `accents.primary` moves. Three
+themes ship: **moss** (green, the default), **harbour** (the blue this app was),
+and **clay** (warm). Six palettes in all, and `npm run palette` measures every
+one against every hard floor in both modes.
+
+**The values are measured, not chosen.** Two other greens were rejected at 4.12
+and 4.15 against the light page, and an ember at 4.43. The three that ship sit
+at 4.83, 4.87 and 5.13 at their worst pairing.
+
+**`auto` is resolved in JavaScript so the light values are written once.** The
+obvious CSS shape is a `prefers-color-scheme` block plus an attribute block,
+which is the must-change-together pair PALETTES.md says has bitten this family
+repeatedly. Instead `public/theme.js` resolves the preference before first paint
+and the stylesheet only ever sees `data-theme="light"` or `"dark"`. The
+preference itself lives in `data-theme-pref`, so the picker can show `auto` as
+`auto` while the CSS sees a concrete answer.
+
+**It is an external blocking script rather than an inline one.** §6 asks for an
+inline one-liner. This app has NO inline script, which is the entire reason a
+Content-Security-Policy is still reachable without `unsafe-inline`. A blocking
+external file in `<head>`, after the stylesheet so it can read `--page` back out
+for the status-bar colour, gives the same no-flash result and keeps that door
+open. It cannot be a module: a module is deferred by definition and would run
+after the paint it exists to prevent.
+
+**One duplicate survives and is gated.** A reader with JavaScript off never gets
+`data-theme` at all, so the light tokens appear a second time under
+`prefers-color-scheme` for that case only. `tools/tokens-check.mjs` holds the two
+blocks character-identical, holds every value in the stylesheet to what the hub's
+gate measured, and refuses a picker offering a theme nobody measured. All three
+rules were planted red before the gate was believed.
+
+### What the theme work found in the accessibility gate
+
+Adding the picker put the first `<label>` wrapping its own control into this
+app, and the gate did not know what one was. It reported 144 failures, and both
+kinds were the gate rather than the picker.
+
+**No accessible name.** A label element wrapping its input is a naming mechanism
+the HTML accessibility mapping defines and every browser implements. The gate
+checked `aria-label`, `aria-labelledby`, `label[for]`, own text and `title` — not
+that. Thirteen states of green had meant "this app contains no wrapping labels",
+which is not the same as the rule being satisfied.
+
+**Twenty by twenty pixels.** The gate measured the radio, which is 20px. What
+activates a control is what a finger has to hit, and clicking anywhere in a
+label activates the control it wraps — so the label's box is the target, which
+is how a 20px radio gets a 44px reach without drawing an absurd 44px circle. The
+gate now measures the label when one contains the control, NAMES the substitution
+in its output rather than applying it quietly, and was planted with an
+undersized label and a bare unlabelled input to prove it did not go blind.
+
+5046 measurements across 13 states, three colour themes and both modes.
+
+**And a trap in the walk, worth writing down.** The first version asserted clay's
+night accent after choosing Clay. It failed, because the mode was still `auto`
+and the machine running it prefers light — so the check depended on the runner's
+operating-system setting rather than on the app. That is a flake with a
+plausible-looking cause, which is the worst kind. The assertion is mode-aware now.
+
 ## The social preview, and what drawing it found
 
 `npm run og` renders `tools/og-card.html` at 1280x640 and writes `og.png`. The
