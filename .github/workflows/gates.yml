@@ -62,6 +62,35 @@ jobs:
       - name: Tests
         run: npm test
 
+      - name: The release triplet is written once
+        run: npm run version:check
+
+      - name: The patch notes in the app match the changelog
+        run: node tools/changelog.mjs --check
+
+      - name: Build the browser bundle
+        run: npm run build
+
+      - name: The palette clears every hard floor
+        run: node .hub/palette-check.mjs palettes/molebridge.json
+
+      # The browser gates need a Chromium. The session sandbox ships one at a
+      # fixed path and `tools/serve.mjs` finds it; a runner has no such path, so
+      # playwright downloads its own and the tools fall through to it.
+      - name: Install a browser for the walk and the accessibility gate
+        run: npx playwright-core install --with-deps chromium
+
+      # Doctrine §6: walk the primary journey from the start screen. It gets one
+      # step wrong on purpose, and it drops the network to prove the offline
+      # claim rather than asserting it.
+      - name: The primary journey
+        run: node tools/walk.mjs
+
+      # Doctrine §4, and it exits non-zero. Every state, both themes, measured
+      # from the pixels the browser resolved rather than from the declarations.
+      - name: Accessibility
+        run: node tools/a11y.mjs
+
       # Doctrine §9b — the FAIL state. Design statements are repo material; the
       # owner's person is not. Canonical in the hub, run from there.
       - name: The owner's person is not repo material

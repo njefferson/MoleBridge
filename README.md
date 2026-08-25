@@ -16,14 +16,15 @@ problems is deliberately kept off every student-facing path.
 
 ## What is built so far
 
-This repository is at the end of **session 1**: the domain engine, the
-completion-code codec, and the test suite. There is **no user interface yet**,
-by design — all the correctness risk lives in the engine and the codec, and a
-wrong molar mass or a codec that silently loses a field is unrecoverable once a
-class has used it. Those are proved first.
+The engine, the completion code, and the student app. A student reads what
+MoleBridge is, types the roster number and assignment key their teacher put on
+the board, picks a set, and works problems one step at a time. It is installable
+and works with no connection.
 
-`NOTES.md` is the source of truth for what is settled, what is next, and every
-judgement call made along the way.
+**Nothing is deployed yet**, and the teacher's decoder is session 3.
+
+`NOTES.md` is the source of truth for what is settled, what each judgement call
+cost, and what is still owed.
 
 ## Running it
 
@@ -36,11 +37,37 @@ npm ci
 npm run check
 ```
 
-`npm run check` is the type check followed by the whole test suite — 107 tests,
-about fifteen seconds. The pieces separately:
+`npm run check` is the type checks, the release-triplet gate, the patch-notes
+drift check and the whole test suite — 108 tests, about fifteen seconds. The
+pieces separately:
 
-- `npm run typecheck` — `tsc --noEmit`, strict, no `any` anywhere in the tree.
+- `npm run typecheck` — `tsc --noEmit`, strict, no `any` anywhere. Twice: the
+  engine is checked WITHOUT the DOM library, so a browser global in
+  `src/chem`, `src/code` or `src/engine` is a type error rather than something
+  that only shows up on a runner.
 - `npm test` — `node --test` over `test/**/*.test.ts`.
+- `npm run build` — emits the browser bundle to `public/app`, regenerates the
+  patch notes and the icons. There is no bundler: `tsc` rewrites the `.ts`
+  import specifiers Node needs into the `.js` ones a browser needs, so the same
+  sources run in both.
+
+### Looking at it
+
+```
+npm run build && npx --yes http-server public
+```
+
+Any static server will do — the app makes no network calls. The two gates that
+drive a real browser:
+
+- `npm run walk` — the primary journey, start screen to completion code. It gets
+  one step wrong on purpose, because the diagnosis and the algebra help are the
+  product, and it drops the network mid-session to prove the offline claim
+  rather than asserting it.
+- `npm run a11y` — the accessibility gate. Every state, both themes, measured
+  from the pixels the browser resolved. It exits non-zero. Add `--verbose` to
+  see every passing measurement.
+- `npm run palette` — the colour floors, against the hub's canonical gate.
 
 ## The command-line harness
 

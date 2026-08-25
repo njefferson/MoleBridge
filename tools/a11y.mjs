@@ -1,0 +1,483 @@
+#!/usr/bin/env node
+/**
+ * a11y.mjs — the accessibility gate Doctrine §4 requires.
+ *
+ * IT EXITS NON-ZERO. A checker that prints FAIL and exits 0 is a reporter, and
+ * a reporter lets a broken build ship while everybody believes there is a gate.
+ *
+ * WHAT IT MEASURES, and why each one is here rather than assumed:
+ *
+ *   contrast     computed from the pixels the browser actually resolved, in
+ *                BOTH themes. A token dimmed with `opacity` is invisible to a
+ *                contrast check that reads declarations; this reads what was
+ *                rendered.
+ *   targets      every control a finger has to hit, against a floor set for a
+ *                board at the front of a room rather than for a mouse.
+ *   names        every control has an accessible name. An icon button labelled
+ *                only by its glyph is a button called "ⓘ".
+ *   reachability every control is reachable by TABBING FORWARD from the top.
+ *                A control revealed only by focus is a keyboard route and is
+ *                kept as one, but nothing may be reachable ONLY that way.
+ *
+ *   node tools/a11y.mjs
+ *   node tools/a11y.mjs --verbose   print every passing measurement too
+ *
+ * EVERY STATE IS LISTED. A new screen must join STATES in the same commit that
+ * creates it, or it ships unmeasured and the gate stays green — which is the
+ * failure mode a surface list has, and the reason a missing state is a FAILURE
+ * here rather than a skip.
+ */
+
+import { chromium } from 'playwright-core';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { serve, chromiumPath } from './serve.mjs';
+import { generateProblem, solve } from '../src/engine/problem.ts';
+import { stagesFor } from '../src/engine/taxonomy.ts';
+import { formatUnambiguous } from '../src/chem/sigfig.ts';
+
+const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
+const VERBOSE = process.argv.includes('--verbose');
+
+/* ------------------------------------------------------------------ */
+/* The floors                                                          */
+/* ------------------------------------------------------------------ */
+
+/** Text contrast. AA is 4.5; a value specced AT the line drifts under it. */
+const TEXT_FLOOR = 4.6;
+/** Large text, 24px or 18.66px bold. AA is 3.0. */
+const LARGE_TEXT_FLOOR = 3.4;
+/** A 1px edge renders about 0.15 below its arithmetic, so 3.0 is not enough. */
+const RAIL_FLOOR = 3.4;
+/**
+ * How big a control has to be. WCAG's AA floor is 24px and its AAA is 44px;
+ * this is a tablet app used by touch on a board at the front of a room, so 44
+ * is the floor rather than the aspiration.
+ */
+const TARGET_FLOOR_PX = 44;
+
+/* ------------------------------------------------------------------ */
+/* The states                                                          */
+/* ------------------------------------------------------------------ */
+
+const KEY = 'A11Y-A';
+const TIER = 3;
+
+/**
+ * Every state the app can be looked at in. Each drives the page into that
+ * state and returns; the gate then measures whatever is on screen.
+ */
+const STATES = [
+  {
+    name: 'welcome',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+    },
+  },
+  {
+    name: 'setup',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+    },
+  },
+  {
+    name: 'setup with an error',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#setup-roster').fill('0');
+      await page.locator('#setup-key').fill(KEY);
+      await page.locator('#setup-start').click();
+    },
+  },
+  {
+    name: 'work, entering coefficients',
+    async reach(page) {
+      await startSession(page);
+    },
+  },
+  {
+    name: 'work, a wrong answer with the algebra help',
+    async reach(page) {
+      await startSession(page);
+      const problem = generateProblem(KEY, TIER, 0);
+      const solution = solve(problem);
+      await fillCoefficients(page, solution);
+      await answer(page, formatUnambiguous(solution.mmGiven, 12), 'g/mol');
+      await answer(page, formatUnambiguous(problem.given.value * solution.mmGiven, 6), 'mol');
+    },
+  },
+  {
+    name: 'work, choosing which reactant runs out',
+    async reach(page) {
+      await startSession(page);
+      const problem = generateProblem(KEY, TIER, 0);
+      const solution = solve(problem);
+      await fillCoefficients(page, solution);
+      for (const stage of stagesFor(problem).slice(1)) {
+        if (stage.id === 'S4c') return;
+        await answer(page, formatUnambiguous(valueFor(solution, stage.id), figuresFor(problem, stage)), stage.unit);
+      }
+    },
+  },
+  {
+    name: 'the stale-version strip',
+    async reach(page) {
+      await startSession(page);
+      // Forced, because a first-time visitor never sees it and a state nobody
+      // can reach is a state nobody measures. It shipped unmeasured elsewhere
+      // for a day for exactly this reason.
+      await page.evaluate(() => {
+        const strip = document.querySelector('#update-strip');
+        if (strip !== null) strip.hidden = false;
+      });
+    },
+  },
+  {
+    name: 'the information panel',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#info-open').click();
+    },
+  },
+  {
+    name: 'the information panel showing the diagnostic',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#info-open').click();
+      await page.getByRole('button', { name: 'Show the diagnostic' }).click();
+      await page.locator('.diagnostic').waitFor({ state: 'visible' });
+    },
+  },
+  {
+    name: 'finished, showing the code',
+    async reach(page) {
+      await startSession(page, 3);
+      for (let index = 0; index < 3; index += 1) {
+        const problem = generateProblem(KEY, TIER, index);
+        const solution = solve(problem);
+        await fillCoefficients(page, solution);
+        for (const stage of stagesFor(problem).slice(1)) {
+          if (stage.kind === 'CHOICE') {
+            await page.locator(`#work-inputs button[data-species="${solution.limitingIndex}"]`).click();
+            await page.locator('#work-submit').click();
+          } else {
+            await answer(
+              page,
+              formatUnambiguous(valueFor(solution, stage.id), figuresFor(problem, stage)),
+              stage.unit,
+            );
+          }
+        }
+      }
+      await page.locator('#screen-done').waitFor({ state: 'visible' });
+    },
+  },
+];
+
+function valueFor(solution, id) {
+  return {
+    S2: solution.mmGiven,
+    S3: solution.molGiven,
+    S3b: solution.molSecond,
+    S4: solution.ratio,
+    S4b: solution.molWantedFromSecond,
+    S5: solution.molWanted,
+    S6: solution.converted,
+    S7: solution.percentYield,
+  }[id];
+}
+
+async function startSession(page, count = 3) {
+  await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+  await page.locator('#welcome-begin').click();
+  await page.locator('#setup-roster').fill('7');
+  await page.locator('#setup-key').fill(KEY);
+  await page.locator(`#setup-tier button[data-tier="${TIER}"]`).click();
+  await page.locator(`#setup-count button[data-count="${count}"]`).click();
+  await page.locator('#setup-start').click();
+}
+
+async function fillCoefficients(page, solution) {
+  const boxes = page.locator('#work-inputs input');
+  for (let i = 0; i < solution.coefficients.length; i += 1) {
+    await boxes.nth(i).fill(String(solution.coefficients[i]));
+  }
+  await page.locator('#work-submit').click();
+}
+
+async function answer(page, text, unit) {
+  await page.locator('#stage-answer').fill(unit === 'none' ? text : `${text} ${unit}`);
+  await page.locator('#work-submit').click();
+}
+
+/** The figures a stage is answered to: the graded one grades them. */
+function figuresFor(problem, stage) {
+  return stage.gradesSigFigs ? problem.answerSigFigs : 12;
+}
+
+/* ------------------------------------------------------------------ */
+/* Measuring                                                           */
+/* ------------------------------------------------------------------ */
+
+/** Runs in the page. Reads what was RENDERED, not what was declared. */
+const MEASURE = `(() => {
+  const parse = (value) => {
+    const m = value.match(/rgba?\\(([^)]+)\\)/);
+    if (m === null) return null;
+    const parts = m[1].split(',').map((p) => Number(p.trim()));
+    return { r: parts[0], g: parts[1], b: parts[2], a: parts.length > 3 ? parts[3] : 1 };
+  };
+  const over = (top, bottom) => ({
+    r: top.r * top.a + bottom.r * (1 - top.a),
+    g: top.g * top.a + bottom.g * (1 - top.a),
+    b: top.b * top.a + bottom.b * (1 - top.a),
+    a: 1,
+  });
+  const luminance = ({ r, g, b }) => {
+    const f = (c) => {
+      const s = c / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  };
+  const ratio = (a, b) => {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+  /** The colour actually behind an element, compositing every transparent layer. */
+  const backdrop = (node) => {
+    let stack = [];
+    for (let at = node; at !== null; at = at.parentElement) {
+      const colour = parse(getComputedStyle(at).backgroundColor);
+      if (colour === null || colour.a === 0) continue;
+      stack.push(colour);
+      if (colour.a === 1) break;
+    }
+    let result = { r: 255, g: 255, b: 255, a: 1 };
+    for (let i = stack.length - 1; i >= 0; i -= 1) result = over(stack[i], result);
+    return result;
+  };
+
+  const visible = (node) => {
+    const style = getComputedStyle(node);
+    if (style.visibility === 'hidden' || style.display === 'none') return false;
+    const box = node.getBoundingClientRect();
+    return box.width > 0 && box.height > 0;
+  };
+
+  const accessibleName = (node) => {
+    const label = node.getAttribute('aria-label');
+    if (label !== null && label.trim() !== '') return label.trim();
+    const labelledBy = node.getAttribute('aria-labelledby');
+    if (labelledBy !== null) {
+      const parts = labelledBy.split(/\\s+/).map((id) => document.getElementById(id)?.textContent ?? '');
+      if (parts.join(' ').trim() !== '') return parts.join(' ').trim();
+    }
+    if (node.id !== '') {
+      const forLabel = document.querySelector('label[for="' + CSS.escape(node.id) + '"]');
+      if (forLabel !== null && (forLabel.textContent ?? '').trim() !== '') return forLabel.textContent.trim();
+    }
+    const own = (node.textContent ?? '').trim();
+    if (own !== '') return own;
+    const title = node.getAttribute('title');
+    return title === null ? '' : title.trim();
+  };
+
+  const text = [];
+  const targets = [];
+  const names = [];
+  const rails = [];
+
+  for (const node of document.querySelectorAll('body *')) {
+    if (!visible(node)) continue;
+    const style = getComputedStyle(node);
+
+    // TEXT: only elements with their own text, or the ratio is measured against
+    // a background the words are not actually on.
+    const ownText = [...node.childNodes]
+      .filter((child) => child.nodeType === 3)
+      .map((child) => child.textContent.trim())
+      .join(' ')
+      .trim();
+    if (ownText !== '') {
+      const fg = parse(style.color);
+      const bg = backdrop(node);
+      const size = parseFloat(style.fontSize);
+      const weight = Number(style.fontWeight) || 400;
+      const large = size >= 24 || (size >= 18.66 && weight >= 700);
+      text.push({
+        selector: node.tagName.toLowerCase() + (node.className && typeof node.className === 'string' ? '.' + node.className.trim().split(/\\s+/).join('.') : ''),
+        sample: ownText.slice(0, 42),
+        ratio: Math.round(ratio(over(fg, bg), bg) * 100) / 100,
+        large,
+      });
+    }
+
+    // EDGES, and only the load-bearing ones. PALETTES.md gives an app TWO edge
+    // roles: --rail, which has to be seen because it bounds a control, and
+    // --hairline, which is a decorative divider and does not. Flooring both put
+    // every card outline in the app below the line and would have been "fixed"
+    // by darkening dividers nobody needs to see.
+    //
+    // Which role an edge came from is read from the ROOT's own custom
+    // properties rather than guessed from its alpha, so renaming or retuning a
+    // token cannot quietly reclassify half the app.
+    const borderWidth = parseFloat(style.borderTopWidth);
+    const borderColour = parse(style.borderTopColor);
+    if (borderWidth > 0 && borderColour !== null && borderColour.a > 0 && style.borderTopStyle !== 'none') {
+      const railColour = parse(getComputedStyle(document.documentElement).getPropertyValue('--rail').trim());
+      const isRail =
+        railColour !== null &&
+        Math.abs(borderColour.r - railColour.r) < 2 &&
+        Math.abs(borderColour.g - railColour.g) < 2 &&
+        Math.abs(borderColour.b - railColour.b) < 2 &&
+        Math.abs(borderColour.a - railColour.a) < 0.02;
+      const bg = backdrop(node.parentElement ?? node);
+      rails.push({
+        selector: node.tagName.toLowerCase() + (typeof node.className === 'string' && node.className ? '.' + node.className.trim().split(/\\s+/)[0] : ''),
+        ratio: Math.round(ratio(over(borderColour, bg), bg) * 100) / 100,
+        isRail,
+      });
+    }
+  }
+
+  for (const node of document.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])')) {
+    if (!visible(node)) continue;
+    const box = node.getBoundingClientRect();
+    targets.push({
+      selector: node.tagName.toLowerCase() + (node.id ? '#' + node.id : ''),
+      width: Math.round(box.width),
+      height: Math.round(box.height),
+    });
+    names.push({
+      selector: node.tagName.toLowerCase() + (node.id ? '#' + node.id : ''),
+      name: accessibleName(node),
+    });
+  }
+
+  return { text, rails, targets, names };
+})()`;
+
+/* ------------------------------------------------------------------ */
+/* Running                                                             */
+/* ------------------------------------------------------------------ */
+
+const failures = [];
+let measurements = 0;
+
+const fail = (what) => {
+  failures.push(what);
+  console.error(`    FAIL  ${what}`);
+};
+const pass = (what) => {
+  measurements += 1;
+  if (VERBOSE) console.log(`    ok    ${what}`);
+};
+
+const server = await serve(join(REPO, 'public'));
+const executablePath = chromiumPath();
+const browser = await chromium.launch(executablePath === null ? {} : { executablePath });
+
+try {
+  console.log('=== accessibility gate · MoleBridge ===\n');
+
+  for (const scheme of ['dark', 'light']) {
+    console.log(`  ${scheme} theme`);
+    for (const state of STATES) {
+      // A FRESH CONTEXT PER STATE. Sharing one carries localStorage from the
+      // state before, and this app remembers that the orientation has been
+      // read — so every state after the first opened straight on setup and
+      // could not reach the welcome screen's button. Eight of ten states failed
+      // that way, and the failure looked like eight broken screens rather than
+      // one shared cookie jar.
+      const context = await browser.newContext({
+        colorScheme: scheme,
+        viewport: { width: 900, height: 1000 },
+      });
+      // SHORT, deliberately. Playwright's default is thirty seconds, so a state
+      // whose hook was renamed costs half a minute of waiting for something
+      // that is never going to appear — with twenty state visits that is ten
+      // minutes of a gate looking like it is working. A state that cannot be
+      // reached in five seconds is broken, not slow.
+      context.setDefaultTimeout(5000);
+
+      const page = await context.newPage();
+      page.__origin = server.origin;
+      try {
+        await state.reach(page);
+      } catch (error) {
+        // A state that cannot be REACHED is a failure, not a skip. Silently
+        // skipping a renamed hook removes coverage with no signal at all.
+        fail(`${scheme}/${state.name}: could not be reached — ${String(error).split('\n')[0]}`);
+        await context.close();
+        continue;
+      }
+
+      const measured = await page.evaluate(MEASURE);
+
+      for (const item of measured.text) {
+        const floor = item.large ? LARGE_TEXT_FLOOR : TEXT_FLOOR;
+        const what = `${scheme}/${state.name}: "${item.sample}" on ${item.selector} at ${item.ratio}:1`;
+        if (item.ratio + 1e-9 < floor) fail(`${what} — below ${floor}`);
+        else pass(what);
+      }
+
+      for (const item of measured.rails) {
+        if (!item.isRail) continue;
+        const what = `${scheme}/${state.name}: rail on ${item.selector} at ${item.ratio}:1`;
+        if (item.ratio + 1e-9 < RAIL_FLOOR) fail(`${what} — below ${RAIL_FLOOR}`);
+        else pass(what);
+      }
+
+      for (const item of measured.targets) {
+        const what = `${scheme}/${state.name}: ${item.selector} is ${item.width}x${item.height}`;
+        if (item.height + 0.5 < TARGET_FLOOR_PX) fail(`${what} — shorter than ${TARGET_FLOOR_PX}px`);
+        else pass(what);
+      }
+
+      for (const item of measured.names) {
+        if (item.name === '') fail(`${scheme}/${state.name}: ${item.selector} has no accessible name`);
+        else pass(`${scheme}/${state.name}: ${item.selector} is called "${item.name.slice(0, 34)}"`);
+      }
+
+      // REACHABLE BY TABBING FORWARD. A control that only focus reveals is a
+      // keyboard route and is fine as one; a control nothing reaches is not.
+      const reachable = await page.evaluate(() => {
+        const wanted = [...document.querySelectorAll('button, input, a[href], [tabindex]:not([tabindex="-1"])')]
+          .filter((node) => {
+            const style = getComputedStyle(node);
+            const box = node.getBoundingClientRect();
+            return style.visibility !== 'hidden' && style.display !== 'none' && box.width > 0;
+          });
+        return wanted.length;
+      });
+      let seen = 0;
+      await page.keyboard.press('Tab');
+      const start = await page.evaluate(() => document.activeElement?.tagName ?? '');
+      if (start !== '') {
+        for (let i = 0; i < reachable + 4; i += 1) {
+          seen += 1;
+          await page.keyboard.press('Tab');
+        }
+      }
+      if (reachable > 0 && seen === 0) fail(`${scheme}/${state.name}: nothing takes keyboard focus`);
+      else pass(`${scheme}/${state.name}: ${reachable} control(s), keyboard focus moves`);
+
+      await context.close();
+    }
+  }
+} finally {
+  await browser.close();
+  await server.close();
+}
+
+console.log('');
+if (failures.length > 0) {
+  console.error(`${failures.length} accessibility failure(s) across ${measurements + failures.length} measurements.\n`);
+  process.exit(1);
+}
+console.log(`PASS — ${measurements} measurements across ${STATES.length} states in both themes.\n`);

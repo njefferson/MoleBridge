@@ -35,6 +35,11 @@
   --text-3: #c1c1c1;
   --accent: #9fc2f5;
   --accent-soft: rgba(159, 194, 245, 0.15);
+  /* Text ON the accent. Its own token rather than reusing --page: in day mode
+     the page is a warm tan, and tan lettering on a dark blue button is a pairing
+     nobody chose — it just fell out of borrowing a token for a job it was not
+     for. PALETTES.md §2: text on an accent-tinted fill is a real background. */
+  --on-accent: #10233d;
 
   --step: 0.5rem;
   --radius: 0.6rem;
@@ -58,6 +63,7 @@
     --text-3: #4a4436;
     --accent: #17458f;
     --accent-soft: rgba(23, 69, 143, 0.12);
+    --on-accent: #f7f3ea;
   }
 }
 
@@ -295,7 +301,7 @@ input[type="text"] {
   padding: 0.7rem 1.3rem;
   font: inherit;
   font-weight: 600;
-  color: var(--page);
+  color: var(--on-accent);
   background: var(--accent);
   border: 1px solid var(--accent);
   border-radius: var(--radius);
@@ -303,7 +309,14 @@ input[type="text"] {
 }
 .button:hover { filter: brightness(1.06); }
 .button-big { width: 100%; font-size: 1.1875rem; min-height: 3.5rem; }
-.button-small { min-height: 2.5rem; padding: 0.4rem 0.9rem; font-size: 0.9375rem; }
+.button-small {
+  /* 2.75rem, not 2.5. A 40px control is under the 44px floor a finger on a
+     board at the front of a room needs, and "small" is about how loud it looks
+     rather than how hard it is to hit. */
+  min-height: 2.75rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9375rem;
+}
 .button-quiet { color: var(--text-1); background: transparent; border-color: var(--rail); }
 
 /* ---------------- feedback ---------------- */

@@ -18,7 +18,9 @@
     "check": "npm run typecheck && npm run version:check && node tools/changelog.mjs --check && npm test",
     "gates": "node ../noahjefferson/privacy-check.mjs --repo . && node ../noahjefferson/quote-check.mjs --repo . && node ../noahjefferson/docs-check.mjs . && node ../noahjefferson/pin-check.mjs --repo .",
     "doctrine": "node ../noahjefferson/doctrine-sync.mjs --repo .",
-    "walk": "npm run build && node tools/walk.mjs"
+    "walk": "npm run build && node tools/walk.mjs",
+    "a11y": "node tools/a11y.mjs",
+    "palette": "node ../noahjefferson/palette-check.mjs palettes/molebridge.json"
   },
   "devDependencies": {
     "@types/node": "22.19.4",

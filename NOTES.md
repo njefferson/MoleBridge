@@ -18,6 +18,18 @@ student PII ever — identity is a teacher-assigned roster number from 1 to 4095
 
 ## Where this stands
 
+**Session 2 is complete: MoleBridge has a screen.** A student reads what it is,
+types the roster number and assignment key off the board, picks a set, and works
+problems one step at a time. Wrong steps are diagnosed rather than marked, and
+the algebra help lands at the failing step. At the end there is a code to type
+into Canvas.
+
+It is installable, it works with no connection, a new version waits rather than
+taking over, it shows what changed, and it can produce a text diagnostic. The
+accessibility gate passes 1268 measurements across ten states in both themes.
+
+**Nothing is deployed.** See the open obligations at the foot of this file.
+
 **Session 1 is complete.** The domain engine, the completion-code codec and the
 test suite are built and green: 107 tests, a clean strict type check with no
 `any` in the tree, and no runtime dependencies at all. There is no user
@@ -150,28 +162,55 @@ guarantee applied a classroom-balance range to every stage value, and
 healthy and had quietly lost a whole problem kind. The test that catches it now
 asserts that every problem kind actually appears in a sweep.
 
-## What sessions 2 and 3 owe
+## What session 2 found, and what it changed in the engine
 
-**Session 2 — the user interface.** The rules the engine is built to support and
-that a screen must not break:
+Building the screen found four defects in the engine that no test had objected
+to, because every one of them produced correct output.
 
-- The correct answer is **never** displayed before the student's attempt at that
-  stage. `solve()` and `predictionsFor()` are the grader's; a screen renders a
-  `Problem`, which deliberately carries no coefficients, no molar masses and no
-  intermediates.
-- `solveBalance` must not be reachable from any student-facing path. `balance.ts`
-  names the one export that is safe there — `checkBalance`, which grades a
-  coefficient set the student has already committed to and cannot be run
-  backwards.
-- Remediation is injected at the failing stage, never offered as a menu.
-- A completion code is 24 characters and the student will retype it. Show it
-  grouped 5-5-5-5-4, selectable, and large enough to read off a Chromebook
-  screen at arm's length.
-- Everything the doctrine's §7e asks of every app: an information control in the
-  app's own chrome, first-run orientation that survives whatever is pressed to
-  begin, patch notes from one source, a text diagnostic, and a way to say the
-  app has gone stale. Plus the on-screen build stamp from the first deploy
-  (§7b).
+**The algebra help handed over the answer.** A worked line ended
+`mol N2 = 878 / 28.01 = 31.34`, which is the value the student is stuck on. The
+magnitude help was worse: it printed a one-figure estimate, and no intermediate
+stage grades figures, so typing that estimate back in was accepted. There is a
+gate now — no help may show a number that would be marked correct at the stage
+it appears on — and it checks 17,000 numbers across 23,000 worked lines against
+the classifier itself.
+
+**The classifier accepted an answer of 2 for a value of 1.627**, because at one
+significant figure they agree and only the last stage grades figures. An answer
+23% out was correct at every other stage. Entry is now judged at no less than
+the precision the problem states.
+
+**The quantities were not of this world.** The physical-range guarantee used the
+limits of arithmetic rather than of a school laboratory, so the generator posed
+a kilogram of propane. Masses now sit between a tenth of a gram and a few
+hundred — and tightening that range starved the generator, because the same band
+was being applied to mole counts, which legitimately run a thousand times
+smaller. That is LESSONS 140 recurring in the repository that wrote it.
+
+**The mole-ratio stage had the wrong remediation shape entirely.** It was
+explained as "multiply this by that", which describes the step after it. It now
+names the two coefficients by substance.
+
+## Decisions the screen settled
+
+**One thing on the board.** The completion code needs a 12-bit assignment id and
+the generator needs an assignment key. The id is derived from the key, so a
+teacher writes one thing and a class of thirty types one thing. Twelve bits
+collide; that is fine and is not a security property.
+
+**Units are typed, never chosen from a list.** A dropdown would turn "which unit
+is this step in" — which is the chemistry — into a guess between four options,
+and would make E-UNIT-MISSING unreachable. The hint says a unit is needed and
+does not say which.
+
+**Significant figures are graded only at the last stage**, as the engine always
+intended: rounding an intermediate is E-ROUND-EARLY, so demanding a rounded
+intermediate would mark students down for the thing the app elsewhere calls a
+mistake.
+
+**The palette is the Instrument family, taken verbatim.** `palettes/molebridge.json`
+holds it in role terms and the hub's gate measures it. Reskinning is a matter of
+swapping that file, which is what `PALETTES.md` exists for.
 
 **Session 3 — the teacher decoder and the print view.** The decoder takes a
 pasted gradebook column, decodes each code, and reports a per-student and
@@ -183,15 +222,32 @@ keep those apart.
 
 ## Repository obligations still open
 
+These are the things standing between MoleBridge and a class using it. None is
+work a session can finish on its own.
+
+- **Nothing is deployed, and the Cloudflare Pages project does not exist.**
+  Creating it, pointing it at this repository, and setting the build command to
+  `npm ci && npm run build` with an output directory of `public` are steps in
+  the Cloudflare dashboard. `public/_headers` is already written and deploys
+  with the site. No deploy workflow has been added, because one that sits red
+  for want of a project and a token is worse than none.
 - **Branches.** This repository has `main` and the harness branch. The family
-  convention is `staging` and `main`, with `staging` a hard release gate — that
-  matters from the first deploy, which has not happened, and needs setting up
-  before session 2 ships anything.
-- **`.branch-guard` and the generated pre-commit hook** are not installed yet.
-  They should be, in the same change that creates `staging`.
-- **`ACCESSIBILITY.md`** is owed as soon as there is any UI, and a new surface
-  must join the accessibility gate's surface list in the same commit that
-  creates it, or it ships unmeasured.
+  convention is `staging` and `main`, with `staging` a hard release gate. The
+  harness's standing instruction here is to push only to its designated branch,
+  which conflicts with creating and pushing `staging`, so that call is the
+  owner's.
+- **`.branch-guard` and the generated pre-commit hook** are owed in the same
+  change that creates `staging`. `tools/version-check.mjs` is written to be an
+  `also=` entry when that happens, so the release triplet is held on every
+  commit rather than when somebody remembers.
+- **No Content-Security-Policy.** `public/_headers` says so in as many words
+  rather than implying otherwise. The app carries no inline script, so one is
+  reachable; it is a refactor rather than a header and it has not been done.
+- **The on-device pass.** Headless Chromium cannot tell whether a 44px target is
+  comfortable to hit with a finger at arm's length, and it has no opinion about
+  a software keyboard covering the answer box. Real iPad, real ViewBoard, real
+  Chromebook.
 - **Repo metadata** — description, website, topics, social preview — is a manual
   GitHub step. Proposed values are in the hub's `METADATA.md`; nothing is set
-  until they are applied there.
+  until they are applied there. The website item is deliberately marked not-yet-
+  live.
