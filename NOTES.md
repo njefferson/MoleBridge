@@ -790,6 +790,49 @@ quantities rather than their positions.
 reporting a deliberate change as a defect, which teaches whoever hits it to edit
 the number without reading why. It counts `LESSONS.length` now.
 
+## The calculator, and the line it must not cross
+
+The owner asked for one. The design question is not how to build it — it is what
+it must refuse.
+
+**A calculator that understands chemistry deletes the product.** `E-MM-ARITH`,
+`E-MM-PARSE` and `E-MM-HYDRATE` exist because working out a molar mass is a thing
+a student does and gets wrong in recognisable ways. `E-CONV-FACTOR` and
+`E-CONV-INVERTED` exist because choosing and applying a factor is. A box that
+takes `CuSO4·5H2O` and returns 249.68 does not help a student who cannot do that
+— **it removes the step, and with it every diagnosis MoleBridge could have given
+them about it.** Five of twenty classes, gone, in exchange for a convenience free
+tools already offer.
+
+So it evaluates numbers and the four operations. A letter anywhere in the input
+is an error rather than an identifier, and `calculator.test.ts` feeds it **all
+118 element symbols** and seven real formulas. Structural rather than a
+blocklist: a blocklist is a list somebody forgets to extend.
+
+**No `eval`, no `Function`.** Not primarily for safety — the input is the
+student's own and the CSP forbids both — but because `eval` would ACCEPT exactly
+what this has to refuse. `Math.sqrt`, a bare identifier, a property access: all
+valid JavaScript, none of it belongs in a box meant to do sums. A hand-written
+recursive descent refuses by construction. The grammar is four operators and a
+bracket, so the parser reads like the grammar.
+
+**It does not round to the problem's precision.** Rounding there would make the
+significant-figures decision for the student, which is a graded step and its own
+error class — `E-SIG-FIGS` and `E-ROUND-EARLY` both live on exactly that
+boundary. Ten figures, and nothing said about how many belong.
+
+**Empty on every open**, asserted by the walk. A calculator that remembers is one
+step from a calculator that knows which problem you are on.
+
+**The refusal is walked on a real screen**, not left to the unit test: the walk
+types `CuSO4`, checks the message names what the box is for, and checks the
+refusal itself leaks no number.
+
+The accessibility state measured is the REFUSAL rather than a result — it is the
+longer message, it is where a student who typed a formula lands, and it is text
+on a surface rather than a number in an accent-soft box. Measuring the happy path
+would have measured the easier of the two.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

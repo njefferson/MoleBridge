@@ -249,6 +249,24 @@ const STATES = [
     },
   },
   {
+    name: 'the calculator, showing a refusal',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+      await page.locator('#calc-open').click();
+      // THE REFUSAL RATHER THAN A RESULT. It is the longer message, it is the
+      // state a student who typed a formula lands in, and it is the one with
+      // text that has to be readable against a surface rather than a number in
+      // an accent-soft box. Measuring the happy path would measure the easier
+      // of the two.
+      await page.locator('#calc-entry').fill('CuSO4');
+      await page.waitForFunction(
+        () => (document.querySelector('#calc-out')?.textContent ?? '').length > 0,
+      );
+    },
+  },
+  {
     name: 'the reference, at one page',
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });

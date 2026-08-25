@@ -478,6 +478,44 @@ try {
     'and there is no such offer in a class assignment',
   );
 
+  /* ---- the calculator, and what it must refuse ---- */
+  //
+  // THE REFUSAL IS THE FEATURE. A box that takes CuSO4 and returns 159.6 deletes
+  // three error classes from the taxonomy, so the refusal is walked on a real
+  // screen rather than trusted to the unit test alone.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-start').click();
+
+  check(await page.locator('#calc-open').isVisible(), 'the calculator is in the chrome, on every screen');
+  await page.locator('#calc-open').click();
+  check(await page.locator('#calc-panel[open]').isVisible(), 'and it opens over the problem');
+
+  await page.locator('#calc-entry').fill('2.50 * 4');
+  const sum = (await page.locator('#calc-out').textContent())?.trim();
+  check(sum === '10', `it does the arithmetic (${sum})`);
+
+  await page.locator('#calc-entry').fill('CuSO4');
+  const refusal = (await page.locator('#calc-out').textContent()) ?? '';
+  check(/molar mass/i.test(refusal), 'and refuses a formula, saying what it is for');
+  check(!/\d{2,}/.test(refusal), 'without leaking a number while refusing');
+
+  // The keypad works too — the board at the front has no keyboard in reach.
+  await page.locator('#calc-entry').fill('');
+  for (const key of ['6', '×', '7']) await page.locator(`#calc-keys [data-key="${key}"]`).click();
+  const tapped = (await page.locator('#calc-out').textContent())?.trim();
+  check(tapped === '42', `the keys work as well as the keyboard (${tapped})`);
+
+  await page.locator('#calc-close').click();
+  check(await page.locator('#work-inputs').isVisible(), 'and closing it leaves the problem where it was');
+
+  // NOTHING CARRIES BETWEEN OPENS. A calculator that remembers is one step from
+  // a calculator that knows which problem you are on.
+  await page.locator('#calc-open').click();
+  const reopened = await page.locator('#calc-entry').inputValue();
+  check(reopened === '', `it is empty when it opens again ("${reopened}")`);
+  await page.locator('#calc-close').click();
+
   /* ---- the reference, and the route into it from a wrong answer ---- */
   //
   // THE POINT OF THE WHOLE SURFACE is that a diagnosis is not the last word. A

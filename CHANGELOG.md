@@ -4,6 +4,30 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.11.0 — CAPABILITY
+
+A calculator, in the top bar, on every screen.
+
+Press **=**. Type a sum or tap the keys. It handles brackets, decimals and
+scientific notation, so `6.022e23 * 2` works and so does `(2.50 + 1.25) / 3`.
+
+**It will not do the chemistry, and that is on purpose.** Type a formula and it
+says so instead of answering. Working out a molar mass and choosing which way up
+to put a conversion are the steps you are practising — MoleBridge can only tell
+you what went wrong in them if you do them, and a box that hands back 249.68
+takes both the step and the explanation away.
+
+It does not round to the number of figures your answer needs. That decision is
+yours and it is one MoleBridge marks, so the calculator shows plenty of figures
+and says nothing about how many belong.
+
+It opens over whatever you were doing and closes back to it, and it is empty
+every time it opens.
+
+**What is still missing.** No periodic table yet. And the same gaps as before:
+no way to review a problem you have already finished, and no running total
+across sessions.
+
 ## 0.10.0 — CAPABILITY
 
 Somewhere to go when MoleBridge tells you what you did wrong.
