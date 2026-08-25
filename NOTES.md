@@ -881,6 +881,101 @@ oxygen atoms" mid-sentence. A heading reading "carbon (C)" looks like a typo, so
 the panel capitalises for display — in the visible heading AND in the cell's
 accessible name, which have to agree or SC 2.5.3 is failed by the fix.
 
+## D1: can a colour set be swapped wholesale? Yes, once two gates exist
+
+The question was whether a set that already clears every floor in the hub's
+palette gate can replace the current one without re-running this app's
+accessibility gate against it — so adding a theme stops multiplying the browser
+work by the number of themes.
+
+**The answer is yes, and it was NOT true when the question was asked.** Two
+things had to become true first, and finding that out found a defect that had
+been on production for fifteen releases.
+
+### One: the app paints only role tokens
+
+This is the half that feels obviously true. It was not, and grep cannot settle
+it — a literal reaches a screen from a browser default, an inherited value, or a
+script writing `.style`, none of which is in the stylesheet.
+
+So `tools/a11y.mjs` resolves every role token through the browser, builds a map
+from colour to token, and reverse-maps every colour it measures. **A colour that
+maps to nothing came from outside the palette, and fails the run.**
+
+**On its first honest run it found every secondary button in the app.**
+`.button-small` set a height, a padding and a font size — it was written as a
+modifier for `.button`, which carries the colour. Every element used it ALONE,
+so `.button` never applied and Chromium painted them with its own defaults:
+`#6b6b6b` on white text in dark, `#efefef` on black in light. Cold grey against
+a warm palette, unmoved by which theme was chosen, on Back, Copy it, Check and
+Look up a mistake — fifteen sites across the markup and four modules.
+
+Fifteen releases. Every gate green, including a contrast gate measuring resolved
+pixels in three palettes and both modes. **Nothing was wrong with the contrast**
+— UA button colours are legible, which is why browsers picked them. No gate had
+ever asked whether the colour came from the theme.
+
+Three details separate an instrument from a confident liar, and each cost a run:
+
+- **Resolve tokens through the browser, not by parsing the declaration.** The
+  first version read the custom property off the root, got hex where the parser
+  wanted `rgb()`, and reported all 8,949 measurements as unmapped. A broken
+  instrument at full confidence looks exactly like a catastrophic finding.
+- **Composite alpha tokens over every fill, and keep the fill in the name.**
+  Without compositing, every hairline reads as unmapped. Without the fill in the
+  name, a tint over the page and the same tint over the top surface are the same
+  key — and that turned three genuine near-misses on screens nobody has built
+  into three reported defects.
+- **Token order decides collisions.** The print palette collapses everything to
+  black on white, so `--rail` and `--text-1` are both `#000` there; with edges
+  registered first, every heading on the printed decoder reported itself as a
+  rail. Foregrounds first.
+
+### Two: the pairings the app makes are recorded from a run
+
+The palette gate measures the full cross product of roles, which is what makes a
+palette PORTABLE — cleared against every pairing it can go into any app. This app
+paints **nineteen** of them.
+
+Both facts are worth having and they are not the same severity, so a spec may now
+carry `_renders`. A floor missed on a recorded pairing is a failure; one missed
+off the list is a forecast — true about the palette, about a screen nobody built.
+
+**`_renders` is never typed.** It comes out of a run, and the same run fails when
+the recorded list and the observed one differ, in both directions. A stale list
+is not a smaller gate, it is a gate pointed at the wrong screens (hub LESSONS
+§53's shape).
+
+**It is only authoritative from `--all-palettes`**, because two roles sharing a
+value in one palette mask a pairing — which is exactly what print does. The
+default run checks it as a subset; CI checks it for equality.
+
+### What the widened palette gate found
+
+Adding `onAccent` to the hub's gate was the other half. **`--on-accent` was
+declared in the stylesheet, painted on every primary button, and measured by
+nothing** — the spec had no field for it, so the only thing checking the loudest
+pairing in the app was a per-palette browser run. Widening check 6 to the whole
+text ladder rather than `text[0]` came from the same list.
+
+Together they raised 13 hard failures across the six palettes. Filtered against
+what the app actually paints: **zero defects and ten forecasts**, the useful ones
+being that text-3 on an accent-tinted fill misses the floor in five of six
+palettes — so if a hint is ever put on a highlighted row, that is where it will
+fail.
+
+### The payoff
+
+The default accessibility run went from 16,586 measurements to 5,526 — one
+palette instead of three — and gave up nothing, because the two thirds dropped
+were re-measuring what `npm run palette` proves without a browser. Adding a
+fourth theme is now a palette-gate run.
+
+**Planted red three times before it was believed**: a literal colour on the build
+stamp (44 unmapped), a pairing removed from `_renders` (the app paints it and the
+gate is not flooring it), and a pairing added that nothing renders, caught only
+by `--all-palettes`.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

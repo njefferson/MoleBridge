@@ -377,14 +377,38 @@ input[type="text"] {
 }
 .button:hover { filter: brightness(1.06); }
 .button-big { width: 100%; font-size: 1.1875rem; min-height: 3.5rem; }
+/*
+  A COMPLETE BUTTON, not a size modifier — and it was a size modifier for
+  fifteen releases. Every `class="button-small"` in the app carries that class
+  ALONE, so none of the `.button` rule above applied to any of them and they
+  were painted by the browser's own default button styling: #6b6b6b with white
+  text in dark, #efefef with black in light, in both cases a cold grey against
+  a warm palette and completely unmoved by which theme was chosen.
+
+  It passed every gate. Contrast was fine — the UA colours are legible — and
+  nothing else was looking. What found it was reverse-mapping each rendered
+  colour to the role token it came from: 144 measurements resolved to no token
+  at all, which is the shape of a colour arriving from outside the theme.
+
+  These are SECONDARY buttons — Back, Copy it, Check, Look up a mistake — so
+  they are painted as one rather than given the accent fill of the primary.
+*/
 .button-small {
   /* 2.75rem, not 2.5. A 40px control is under the 44px floor a finger on a
      board at the front of a room needs, and "small" is about how loud it looks
      rather than how hard it is to hit. */
   min-height: 2.75rem;
   padding: 0.5rem 0.9rem;
+  font: inherit;
   font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-1);
+  background: var(--surface-2);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  cursor: pointer;
 }
+.button-small:hover { background: var(--surface-3); }
 .button-quiet { color: var(--text-1); background: transparent; border-color: var(--rail); }
 
 /* ---------------- feedback ---------------- */

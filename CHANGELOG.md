@@ -4,6 +4,15 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.12.1 — ITERATION
+
+Every small button in the app now uses your colour theme.
+
+Back, Copy it, Check, Look up a mistake and the rest were being painted by the
+browser rather than by MoleBridge — a flat grey that stayed the same whichever
+of the three themes you picked, and looked wrong against all of them. They were
+legible, so nothing caught it. They match now.
+
 ## 0.12.0 — CAPABILITY
 
 A periodic table, in the top bar, next to the calculator.

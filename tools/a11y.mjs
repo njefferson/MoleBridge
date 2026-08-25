@@ -64,6 +64,37 @@ import { assignmentKeyIdFor } from '../src/engine/assignment.ts';
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 const VERBOSE = process.argv.includes('--verbose');
 
+/*
+  ---- HOW MANY PALETTES THIS SWEEPS, AND WHY IT CAN BE ONE ----
+
+  Full sweep by default was 23 states x 3 palettes x 2 modes, and two thirds of
+  it was measuring the same thing three times. What this gate checks that is
+  palette-DEPENDENT is contrast; touch targets, accessible names, focus
+  reachability and the axe rules are all structure. And contrast is now covered
+  without a browser at all, by two facts this same run establishes:
+
+    1. THE APP PAINTS ONLY ROLE TOKENS. Every rendered colour reverse-maps to a
+       token; anything that maps to nothing fails the run. So no colour reaches
+       a screen except through the palette.
+
+    2. THESE ARE THE PAIRINGS IT MAKES. The observed list is held identical to
+       `_renders` in palettes/molebridge.json, which is what the hub's palette
+       gate hard-floors. A pairing appearing or disappearing fails the run.
+
+  Given both, a palette that clears `npm run palette` clears every screen, and
+  running the browser again per palette re-measures the palette gate's job.
+
+  SO: one palette by default, both modes — that is the fast loop, and it is what
+  a session runs. `--all-palettes` sweeps every one and is what CI runs, because
+  the pairing list is only AUTHORITATIVE from a full sweep: two roles can share
+  a value in one palette and mask a pairing, which is exactly what the print
+  palette does when it collapses everything to black on white.
+
+  On a single-palette run the list is therefore checked as a SUBSET, not for
+  equality — fewer pairings is what one palette can legitimately see.
+*/
+const ALL_PALETTES = process.argv.includes('--all-palettes');
+
 /* ------------------------------------------------------------------ */
 /* The floors                                                          */
 /* ------------------------------------------------------------------ */
@@ -450,6 +481,11 @@ function figuresFor(problem, stage) {
 /* ------------------------------------------------------------------ */
 
 /** Runs in the page. Reads what was RENDERED, not what was declared. */
+/** Every role pairing the app was seen to render, across every state. */
+const observedPairs = new Map();
+/** Every colour rendered that resolves to no role token at all. */
+const unmapped = [];
+
 const MEASURE = `(() => {
   const parse = (value) => {
     const m = value.match(/rgba?\\(([^)]+)\\)/);
@@ -528,6 +564,99 @@ const MEASURE = `(() => {
   const targets = [];
   const names = [];
   const rails = [];
+  const pairs = [];
+
+  /*
+    ---- WHICH ROLE IS THIS COLOUR? ----
+
+    The whole theming argument rests on the app painting nothing but role
+    tokens: if every colour on screen resolves from --page, --surface-*,
+    --text-*, --rail, --accent and friends, then what a palette gate measured
+    about those ROLES is what the screen shows, and a new palette clearing the
+    same floors clears the same screens.
+
+    That is an assumption until something checks it, and grep cannot: a literal
+    can arrive from a browser default, an inherited value, or a script setting
+    .style directly. So every colour measured below is reverse-mapped to the
+    token it came from, and one that maps to nothing is a colour painted
+    outside the role system.
+
+    The alpha tokens (--rail, --hairline, --accent-soft) resolve differently
+    over each fill, so their composites over every opaque fill are registered
+    too — otherwise every hairline in the app would read as unmapped.
+  */
+  /*
+    ORDER IS LOAD-BEARING, because two roles can legitimately hold the same
+    value and the first registration wins. The print palette collapses the whole
+    system to black on white on purpose — paper has no elevation ladder — so
+    --rail and --text-1 are both #000 there, and with the edges listed first
+    every heading on the printed decoder reported itself as "--rail on --page".
+    Foregrounds first, then fills, then edges: a colour that is both text and a
+    rail is being used as text wherever this measures it, since this only ever
+    asks about things with words in them.
+  */
+  const ROLE_TOKENS = [
+    '--text-1', '--text-2', '--text-3', '--on-accent', '--accent',
+    '--page', '--page-alt', '--surface-1', '--surface-2', '--surface-3',
+    '--accent-soft', '--rail', '--hairline',
+  ];
+  /*
+    RESOLVED THROUGH THE BROWSER, not by parsing the declaration. The tokens are
+    written as hex in the stylesheet and as rgba() for the alpha ones, and this
+    file's parse() reads the rgb() form a computed style always comes back as.
+    Reading the raw custom property gave a hex string, which parsed to nonsense
+    and made every colour in the app read as unmapped — 8949 of them, which is
+    what a broken instrument looks like when it is confident.
+
+    A probe element takes color: var(--token) and the browser hands back
+    rgb()/rgba() whatever the source form was.
+  */
+  const probe = document.createElement('span');
+  probe.style.position = 'absolute';
+  probe.style.opacity = '0';
+  document.body.append(probe);
+  const tokenColour = (token) => {
+    probe.style.color = '';
+    probe.style.color = 'var(' + token + ')';
+    const resolved = getComputedStyle(probe).color;
+    return parse(resolved);
+  };
+
+  const key = (c) => Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b);
+  const roleByColour = new Map();
+  const opaqueFills = [];
+  for (const token of ROLE_TOKENS) {
+    const colour = tokenColour(token);
+    if (colour === null) continue;
+    if (colour.a === 1) {
+      if (!roleByColour.has(key(colour))) roleByColour.set(key(colour), token);
+      if (/^--(page|page-alt|surface-)/.test(token)) opaqueFills.push({ token, colour });
+    } else {
+      roleByColour.set(token + '::alpha', token);
+    }
+  }
+  /*
+    Second pass: every alpha token composited over every opaque fill — AND THE
+    FILL IS PART OF THE NAME. "--text-2 on --accent-soft" is not enough for a
+    palette gate to act on, because a tint over the page and the same tint over
+    surface-3 are different colours with different contrast. Recorded without
+    the fill, three real near-misses read as defects on screens the app does not
+    have.
+  */
+  for (const token of ROLE_TOKENS) {
+    const colour = tokenColour(token);
+    if (colour === null || colour.a === 1) continue;
+    for (const fill of opaqueFills) {
+      const composited = over(colour, fill.colour);
+      const name = token + ' over ' + fill.token;
+      if (!roleByColour.has(key(composited))) roleByColour.set(key(composited), name);
+    }
+  }
+  // The dialog backdrop is a deliberate literal — a scrim is not a role, it is
+  // the absence of one, and it darkens whatever theme is underneath by design.
+  // Named here rather than left to read as an unmapped colour.
+  probe.remove();
+  const roleOf = (colour) => roleByColour.get(key(colour)) ?? null;
 
   for (const node of document.querySelectorAll('body *')) {
     if (!visible(node)) continue;
@@ -546,11 +675,18 @@ const MEASURE = `(() => {
       const size = parseFloat(style.fontSize);
       const weight = Number(style.fontWeight) || 400;
       const large = size >= 24 || (size >= 18.66 && weight >= 700);
+      const selector = node.tagName.toLowerCase() + (node.className && typeof node.className === 'string' ? '.' + node.className.trim().split(/\\s+/).join('.') : '');
       text.push({
-        selector: node.tagName.toLowerCase() + (node.className && typeof node.className === 'string' ? '.' + node.className.trim().split(/\\s+/).join('.') : ''),
+        selector,
         sample: ownText.slice(0, 42),
         ratio: Math.round(ratio(over(fg, bg), bg) * 100) / 100,
         large,
+      });
+      pairs.push({
+        selector,
+        sample: ownText.slice(0, 42),
+        fg: roleOf(over(fg, bg)),
+        bg: roleOf(bg),
       });
     }
 
@@ -611,7 +747,7 @@ const MEASURE = `(() => {
     });
   }
 
-  return { text, rails, targets, names };
+  return { text, rails, targets, names, pairs };
 })()`;
 
 /* ------------------------------------------------------------------ */
@@ -642,7 +778,7 @@ try {
   // LESSONS 28's shape exactly: a surface added without joining the gate's list.
   // Reading the list from the palette file rather than retyping it means adding
   // a fourth theme cannot forget this step.
-  for (const palette of PALETTES) {
+  for (const palette of ALL_PALETTES ? PALETTES : PALETTES.slice(0, 1)) {
     for (const scheme of ['dark', 'light']) {
       console.log(`  ${palette} · ${scheme}`);
       for (const state of STATES) {
@@ -692,6 +828,26 @@ try {
       }
 
       const measured = await page.evaluate(MEASURE);
+
+      // ---- THE ROLE INVARIANT ----
+      //
+      // Collected across every state, reported once at the end. Two things
+      // matter: that nothing is painted outside the role system, and WHICH role
+      // pairings the app actually renders — because the second is the list a
+      // palette gate has to cover before a colour set can be swapped wholesale
+      // without re-running any of this.
+      for (const item of measured.pairs) {
+        if (item.fg === null || item.bg === null) {
+          unmapped.push(`${palette}/${scheme}/${state.name}: "${item.sample}" on ${item.selector} — ${item.fg ?? 'fg'} / ${item.bg ?? 'bg'} is not a role token`);
+        } else {
+          // ONE EXAMPLE KEPT PER PAIRING. A list of role pairs with nothing to
+          // look at is hard to act on — the first question about any of them is
+          // "where?", and answering it from the gate beats grepping the
+          // stylesheet for a token that appears in fifteen rules.
+          const pairing = `${item.fg} on ${item.bg}`;
+          if (!observedPairs.has(pairing)) observedPairs.set(pairing, `${item.selector} — "${item.sample}"`);
+        }
+      }
 
       for (const item of measured.text) {
         const floor = item.large ? LARGE_TEXT_FLOOR : TEXT_FLOOR;
@@ -751,11 +907,74 @@ try {
 }
 
 console.log('');
+/* ---- what the run learned about the role system ---- */
+
+console.log(`\n  role pairings rendered: ${observedPairs.size}`);
+for (const [pair, where] of [...observedPairs.entries()].sort()) {
+  console.log(`    ${pair}`);
+  if (VERBOSE) console.log(`        e.g. ${where}`);
+}
+
+/*
+  ---- THE ROLE INVARIANT IS A FAILURE, NOT A REPORT ----
+
+  Everything above rests on it. If a colour can reach a screen without coming
+  from a token, then a palette cleared by the palette gate does not describe
+  what a reader sees, and the single-palette default becomes a coverage cut
+  with a story attached.
+
+  It caught a real one on its first honest run: every `.button-small` in the app
+  — Back, Copy it, Check, Look up a mistake — carried that class ALONE, so the
+  `.button` rule never applied and Chromium painted them with its own defaults.
+  Cold grey, unmoved by the theme, and passing every gate because the UA colours
+  are legible and nothing else was looking.
+*/
+if (unmapped.length > 0) {
+  console.log(`\n  colours painted OUTSIDE the role system: ${unmapped.length}`);
+  for (const line of unmapped.slice(0, 12)) console.log(`    ${line}`);
+  if (unmapped.length > 12) console.log(`    …and ${unmapped.length - 12} more`);
+  fail(`${unmapped.length} colour(s) reach a screen without coming from a role token`);
+}
+
+/*
+  ---- AND THE RECORDED LIST IS HELD TO WHAT WAS JUST SEEN ----
+
+  `_renders` in palettes/molebridge.json is what the hub's palette gate
+  hard-floors; every other pairing in the cross product it reports as a
+  forecast. A stale list is therefore not a smaller gate, it is a gate pointed
+  at the wrong screens — the same shape as the stale privacy mirror in hub
+  LESSONS 53.
+
+  Equality on a full sweep. On the one-palette default a subset is correct and
+  expected: two roles sharing a value in one palette mask a pairing, which is
+  what the print palette does deliberately.
+*/
+const recorded = new Set(
+  JSON.parse(readFileSync(join(REPO, 'palettes', 'molebridge.json'), 'utf8'))._renders ?? [],
+);
+const unrecorded = [...observedPairs.keys()].filter((pair) => !recorded.has(pair));
+for (const pair of unrecorded) {
+  fail(`the app paints "${pair}" and palettes/molebridge.json does not record it — the palette gate is not flooring it`);
+}
+if (ALL_PALETTES) {
+  const vanished = [...recorded].filter((pair) => !observedPairs.has(pair));
+  for (const pair of vanished) {
+    fail(`palettes/molebridge.json records "${pair}" and no state paints it — a recorded pairing nothing renders`);
+  }
+} else if (recorded.size !== observedPairs.size) {
+  console.log(
+    `\n  ${observedPairs.size} of ${recorded.size} recorded pairing(s) seen on one palette — ` +
+      'run with --all-palettes for the authoritative list.',
+  );
+}
+console.log('');
+
 if (failures.length > 0) {
   console.error(`${failures.length} accessibility failure(s) across ${measurements + failures.length} measurements.\n`);
   process.exit(1);
 }
 console.log(
   `PASS — ${measurements} measurements across ${STATES.length} states, ` +
-    `${PALETTES.length} colour theme(s), both modes.\n`,
+    `${ALL_PALETTES ? PALETTES.length : 1} of ${PALETTES.length} colour theme(s), both modes.` +
+    `${ALL_PALETTES ? '' : ' Contrast for the other themes is carried by `npm run palette` and the role invariant above.'}\n`,
 );

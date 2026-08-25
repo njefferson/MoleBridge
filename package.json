@@ -22,6 +22,7 @@
     "doctrine": "node ../noahjefferson/doctrine-sync.mjs --repo .",
     "walk": "npm run build && node tools/walk.mjs",
     "a11y": "node tools/a11y.mjs",
+    "a11y:all": "node tools/a11y.mjs --all-palettes",
     "og": "node tools/render-og.mjs",
     "palette": "node ../noahjefferson/palette-check.mjs palettes/molebridge.json",
     "branch": "node ../noahjefferson/branch-guard.mjs --repo .",

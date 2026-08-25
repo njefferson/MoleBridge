@@ -161,8 +161,17 @@ jobs:
 
       # Doctrine §4, and it exits non-zero. Every state, both themes, measured
       # from the pixels the browser resolved rather than from the declarations.
+      #
+      # --all-palettes, AND CI IS THE ONLY PLACE THAT SPELLING BELONGS. The
+      # default run sweeps one palette, because contrast for the others is
+      # carried by `npm run palette` plus the role invariant this same run
+      # asserts — but the RECORDED PAIRING LIST is only authoritative from a
+      # full sweep: two roles can share a value in one palette and mask a
+      # pairing, which is exactly what the print palette does when it collapses
+      # everything to black on white. A one-palette run checks the list as a
+      # subset; this checks it for equality.
       - name: Accessibility
-        run: node tools/a11y.mjs
+        run: node tools/a11y.mjs --all-palettes
 
       # THE GATED BYTES, handed to the deploy job. Rebuilding there would deploy
       # a build nothing had checked — near-identical, and near-identical is the

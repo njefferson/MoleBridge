@@ -1,5 +1,27 @@
 {
-  "_readme": "MoleBridge's palettes, in the ROLE terms PALETTES.md defines. THE NEUTRALS ARE THE Instrument FAMILY, VERBATIM from the hub \u2014 they are the same in all three and only accents.primary differs, because PALETTES.md's four families vary chrome WARMTH rather than hue, and a person asking for a green app is asking about the accent. Every one of the six entries below is a real palette the hub's gate checks: `npm run palette`. Two greens and one ember were rejected here at 4.12, 4.15 and 4.43 against the day page, which is why these values are measured rather than chosen. `moss` is the default.",
+  "_readme": "MoleBridge's palettes, in the ROLE terms PALETTES.md defines. THE NEUTRALS ARE THE Instrument FAMILY, VERBATIM from the hub — they are the same in all three and only accents.primary differs, because PALETTES.md's four families vary chrome WARMTH rather than hue, and a person asking for a green app is asking about the accent. Every one of the six entries below is a real palette the hub's gate checks: `npm run palette`. Two greens and one ember were rejected here at 4.12, 4.15 and 4.43 against the day page, which is why these values are measured rather than chosen. `moss` is the default.",
+  "_renders_readme": "The role pairings MoleBridge was OBSERVED to paint, written by `npm run pairs` from a real accessibility run rather than typed. The palette gate hard-floors exactly these and reports the rest of the cross product as a forecast. This is what makes a colour set swappable without a browser run: the app paints only role tokens (asserted), these are the pairings it makes (measured), and a new set clearing them clears every screen.",
+  "_renders": [
+    "--on-accent on --accent",
+    "--text-1 on --accent-soft over --page",
+    "--text-1 on --accent-soft over --surface-1",
+    "--text-1 on --accent-soft over --surface-2",
+    "--text-1 on --page",
+    "--text-1 on --page-alt",
+    "--text-1 on --surface-1",
+    "--text-1 on --surface-2",
+    "--text-1 on --surface-3",
+    "--text-2 on --accent-soft over --surface-1",
+    "--text-2 on --page",
+    "--text-2 on --page-alt",
+    "--text-2 on --surface-1",
+    "--text-2 on --surface-2",
+    "--text-2 on --surface-3",
+    "--text-3 on --page",
+    "--text-3 on --page-alt",
+    "--text-3 on --surface-1",
+    "--text-3 on --surface-2"
+  ],
   "molebridge-moss-night": {
     "kind": "app",
     "page": "#1a1a1a",
@@ -19,6 +41,7 @@
     "accents": {
       "primary": "#9fd8b0"
     },
+    "onAccent": "#0e2a1a",
     "accentSoftAlpha": 0.15
   },
   "molebridge-moss-day": {
@@ -40,6 +63,7 @@
     "accents": {
       "primary": "#14532d"
     },
+    "onAccent": "#f7f3ea",
     "accentSoftAlpha": 0.12
   },
   "molebridge-harbour-night": {
@@ -61,6 +85,7 @@
     "accents": {
       "primary": "#9fc2f5"
     },
+    "onAccent": "#10233d",
     "accentSoftAlpha": 0.15
   },
   "molebridge-harbour-day": {
@@ -82,6 +107,7 @@
     "accents": {
       "primary": "#17458f"
     },
+    "onAccent": "#f7f3ea",
     "accentSoftAlpha": 0.12
   },
   "molebridge-clay-night": {
@@ -103,6 +129,7 @@
     "accents": {
       "primary": "#eab896"
     },
+    "onAccent": "#3a1f0a",
     "accentSoftAlpha": 0.15
   },
   "molebridge-clay-day": {
@@ -124,6 +151,7 @@
     "accents": {
       "primary": "#6d3410"
     },
+    "onAccent": "#f7f3ea",
     "accentSoftAlpha": 0.12
   }
 }
