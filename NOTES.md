@@ -225,12 +225,20 @@ keep those apart.
 These are the things standing between MoleBridge and a class using it. None is
 work a session can finish on its own.
 
-- **Nothing is deployed, and the Cloudflare Pages project does not exist.**
-  Creating it, pointing it at this repository, and setting the build command to
-  `npm ci && npm run build` with an output directory of `public` are steps in
-  the Cloudflare dashboard. `public/_headers` is already written and deploys
-  with the site. No deploy workflow has been added, because one that sits red
-  for want of a project and a token is worse than none.
+- **Deploy is wired, and production is empty on purpose.** The workflow creates
+  the Cloudflare Pages project if it is missing, so nothing has to be set up by
+  hand. `main` is the production branch and the code is not on `main` yet — so
+  `molebridge.pages.dev` will answer with nothing until somebody merges. Every
+  other branch deploys as a PREVIEW on its own URL, which is what makes the
+  pipeline verifiable without putting unreviewed work on the address a class
+  would use.
+- **The deploy job takes the GATED build as an artifact** rather than rebuilding.
+  Rebuilding would ship a near-identical build that nothing had checked, and
+  near-identical is the word that does the damage.
+- **A required reviewer on `production` is worth adding, and is a GitHub step.**
+  The deploy job runs in a dedicated environment — `production` from `main`,
+  `preview` from anything else — so a protection rule can sit on production
+  alone without gating every preview. Nothing protects it today.
 - **Branches.** This repository has `main` and the harness branch. The family
   convention is `staging` and `main`, with `staging` a hard release gate. The
   harness's standing instruction here is to push only to its designated branch,

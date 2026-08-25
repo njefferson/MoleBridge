@@ -1,4 +1,4 @@
-name: Gates
+name: Gates and deploy
 
 # Everything that can be checked without a person looking at a screen.
 #
@@ -30,6 +30,7 @@ env:
 
 jobs:
   gates:
+    name: Gates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -128,3 +129,132 @@ jobs:
       # from the pixels the browser resolved rather than from the declarations.
       - name: Accessibility
         run: node tools/a11y.mjs
+
+      # THE GATED BYTES, handed to the deploy job. Rebuilding there would deploy
+      # a build nothing had checked — near-identical, and near-identical is the
+      # word that does the damage. What passed the walk and the accessibility
+      # gate is what goes out.
+      - name: Keep the build that passed
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: site
+          path: public/
+          retention-days: 7
+          include-hidden-files: true
+
+  deploy:
+    name: Deploy
+    # Only after every gate above has passed. A step that fails stops its job,
+    # so `needs` here means the build being deployed cleared all of them.
+    needs: gates
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # A DEDICATED ENVIRONMENT, and two of them, which is Doctrine §16.5:
+    # friction in proportion to damage. Production and preview being the same
+    # environment would mean any protection rule put on production also gates
+    # every preview, so nobody would put one on. Split, a required reviewer can
+    # sit on `production` alone — which is the difference between a deploy to a
+    # class's address and a deploy to a throwaway URL.
+    #
+    # zizmor's `secrets-outside-env` is what asked for this. It is suppressed at
+    # the default threshold, so it was found by running the auditor persona on a
+    # workflow that had just been handed a live Cloudflare token, rather than by
+    # reading the green tick.
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
+      url: ${{ steps.deploy.outputs.deployment-url }}
+    concurrency:
+      group: deploy-${{ github.ref_name }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: site
+          path: public
+
+      - name: What is being deployed
+        run: |
+          echo "branch: $GITHUB_REF_NAME"
+          echo "commit: $GITHUB_SHA"
+          find public -type f | sort | head -40
+          echo "$(find public -type f | wc -l) files"
+
+      - name: Prepare Cloudflare credentials
+        id: cf
+        env:
+          RAW_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          RAW_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # Strip whitespace and newlines that come along when a secret is
+          # pasted. A trailing newline corrupts the Authorization header and
+          # Cloudflare answers 6111, which reads like a bad token and is not.
+          TOKEN=$(printf '%s' "$RAW_TOKEN" | tr -d '[:space:]')
+          ACCOUNT=$(printf '%s' "$RAW_ACCOUNT" | tr -d '[:space:]')
+          echo "::add-mask::$TOKEN"
+          echo "::add-mask::$ACCOUNT"
+          if [ -n "$TOKEN" ] && [ -n "$ACCOUNT" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare secrets are not set on this repository — nothing to deploy to."
+          fi
+          # Doctrine §16.4: the cleaned values go to the job ENVIRONMENT, never
+          # to step outputs. Outputs persist in the run's stored output and are
+          # readable through the API; env is scoped to this job. Only the
+          # non-secret `ready` flag is an output.
+          echo "CF_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          echo "CF_ACCOUNT=$ACCOUNT" >> "$GITHUB_ENV"
+
+      - name: Verify the token before using it
+        if: steps.cf.outputs.ready == 'true'
+        continue-on-error: true
+        run: |
+          curl -s https://api.cloudflare.com/client/v4/user/tokens/verify \
+            -H "Authorization: Bearer $CF_TOKEN" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print('token valid:', d.get('success'), '| status:', (d.get('result') or {}).get('status'), '| errors:', d.get('errors'))"
+
+      # Idempotent: it fails harmlessly once the project exists, which is why it
+      # tolerates its own failure rather than being a thing somebody has to
+      # remember to do by hand exactly once.
+      - name: Ensure the Pages project exists
+        if: steps.cf.outputs.ready == 'true'
+        continue-on-error: true
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ env.CF_TOKEN }}
+          accountId: ${{ env.CF_ACCOUNT }}
+          command: pages project create molebridge --production-branch=main
+
+      # `main` is the production branch, so every other branch lands as a
+      # PREVIEW on its own URL. That is what makes the pipeline verifiable
+      # without putting unreviewed work on the address a class would use.
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        if: steps.cf.outputs.ready == 'true'
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ env.CF_TOKEN }}
+          accountId: ${{ env.CF_ACCOUNT }}
+          command: pages deploy public --project-name=molebridge --branch=${{ github.ref_name }} --commit-dirty=true
+
+      - name: How to roll this back
+        if: always() && steps.cf.outputs.ready == 'true'
+        run: |
+          # Printed on every deploy so the rollback path is known BEFORE it is
+          # needed rather than looked up during a lesson.
+          echo "If this deploy is bad:"
+          echo "  Cloudflare dashboard -> Workers & Pages -> molebridge -> Deployments"
+          echo "  -> pick the last good one -> Manage deployment -> Rollback."
+          echo "That is instant. A git revert also works but waits for a fresh build,"
+          echo "and concurrency cancel-in-progress can cancel an in-flight deploy."
+
+      - name: Where it went
+        if: steps.cf.outputs.ready == 'true'
+        env:
+          DEPLOYED_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          # LESSONS 53: a push is not a release. The URL is read from the
+          # deploy's own output rather than assembled from a branch name, so
+          # what is reported is what Cloudflare actually answered with.
+          echo "deployed to: $DEPLOYED_URL"

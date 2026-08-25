@@ -21,7 +21,9 @@ MoleBridge is, types the roster number and assignment key their teacher put on
 the board, picks a set, and works problems one step at a time. It is installable
 and works with no connection.
 
-**Nothing is deployed yet**, and the teacher's decoder is session 3.
+Deploy is wired to Cloudflare Pages: `main` is production, every other branch
+lands as a preview on its own URL, and the build that deploys is the exact one
+the gates passed. The teacher's decoder is session 3.
 
 `NOTES.md` is the source of truth for what is settled, what each judgement call
 cost, and what is still owed.
