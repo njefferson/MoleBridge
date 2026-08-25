@@ -316,8 +316,18 @@ tile-coloured outline round the whole animal is load-bearing rather than
 decorative: without it there is no edge between the mole and the thing it is
 standing on.
 
-Three rounds, each rendered at 260, 128, 96 and 48 and looked at. The foreleg
-was boxy in round two and read as a satchel.
+**The third grew a fifth leg.** The foreleg was a separate shape with its own
+outline laid over the body, and with two hind feet already drawn the animal had
+three legs and a tail — a limb sprouting from the shoulder. The body is now ONE
+CLOSED PATH with the legs cut into its underside: back, head, snout, under the
+chin, down the foreleg, across the spade foot, up, along the belly, down the
+hind leg, and home. **A leg that is part of the outline cannot detach from it**,
+and a side profile shows two legs rather than three.
+
+Four rounds, each rendered at 260, 128, 96 and 48 and looked at. The foreleg was
+boxy in round two and read as a satchel. Every one of these was invisible in the
+source and obvious the moment it was rendered, which is the whole argument for
+rendering rather than reading.
 
 **0.4.0's lump reached staging and a preview URL and never reached production.**
 That is the branch model doing exactly what it is for, on its first real test.

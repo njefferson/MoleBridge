@@ -4,6 +4,21 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.4.2 — ITERATION
+
+The mole has four legs' worth of sense in it now — two, which is what you see
+from the side.
+
+The previous drawing had the front leg laid over the body as its own shape, so
+it read as a fifth limb sprouting from the shoulder, with two back feet already
+there. The animal is drawn as a single outline now and the legs are cut into its
+underside, so a leg cannot come loose from the body it belongs to.
+
+**What is still missing.** The tile is green whichever colour you choose in the
+app; a home-screen icon cannot follow a setting. And the same gaps as before: no
+way to review a problem you have already finished, and no running total across
+sessions.
+
 ## 0.4.1 — ITERATION
 
 The mole on the icon actually looks like a mole now.
