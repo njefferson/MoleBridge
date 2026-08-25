@@ -301,6 +301,57 @@ Cloudflare's production branch is correctly configured.
 the front of the room is further away and runs a Chromium nobody here can test
 against.
 
+## Three doors, and the code wall is one of them
+
+The owner's shape: practice is the main destination, learning easy to get to, a
+class assignment beside them. Two of the three are built; **Learn joins the menu
+in the commit that builds it**, because a door that opens onto an apology is
+worse than a door that is not there.
+
+**The doors ARE the code wall, made visible.** Practice shows answers on
+request, so if practice could also emit a completion code then "practice" would
+be the route to credit for work the app did in front of you. A student can see
+that the assignment door is the one with a code at the end of it, rather than
+being told so in prose nobody reads.
+
+**And the wall is in the engine, not the screen.** `completionPayload` THROWS on
+a practice session rather than returning something a caller is trusted to
+discard. A screen that must remember not to render a button is not a wall; a
+function that refuses is. Asserted by a test that also checks the same session
+in assignment mode still works, so the refusal is about the mode rather than
+about something else being broken.
+
+**The seed is rolled AND shown.** The engine is deterministic from a key, and a
+Random button that kept its roll to itself would throw that away — a student who
+got one wrong could never return to it, show a friend, or bring it to a teacher.
+Random rolls a word-pair seed, puts it in the field, and the field takes one
+typed back. The words are short and unambiguous when spoken because they get
+read across a classroom; a base-32 hash would not survive that trip. `Math.random`
+belongs here and nowhere else in this repository: nothing is graded from it and
+the one thing it must not be is reproducible.
+
+**The reveal is per stage, and gated on the session rather than the CSS.** It
+shows one step, resets at every stage — asking about one step is not asking
+about the rest — and `work.ts` checks `session.config.mode` rather than whether
+the button happens to be visible. A hidden control is a stylesheet fact; a
+graded session refusing to answer is a program fact, and only the second one
+survives someone styling the page differently. What it shows comes from
+`correctEntryFor`, the grader's own function, so a revealed answer is exactly
+what the student would have been marked against.
+
+### A flake found by running the gate ten times instead of once
+
+The walk went green, then red, then green. Six runs isolated it: `dialog.close()`
+fires its `close` event as a QUEUED TASK rather than synchronously, so the
+orientation's move into the ⓘ panel happens a tick after the click returns — and
+the assertion that read the DOM immediately afterwards was racing the browser
+and losing about one run in three.
+
+The app was right and the check was wrong; it waits now. **It had already passed
+twice before it first failed**, which is the whole point: a gate run once is not
+known to be stable, and a flaky gate passing on the first attempt is
+indistinguishable from a working one. Ten consecutive clean runs after the fix.
+
 ## The first run is a modal, because its button was below the fold
 
 The orientation was a full-height screen, and on a real device the **Get

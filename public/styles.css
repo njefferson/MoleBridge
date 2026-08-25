@@ -661,3 +661,44 @@ textarea {
   background: var(--surface-1);
 }
 .welcome-actions .button { width: 100%; }
+
+/*
+  ---- the three doors ----
+
+  Big targets, stacked, each one saying what it is FOR rather than just naming
+  itself. A menu of bare nouns makes a student guess which one produces the
+  thing their teacher asked for, and guessing wrong in an assignment costs them
+  a code they then cannot produce.
+*/
+.doors { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--step); }
+.door {
+  width: 100%;
+  min-height: var(--touch);
+  display: block;
+  text-align: left;
+  padding: calc(var(--step) * 1.75);
+  color: var(--text-1);
+  background: var(--surface-1);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font: inherit;
+}
+.door:hover { background: var(--surface-2); }
+.door:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.door-name { display: block; font-size: 1.35rem; font-weight: 650; }
+.door-what { display: block; margin-top: calc(var(--step) * 0.5); color: var(--text-2); }
+
+/*
+  The revealed answer. --accent-soft rather than a colour of its own: this is
+  the app telling you something you asked for, which is the same voice as the
+  algebra help, and a second highlight colour would imply a second meaning.
+*/
+.reveal {
+  margin-top: var(--step);
+  padding: 0.75rem 1rem;
+  color: var(--text-1);
+  background: var(--accent-soft);
+  border-left: 4px solid var(--rail);
+  border-radius: var(--radius);
+}

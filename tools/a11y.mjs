@@ -106,10 +106,41 @@ const STATES = [
     },
   },
   {
+    // The three doors. Practice is the destination and the assignment is the
+    // errand, so this is the screen most students see most often.
+    name: 'the three doors',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#screen-home:not([hidden])').waitFor();
+    },
+  },
+  {
+    name: 'practice setup',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+    },
+  },
+  {
+    // Practice mid-problem, WITH the answer revealed — a surface that only
+    // exists in this mode and would otherwise ship unmeasured.
+    name: 'practice with the answer shown',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+      await page.locator('#practice-start').click();
+      await page.locator('#work-reveal').click();
+    },
+  },
+  {
     name: 'setup',
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
       await page.locator('#welcome-begin').click();
+      await page.locator('#door-assignment').click();
     },
   },
   {
@@ -117,6 +148,7 @@ const STATES = [
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
       await page.locator('#welcome-begin').click();
+      await page.locator('#door-assignment').click();
       await page.locator('#setup-roster').fill('0');
       await page.locator('#setup-key').fill(KEY);
       await page.locator('#setup-start').click();
@@ -170,6 +202,7 @@ const STATES = [
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
       await page.locator('#welcome-begin').click();
+      await page.locator('#door-assignment').click();
       await page.locator('#info-open').click();
     },
   },
@@ -178,6 +211,7 @@ const STATES = [
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
       await page.locator('#welcome-begin').click();
+      await page.locator('#door-assignment').click();
       await page.locator('#info-open').click();
       await page.getByRole('button', { name: 'Show the diagnostic' }).click();
       await page.locator('.diagnostic').waitFor({ state: 'visible' });
@@ -288,6 +322,7 @@ function valueFor(solution, id) {
 async function startSession(page, count = 3) {
   await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
   await page.locator('#welcome-begin').click();
+      await page.locator('#door-assignment').click();
   await page.locator('#setup-roster').fill('7');
   await page.locator('#setup-key').fill(KEY);
   await page.locator(`#setup-tier button[data-tier="${TIER}"]`).click();

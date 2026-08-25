@@ -84,8 +84,27 @@ export function controllableClock(startMs: number): ControllableClock {
 }
 
 /** What a session needs to start. */
+/**
+ * Which door the student came through.
+ *
+ * THIS IS THE CODE WALL. A practice session can never produce a completion
+ * code — `completionPayload` throws on one rather than returning something the
+ * UI is trusted to discard. Practice shows answers on request, so if it could
+ * also emit a code, "practice" would be the route to credit without work, and
+ * the whole grading posture would rest on a screen remembering not to offer a
+ * button.
+ */
+export type SessionMode = 'assignment' | 'practice';
+
 export interface SessionConfig {
-  /** The teacher's assignment key, as typed. Drives problem generation. */
+  readonly mode: SessionMode;
+  /**
+   * What problems get generated. In assignment mode this is the teacher's key,
+   * typed off the board. In practice it is a seed — random unless the student
+   * typed one — and it is SHOWN to them, so any problem can be reopened, handed
+   * to a friend, or brought to a teacher. A random button that keeps its roll
+   * to itself makes every problem unrepeatable.
+   */
   readonly assignmentKey: string;
   /** The same assignment, as the 12-bit number the completion code carries. */
   readonly assignmentKeyId: number;
@@ -278,6 +297,13 @@ export function submit(session: Session, entry: StudentEntry, clock: Clock): Sub
  * again, which is belt and braces on the two fields this computes here.
  */
 export function completionPayload(session: Session, clock: Clock): CompletionPayload {
+  // THE WALL, and it throws rather than returning an empty code. A caller that
+  // asks a practice session for a payload has a bug, and the loud version of
+  // that bug is a stack trace in a test rather than a code a student can hand
+  // in for work they watched the app do.
+  if (session.config.mode !== 'assignment') {
+    throw new Error('a practice session has no completion code, and must never be asked for one');
+  }
   const elapsedMs = Math.max(0, clock.now() - session.startedAtMs);
   const dayOffset = Math.floor((session.startedAtMs - session.config.assignmentEpochMs) / MS_PER_DAY);
   return {

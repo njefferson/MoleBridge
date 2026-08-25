@@ -138,6 +138,7 @@ export function mountSetup(host: SetupHost): void {
     }
 
     host.onStart({
+      mode: 'assignment',
       assignmentKey,
       assignmentKeyId: assignmentKeyIdFor(assignmentKey),
       rosterId,

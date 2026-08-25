@@ -13,6 +13,7 @@
 
 import { need, showOnly } from './dom.ts';
 import { mountSetup } from './setup.ts';
+import { mountPractice } from './practice.ts';
 import { mountWork } from './work.ts';
 import { mountDone } from './done.ts';
 import { mountInfo } from './info.ts';
@@ -39,10 +40,12 @@ function boot(): void {
   need('#build-stamp').textContent = VERSION;
 
   const welcomePanel = need<HTMLDialogElement>('#welcome-panel');
+  const home = need('#screen-home');
+  const practice = need('#screen-practice');
   const setup = need('#screen-setup');
   const work = need('#screen-work');
   const done = need('#screen-done');
-  const screens = [setup, work, done];
+  const screens = [home, practice, setup, work, done];
 
   let session: Session | null = null;
 
@@ -67,12 +70,31 @@ function boot(): void {
     },
   });
 
-  mountSetup({
-    onStart(config: SessionConfig): void {
-      session = startSession(config, systemClock);
-      showOnly(screens, work);
-      workScreen.begin(session);
+  // BOTH DOORS START A SESSION THE SAME WAY. The difference between practice
+  // and an assignment is carried in the config and enforced in the engine, not
+  // in two divergent code paths that could drift apart — a second `startSession`
+  // call site is a second place for the mode to be got wrong.
+  const begin = (config: SessionConfig): void => {
+    session = startSession(config, systemClock);
+    showOnly(screens, work);
+    workScreen.begin(session);
+  };
+
+  mountSetup({ onStart: begin });
+  mountPractice({
+    onStart: begin,
+    onBack(): void {
+      showOnly(screens, home);
     },
+  });
+
+  need<HTMLButtonElement>('#door-practice').addEventListener('click', () => {
+    showOnly(screens, practice);
+    need<HTMLInputElement>('#practice-seed').focus();
+  });
+  need<HTMLButtonElement>('#door-assignment').addEventListener('click', () => {
+    showOnly(screens, setup);
+    need<HTMLInputElement>('#setup-roster').focus();
   });
 
   // THE MOVE HAPPENS ON `close`, NOT ON THE BUTTON. A dialog can also be
@@ -81,7 +103,7 @@ function boot(): void {
   // out of this panel goes through one place.
   welcomePanel.addEventListener('close', () => {
     info.adoptOrientation();
-    need<HTMLInputElement>('#setup-roster').focus();
+    need<HTMLButtonElement>('#door-practice').focus();
   });
   need<HTMLButtonElement>('#welcome-begin').addEventListener('click', () => {
     welcomePanel.close();
@@ -90,7 +112,7 @@ function boot(): void {
   // The app opens on SETUP either way, with the orientation laid over it on a
   // first run. Behind a modal there is still an app to see, which answers "what
   // is this" better than a page of prose in front of it does.
-  showOnly(screens, setup);
+  showOnly(screens, home);
   if (info.hasBeenSeen()) {
     info.adoptOrientation();
   } else {

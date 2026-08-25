@@ -4,6 +4,31 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 0.7.0 — CAPABILITY
+
+MoleBridge opens on a menu now, and practice is the point of it.
+
+**Practice** is there whenever you want it. Press Random for a set of problems,
+or type in a set name you have seen before to get exactly those problems back —
+so if you got one wrong you can return to it, or read the name across the room
+to somebody else. Nothing is handed in and nothing is recorded.
+
+**In practice you can ask to see the answer.** There is a button on every step.
+It shows you that step only, so you can work backwards to it and find out where
+it comes from, and asking about one step does not give away the rest.
+
+**Class assignment** is unchanged: the problems your teacher set, answers stay
+hidden, and you finish with the code to type into Canvas. **It is the only door
+that produces a code.** Practice cannot make one — not "does not", cannot.
+
+Lessons are coming and will join this menu. They are not here yet, and there is
+no door for them until there is something behind it.
+
+**What is still missing.** No lessons yet. No calculator or periodic table yet.
+The tile is green whichever colour you choose in the app. And the same gaps as
+before: no way to review a problem you have already finished, and no running
+total across sessions.
+
 ## 0.6.0 — CAPABILITY
 
 MoleBridge now tells your browser what it is allowed to do, and the answer is

@@ -95,7 +95,7 @@ try {
   /* ---- the first-run orientation, and the build stamp ---- */
   check(await page.locator('#welcome-panel[open]').isVisible(), 'the orientation opens over the app on a first run');
   check(await page.locator('#orientation').isVisible(), 'the orientation is in it');
-  check(await page.locator('#screen-setup').isVisible(), 'and the app is behind it, not replaced by it');
+  check(await page.locator('#screen-home').isVisible(), 'and the app is behind it, not replaced by it');
 
   // THE BUTTON IS ON SCREEN. This is the defect that made it a dialog: as a
   // full-height screen the content pushed "Get started" below the fold, so the
@@ -129,15 +129,35 @@ try {
   /* ---- §7e: the orientation MOVES, it is not copied ---- */
   await page.locator('#welcome-begin').click();
   check(!(await page.locator('#welcome-panel[open]').isVisible()), 'pressing Get started closes it');
-  check(await page.locator('#screen-setup').isVisible(), 'and the setup screen is ready underneath');
+  check(await page.locator('#screen-home').isVisible(), 'and the three-door menu is underneath');
   check(
     (await page.locator('#orientation').count()) === 1,
     'there is exactly ONE orientation block after the move, never a copy',
   );
-  check(
-    (await page.locator('#info-orientation-slot #orientation').count()) === 1,
-    'and it now lives behind the information control',
-  );
+  // WAITED FOR, NOT READ IMMEDIATELY. `dialog.close()` fires its `close` event
+  // as a queued task rather than synchronously, so the move into the ⓘ panel
+  // happens a tick after the click returns — and asserting straight afterwards
+  // was a race that lost about one run in three.
+  //
+  // It was found by running this walk six times in a row rather than once,
+  // which is the only reason it was found at all: a flaky gate passing on the
+  // first attempt is indistinguishable from a working one, and this had already
+  // passed twice before it failed.
+  const moved = await page
+    .locator('#info-orientation-slot #orientation')
+    .waitFor({ state: 'attached', timeout: TIMEOUT_MS })
+    .then(() => true)
+    .catch(() => false);
+  check(moved, 'and it now lives behind the information control');
+
+  /* ---- the doors ---- */
+  //
+  // THE ASSIGNMENT DOOR IS THE ONLY ONE THAT LEADS TO A CODE, and that is the
+  // code wall expressed where a student can see it. Both halves are checked:
+  // this journey takes the assignment door and ends holding a code, and the
+  // practice pass further down takes the other one and ends without.
+  await page.locator('#door-assignment').click();
+  check(await page.locator('#screen-setup').isVisible(), 'the assignment door reaches setup');
 
   /* ---- setup refuses what it should ---- */
   await page.locator('#setup-roster').fill('0');
@@ -331,6 +351,44 @@ try {
 
   const bars = await page.locator('.histogram-row').count();
   check(bars === 6, `the histogram covers all six stages (${bars})`);
+
+  /* ---- the practice door ---- */
+  //
+  // THE OTHER HALF OF THE CODE WALL. The assignment journey above ended holding
+  // a completion code; this one must not be able to, and the engine refuses at
+  // `completionPayload` rather than trusting a screen to hide a button. What is
+  // checked here is the part a student sees: a seed they can read and reuse, an
+  // answer available on request, and that same request absent when it is graded.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  check(await page.locator('#screen-practice').isVisible(), 'the practice door reaches practice');
+
+  const firstSeed = await page.locator('#practice-seed').inputValue();
+  check(firstSeed.trim() !== '', `a seed is already there to start with (${firstSeed})`);
+  await page.locator('#practice-random').click();
+  const secondSeed = await page.locator('#practice-seed').inputValue();
+  check(secondSeed.trim() !== '' && secondSeed !== firstSeed, `Random rolls a different one (${secondSeed})`);
+
+  await page.locator('#practice-start').click();
+  check(await page.locator('#screen-work').isVisible(), 'practice starts a session');
+  check(await page.locator('#work-reveal').isVisible(), 'and the answer is available on request');
+
+  await page.locator('#work-reveal').click();
+  const revealed = (await page.locator('#work-revealed').textContent())?.trim() ?? '';
+  check(revealed !== '', `asking shows the step's answer (${revealed.slice(0, 46)}...)`);
+
+  // THE SAME CONTROL MUST BE GONE WHEN IT IS GRADED. Hidden rather than
+  // disabled, and checked from a real assignment session rather than by reading
+  // the markup — the app removes it on the mode, not on the stylesheet.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-assignment').click();
+  await page.locator('#setup-roster').fill(String(ROSTER));
+  await page.locator('#setup-key').fill(KEY);
+  await page.locator('#setup-start').click();
+  check(
+    !(await page.locator('#work-reveal').isVisible()),
+    'and there is no such offer in a class assignment',
+  );
 
   /* ---- the appearance picker actually changes the appearance ---- */
   //

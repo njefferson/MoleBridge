@@ -32,6 +32,7 @@ const EPOCH = Date.UTC(2026, 8, 1);
 const START = Date.UTC(2026, 8, 14, 9, 0, 0);
 
 const config = (overrides: Partial<SessionConfig> = {}): SessionConfig => ({
+  mode: 'assignment',
   assignmentKey: 'CHEM-A',
   assignmentKeyId: 1234,
   rosterId: 17,
@@ -289,4 +290,25 @@ test('numericAnswer refuses to answer a stage that is not numeric', () => {
   const s1 = stagesFor(problem)[0];
   assert.notEqual(s1, undefined);
   if (s1 !== undefined) assert.throws(() => numericAnswer(problem, solution, s1), /not a numeric stage/);
+});
+
+test('a practice session has no completion code, and asking for one throws', () => {
+  // THE CODE WALL. Practice shows answers on request, so if it could also emit
+  // a code then "practice" would be the route to credit for work the app did in
+  // front of you — and the whole grading posture would rest on a screen
+  // remembering not to render a button. It rests here instead.
+  const practice = startSession(config({ mode: 'practice' }), controllableClock(START));
+  assert.throws(
+    () => completionPayload(practice, controllableClock(START)),
+    /practice session has no completion code/,
+    'a practice session must refuse to produce a payload at all',
+  );
+
+  // And the same session in assignment mode still does, so the refusal is about
+  // the mode rather than about something else being wrong.
+  const assigned = startSession(config({ mode: 'assignment' }), controllableClock(START));
+  assert.ok(
+    completionPayload(assigned, controllableClock(START)).assignmentKeyId >= 0,
+    'assignment mode is unaffected',
+  );
 });

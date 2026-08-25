@@ -61,6 +61,73 @@
 
 <main id="main">
 
+  <!-- ============ home ============ -->
+  <!--
+    THREE DOORS, and which one you came through decides what the app does.
+    Practice is the destination; the class assignment is the errand.
+
+    The doors are the code wall made visible. Only the assignment door leads to
+    a completion code, and a student can SEE that rather than being told it in
+    prose they will not read — practice shows answers on request, so if it could
+    also produce a code it would be the route to credit for work the app did.
+    `completionPayload` refuses a practice session outright; this is the same
+    fact where a person can look at it.
+
+    Learn is not here yet. It joins this menu in the commit that builds it — a
+    door that opens onto an apology is worse than a door that is not there.
+  -->
+  <section class="screen" id="screen-home" aria-labelledby="home-title" hidden>
+    <h1 id="home-title">MoleBridge</h1>
+    <p class="lede">Work stoichiometry one step at a time, and find out which mistake made the number you got.</p>
+
+    <ul class="doors">
+      <li>
+        <button type="button" class="door" id="door-practice">
+          <span class="door-name">Practice</span>
+          <span class="door-what">Any number of problems, whenever you like. You can ask to see the answer and work back to it. Nothing is handed in.</span>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="door" id="door-assignment">
+          <span class="door-name">Class assignment</span>
+          <span class="door-what">The problems your teacher set. Answers stay hidden, and you finish with a code to type into Canvas.</span>
+        </button>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ practice ============ -->
+  <section class="screen" id="screen-practice" aria-labelledby="practice-title" hidden>
+    <h1 id="practice-title">Practice</h1>
+    <p class="lede">Nothing here is handed in and nothing is recorded. Ask to see an answer whenever you want it.</p>
+
+    <form class="card" id="practice-form" novalidate>
+      <!--
+        THE SEED IS SHOWN, and that is the point of it. A random button that
+        keeps its roll to itself makes every problem unrepeatable — a student
+        who got one wrong could never return to it, show it to a friend, or
+        bring it to a teacher. Roll it, show it, and let it be typed back in.
+      -->
+      <label class="field">
+        <span class="field-label">Problem set</span>
+        <input type="text" id="practice-seed" inputmode="text" autocomplete="off" spellcheck="false">
+      </label>
+      <p class="hint">Press Random for a new set, or type one you have seen before to get the same problems again.</p>
+      <button type="button" class="button" id="practice-random">Random</button>
+
+      <span class="field-label" id="practice-tier-label">How hard</span>
+      <div class="choices" id="practice-tier" role="radiogroup" aria-labelledby="practice-tier-label"></div>
+
+      <span class="field-label" id="practice-count-label">How many</span>
+      <div class="choices" id="practice-count" role="radiogroup" aria-labelledby="practice-count-label"></div>
+
+      <p class="error" id="practice-error" role="alert" hidden></p>
+      <button type="submit" class="button button-big" id="practice-start">Start practising</button>
+    </form>
+
+    <button type="button" class="button-small" id="practice-back">Back</button>
+  </section>
+
   <!-- ============ setup ============ -->
   <section class="screen" id="screen-setup" aria-labelledby="setup-title" hidden>
     <h1 id="setup-title">Start a session</h1>
@@ -115,6 +182,14 @@
       <h2 class="stage-prompt" id="work-stage-prompt"></h2>
       <div id="work-inputs"></div>
       <button type="submit" class="button button-big" id="work-submit">Check this step</button>
+      <!--
+        PRACTICE ONLY, and hidden outright in an assignment rather than
+        disabled: a greyed-out "show me the answer" on a graded screen is an
+        invitation and a distraction. `work.ts` removes it when the mode is not
+        practice, so it is not merely invisible.
+      -->
+      <button type="button" class="button-small" id="work-reveal" hidden>Show me this step's answer</button>
+      <p class="reveal" id="work-revealed" role="status" hidden></p>
     </form>
 
     <!--
@@ -128,6 +203,9 @@
   <section class="screen" id="screen-done" aria-labelledby="done-title" hidden>
     <h1 id="done-title">Finished</h1>
     <p class="lede">Type this code into the Canvas assignment. It is the same every time for this session, so you can come back to it.</p>
+
+    <!-- Practice ends here too, and says so instead of showing a blank card. -->
+    <p class="lede" id="done-practice" hidden></p>
 
     <div class="card code-card">
       <p class="code" id="done-code" tabindex="0" aria-label="Your completion code"></p>

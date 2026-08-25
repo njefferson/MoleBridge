@@ -12,7 +12,7 @@
  * only, no answers, no name — is short enough to print beside it.
  */
 
-import { el, fill, need } from './dom.ts';
+import { clear, el, fill, need } from './dom.ts';
 import { encodeCompletionCode, totalStageErrors, type CompletionPayload } from '../code/codec.ts';
 import { BUILD_SECRET } from '../code/secret.ts';
 import { completionPayload, type Clock, type Session } from '../engine/steps.ts';
@@ -40,6 +40,7 @@ export function mountDone(clock: Clock, host: DoneHost): DoneScreen {
   const copy = need<HTMLButtonElement>('#done-copy');
   const copyStatus = need('#done-copy-status');
   const restart = need<HTMLButtonElement>('#done-restart');
+  const practiceNote = need('#done-practice');
 
   let shown = '';
 
@@ -60,6 +61,27 @@ export function mountDone(clock: Clock, host: DoneHost): DoneScreen {
 
   return {
     show(session: Session): string {
+      // PRACTICE ENDS WITHOUT A CODE, and the screen says why rather than
+      // leaving a blank where one used to be. `completionPayload` would throw
+      // here, which is the wall doing its job — this branch exists so the wall
+      // is never reached in normal use, not so the wall can be avoided.
+      if (session.config.mode !== 'assignment') {
+        shown = '';
+        codeNode.textContent = '';
+        codeNode.hidden = true;
+        copy.hidden = true;
+        copyStatus.textContent = '';
+        practiceNote.hidden = false;
+        practiceNote.textContent =
+          `That was practice — ${session.attempted} ${session.attempted === 1 ? 'problem' : 'problems'}, ` +
+          `set ${session.config.assignmentKey}. Nothing is handed in and nothing was recorded. ` +
+          `Type that set name in again to get the same problems back.`;
+        clear(summary);
+        return '';
+      }
+      codeNode.hidden = false;
+      copy.hidden = false;
+      practiceNote.hidden = true;
       const payload = completionPayload(session, clock);
       shown = encodeCompletionCode(payload, BUILD_SECRET);
       codeNode.textContent = shown;
