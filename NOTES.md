@@ -251,6 +251,14 @@ deploy log rather than assembled from a branch name. Cloudflare also serves a
 moving alias per branch; that one was NOT printed in the log, so it is not
 written here as fact.
 
+**This URL is not chased, and that is deliberate.** Every push deploys, so every
+push mints a new deployment id — including a commit that changes only this file,
+because `public/` is what goes out and a docs commit leaves it byte-identical.
+Writing the newest id down here would therefore create a newer one, forever. The
+id above is immutable, still answers, and serves the same site as every later
+docs-only deploy; the authoritative current id, when one is genuinely needed, is
+in the newest deploy job's log.
+
 **The old alias has stopped moving.** `https://claude-molebridge-engine-cod.molebridge.pages.dev`
 served every build up to 0.2.0 at `8920f67`, and will keep serving that one:
 gates no longer run on the harness branch, so nothing deploys from it. Anyone
