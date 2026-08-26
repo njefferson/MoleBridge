@@ -1957,40 +1957,48 @@ after the click races it. **That is the third time in this file** — the other 
 were `dialog.close()` firing as a queued task and the version being recorded in
 its handler.
 
-## A promote that pushed and did not deploy
+## The promote deployed, and the diagnostic said it had not
 
-`main` moved to `ed850b9` and **GitHub created no workflow run for it.** Eight
-runs exist on `main`, the newest still `e2f251b` — the previous promote. The push
-was verified against the true remote with `ls-remote`, exactly as hub LESSONS 143
-requires, and that check passed. It was never the check that mattered here.
+**None of the incident this section first described happened.** 1.9.0 reached
+production normally. The runner fetched the live page and read `molebridge-1.9.0`
+back off it, on the per-deploy host and on the address a class opens, with the
+edge taking two attempts to catch up.
 
-**A push is not a release, and this is the shape that proves it.** Everything a
-session normally looks at was green: the merge was clean, the ref moved, the
-remote agreed. What did not happen was the only thing that puts bytes on the
-address a class opens.
+What actually failed was **the query used to check**. Asking the GitHub API for
+this repository's workflow runs filtered by `branch: main` returned the same
+eight runs every time, newest `e2f251b` — the PREVIOUS promote. Asking for the
+runs with **no branch filter** returned thirty, including both of the pushes the
+filtered call insisted did not exist. Same repository, same credential, seconds
+apart, two different answers, and only one of them true.
 
-**It is not the workflow file.** The identical `gates.yml` ran on `staging`
-minutes earlier, on `dbcb884`, so the YAML parses and Actions is enabled. A
-`workflow_dispatch` cannot rescue it either: the deploy job is gated on
-`github.event_name == 'push'`, so a dispatched run does the gates and skips the
-thing that deploys. Re-running the previous run re-uses the previous SHA. There
-is no button that ships a commit whose push event never existed.
+**A stale answer is worse than an error.** An error stops you. This came back
+well-formed, complete, plausible, and consistent across three separate calls
+spread over ten minutes — which is exactly what "I have checked" feels like.
+Three consistent readings from one instrument are one reading.
 
-**And the remedies that feel available are the forbidden ones** — an empty commit
-to kick CI, or a close-and-reopen. The rule against them is not decorative: both
-put a lie in the history to work around a symptom, and neither tells anybody what
-actually failed.
+**The rule: when a check says something surprising, vary the INSTRUMENT before
+believing the finding.** Not the timing, not the retry count — the instrument.
+The unfiltered call was available the whole time and was the first thing that
+should have been tried the moment the filtered one disagreed with a push that
+had already been verified against the true remote.
 
-So the remedy is a REAL push carrying real content — this entry — and the promote
-that carries it is the same mechanism as any other. If that push also produces no
-run, the cause is not transient and is above a session's reach: Actions
-settings or a spending limit, which is the owner's to look at.
+**And the remedy cancelled the thing that was already working.** `ed850b9`'s run
+was created at 16:52:05 and was running while the filtered query reported it
+absent. Pushing `53eb91d` as a "fix" one minute later cancelled it —
+`concurrency: cancel-in-progress` doing precisely its job — and started a second
+run that deployed. Left alone, the first would have deployed on its own.
 
-**What no session can check from here:** whether the address a class opens is
-actually serving the release. This sandbox's proxy refuses `*.pages.dev` with a
-403 on CONNECT, which is why the deploy job fetches the live page from the
-RUNNER. With no run, that check did not happen, and nothing in this repository
-knows what production is serving. It is on `1.6.0` unless a run says otherwise.
+Nothing was broken and nothing needed fixing. The commit that "fixed" it was a
+NOTES entry describing an outage that was not happening, and it went to
+production carrying that description. **A false incident report in the history is
+a real defect**, which is why this section is a correction rather than a
+deletion: the reasoning that produced it is the part worth keeping.
+
+**What holds up from the original entry:** a push really is not a release, the
+deploy job really is gated on `event_name == 'push'` so `workflow_dispatch`
+cannot ship anything, and this sandbox really cannot read `*.pages.dev` — a 403
+on CONNECT — which is why the runner fetches the live page instead. Those were
+right. The conclusion drawn from them was not.
 
 ## Repository obligations still open
 
