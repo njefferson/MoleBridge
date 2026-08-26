@@ -278,6 +278,30 @@ const STATES = [
     },
   },
   {
+    // WHAT YOU HAVE SO FAR, OPEN, with one-step-at-a-time on and the text at its
+    // largest — the exact combination the control exists for, and the one where
+    // a list of numbers is most likely to overflow something. An open
+    // disclosure is a different rendered thing from a folded one and would ship
+    // unmeasured if only the folded state were walked.
+    name: 'what you have so far, open, one step at a time',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.evaluate(() => {
+        localStorage.setItem('molebridge.text', 'largest');
+        localStorage.setItem('molebridge.focus', 'on');
+      });
+      await startSession(page);
+      // ONE STEP ACTUALLY FINISHED. The first attempt filled every coefficient
+      // box with 1, which is wrong, so the stage never advanced and there was
+      // nothing to have so far — a state that cannot be reached is a FAILURE
+      // here rather than a skip, which is how it said so.
+      await fillCoefficients(page, solve(generateProblem(KEY, TIER, 0)));
+      await page.locator('#work-so-far:not([hidden])').waitFor();
+      await page.locator('#work-so-far summary').click();
+      await page.locator('#work-so-far-list li').first().waitFor();
+    },
+  },
+  {
     // The calculator ON THE WORK SCREEN, with a result and the control that
     // hands it back — which is a different state from the refusal one below it:
     // that opens from a menu, where there is no answer box and the button is

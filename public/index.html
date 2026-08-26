@@ -398,6 +398,34 @@
 
     <ol class="rail" id="work-rail" aria-label="Steps in this problem"></ol>
 
+    <!--
+      ============ what you have so far ============
+
+      ONE-STEP-AT-A-TIME PUTS LESS ON THE SCREEN; IT MUST NOT PUT LESS WITHIN
+      REACH. That setting hides the rail, which is the right default for the
+      student who turned it on — and it was also hiding the numbers they worked
+      out at the earlier steps, which stoichiometry requires them to carry
+      forward. An accommodation that removes the thing the task needs has
+      stopped being an accommodation.
+
+      So the values stay reachable, folded away rather than deleted: the student
+      decides when to look, the app never decides for them.
+
+      SHOWN ONLY WHERE THE RAIL IS NOT. With the rail on screen this would be
+      the same numbers twice. The swap is done in CSS off the same
+      `data-focus` attribute the rail's own rule reads, so there is one place
+      that knows which of the two is showing and no way for both to be hidden
+      at once.
+
+      It stays open once opened, because it is static markup that `render()`
+      only fills — a student who unfolded it at step 3 does not have to unfold
+      it again at step 4.
+    -->
+    <details class="so-far" id="work-so-far" hidden>
+      <summary>What you have so far</summary>
+      <ol class="so-far-list" id="work-so-far-list"></ol>
+    </details>
+
     <form class="card stage-card" id="work-form" novalidate>
       <div class="stage-head">
         <h2 class="stage-prompt" id="work-stage-prompt"></h2>

@@ -1098,6 +1098,48 @@ try {
       );
     }
 
+    // ONE-STEP-AT-A-TIME MUST NOT TAKE THE CHAIN AWAY. That setting hides the
+    // rail, which is what the student asked for — and was hiding with it the
+    // numbers the next step needs. Exactly one of the two routes is on screen,
+    // and never neither.
+    await page.evaluate(() => localStorage.setItem('molebridge.focus', 'on'));
+    await page.reload({ waitUntil: 'load' });
+    await page.locator('#resume-go').click();
+    await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+
+    check(
+      !(await page.locator('#work-rail').isVisible()),
+      'one step at a time hides the row of steps, as it is meant to',
+    );
+    const soFar = page.locator('#work-so-far');
+    check(await soFar.isVisible(), 'and What you have so far takes its place');
+    check(
+      !(await page.locator('#work-so-far-list').isVisible()),
+      'folded away, so the setting still puts less on screen',
+    );
+    const summaryBox = await soFar.locator('summary').boundingBox();
+    check(
+      summaryBox !== null && summaryBox.height >= 44,
+      `which a finger can open (${summaryBox === null ? 'not found' : `${Math.round(summaryBox.height)}px`})`,
+    );
+    await soFar.locator('summary').click();
+    const keptValues = await page.locator('#work-so-far-list .so-far-value').allTextContents();
+    check(
+      keptValues.some((text) => text.trim() === wanted),
+      `and it holds what they typed (${keptValues.join(' | ')})`,
+    );
+
+    // BACK OFF AGAIN, so the two are never both hidden and never both shown.
+    await page.evaluate(() => localStorage.setItem('molebridge.focus', 'off'));
+    await page.reload({ waitUntil: 'load' });
+    await page.locator('#resume-go').click();
+    await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+    check(await page.locator('#work-rail').isVisible(), 'with the setting off the row of steps is back');
+    check(
+      !(await page.locator('#work-so-far').isVisible()),
+      'and the folded copy is not also there, which would be the same numbers twice',
+    );
+
     // AND NONE OF IT LEAVES THE DEVICE. The problem report says in its own words
     // that it carries no answers and no working.
     await page.locator('#report-open').click();

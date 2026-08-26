@@ -33,9 +33,11 @@ mistake behind your back and never tell you that you had made it.
 you hand in, it is not in a problem report, and there is nowhere for it to go —
 the code has only ever carried counts.
 
-**What is still missing.** If you have turned on *Just the step I am on*, the row
-of steps is hidden, and so are the numbers in it — that setting exists to put
-less on screen, and this has not been reconciled with it yet.
+**And it works with *Just the step I am on* turned on.** That setting hides the
+row of steps, which is the point of it — but it was hiding your numbers with
+them, and the next step needs those. There is now **What you have so far** in
+their place: folded away so the screen still stays quiet, and holding everything
+you have worked out when you open it. Less on the screen, not less within reach.
 
 ## 1.8.0 — ITERATION
 

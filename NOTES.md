@@ -1914,6 +1914,35 @@ an earlier build has no such field, and refusing to resume those would throw
 away a student's half-finished set to enforce a field they never had a chance to
 write.
 
+## An accommodation that removed what the task requires
+
+`data-focus="on"` — *just the step I am on* — hides the rail. That is exactly
+what the student who turned it on asked for, and the moment the rail started
+carrying the numbers from earlier steps it was also hiding the one thing the
+next step cannot be done without.
+
+**Less on the screen is the request. Less within reach is not.** So the values
+stay available, folded away rather than deleted: `What you have so far` appears
+where the rail is hidden, closed, and holds the same list from the same source.
+The student decides when to look; the app never decides for them.
+
+**Which of the two is showing is settled in CSS**, off the same `data-focus`
+attribute the rail's own rule reads, so there is one place that knows and no way
+for both to be hidden at once. The walk asserts both directions — with the
+setting on the rail is gone and the disclosure is there; with it off the rail is
+back and the disclosure is not, because the same numbers twice is its own kind
+of clutter.
+
+`hidden` in the markup and un-hidden only when there is something to show, so it
+is never an empty promise at the first step. Its summary clears the 44px floor —
+48px measured — because a disclosure is a control a finger has to open.
+
+**And the a11y state for it could not be reached the first time.** The setup
+filled every coefficient box with `1`, which is wrong, so the stage never
+advanced and there was nothing to have so far. The gate said so and failed
+rather than skipping, which is the whole reason an unreachable state is a
+failure in this file.
+
 ## Three selector mistakes in one walk block, all the same shape
 
 `#practice-tier button[data-tier=…]` — the setup form uses `data-tier`, the

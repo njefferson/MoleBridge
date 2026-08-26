@@ -60,6 +60,8 @@ interface Elements {
   readonly prompt: HTMLElement;
   readonly figures: HTMLElement;
   readonly rail: HTMLElement;
+  readonly soFar: HTMLDetailsElement;
+  readonly soFarList: HTMLElement;
   readonly form: HTMLFormElement;
   readonly stagePrompt: HTMLElement;
   readonly inputs: HTMLElement;
@@ -98,6 +100,8 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     stagePrompt: need('#work-stage-prompt'),
     inputs: need('#work-inputs'),
     feedback: need('#work-feedback'),
+    soFar: need<HTMLDetailsElement>('#work-so-far'),
+    soFarList: need('#work-so-far-list'),
     reveal: need<HTMLButtonElement>('#work-reveal'),
     revealed: need('#work-revealed'),
   };
@@ -154,6 +158,7 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
       `Give the final answer to ${problem.answerSigFigs} significant figures.`;
 
     renderRail(nodes.rail, stages, session.stageIndex, carried);
+    renderSoFar(nodes.soFar, nodes.soFarList, stages, carried);
     nodes.stagePrompt.textContent = stage.prompt;
     choice = null;
     renderInputs(nodes.inputs, problem, stage);
@@ -451,6 +456,40 @@ function renderRail(
         ],
       );
     }),
+  );
+}
+
+/**
+ * The same values as the rail, folded away, for the student who has turned the
+ * rail off.
+ *
+ * ONE-STEP-AT-A-TIME PUTS LESS ON THE SCREEN; IT MUST NOT PUT LESS WITHIN
+ * REACH. That setting hides the rail — right, for the person who asked for it —
+ * and was hiding with it the numbers the next step needs. An accommodation that
+ * removes what the task requires has stopped being one.
+ *
+ * WHICH OF THE TWO IS SHOWING IS DECIDED IN CSS, off the same `data-focus`
+ * attribute the rail's own rule reads, so there is one place that knows and no
+ * way for both to be hidden at once. This function only decides whether there
+ * is anything to show at all: an empty disclosure is a promise of information
+ * that is not there.
+ */
+function renderSoFar(
+  panel: HTMLDetailsElement,
+  list: HTMLElement,
+  stages: readonly Stage[],
+  carried: readonly Carried[],
+): void {
+  panel.hidden = carried.length === 0;
+  const named = new Map<string, string>(stages.map((stage) => [stage.id, RAIL_NAMES[stage.id] ?? stage.id]));
+  fill(
+    list,
+    carried.map((one) =>
+      el('li', {}, [
+        el('span', { className: 'so-far-name', text: `${named.get(one.stage) ?? one.stage}: ` }),
+        el('span', { className: 'so-far-value', text: one.text }),
+      ]),
+    ),
   );
 }
 
