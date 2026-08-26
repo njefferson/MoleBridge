@@ -1981,10 +1981,25 @@ to kick CI, or a close-and-reopen. The rule against them is not decorative: both
 put a lie in the history to work around a symptom, and neither tells anybody what
 actually failed.
 
-So the remedy is a REAL push carrying real content — this entry — and the promote
-that carries it is the same mechanism as any other. If that push also produces no
-run, the cause is not transient and is above a session's reach: Actions
-settings or a spending limit, which is the owner's to look at.
+So the remedy was a REAL push carrying real content — this entry — promoted by
+the same mechanism as any other.
+
+**It happened again.** `53eb91d` moved `main` and produced no run either. Two
+consecutive pushes to `main`, no runs; a push to `staging` twenty minutes earlier
+ran normally on the identical workflow file. Runs have always appeared within
+SECONDS here — `e2f251b`'s was created in the same second as its push — so ninety
+seconds of nothing is an answer rather than a wait.
+
+**That is not transient and it is above a session's reach.** What a session can
+establish is bounded and is now established: the ref moved, the remote agrees,
+the workflow file parses, Actions is enabled, `staging` still triggers, `main`
+does not. What it cannot see is the Actions tab, the repository's rulesets, or a
+spending limit. Nor can it read the live page — this sandbox's proxy refuses
+`*.pages.dev` with a 403 on CONNECT, which is exactly why the deploy job fetches
+the live page from the RUNNER.
+
+**Until a run says otherwise, production is on 1.6.0** and `main` says 1.9.0. The
+gap between those two sentences is the whole of what this entry is for.
 
 **What no session can check from here:** whether the address a class opens is
 actually serving the release. This sandbox's proxy refuses `*.pages.dev` with a
