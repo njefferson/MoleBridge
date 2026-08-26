@@ -126,6 +126,50 @@
   --on-accent: #f7f3ea;
 }
 
+/*
+  ---- reading preferences ----
+
+  Set on <html> by theme.js before the first paint, for the same reason the
+  theme is: applied afterwards they are a visible reflow, and text jumping size
+  on load is worst for the reader who needed the setting.
+
+  SIZE IS A ROOT FONT SIZE, not a zoom. Everything in this stylesheet is in
+  `rem`, so one value moves the type, the touch targets and the spacing
+  together — a student who needs bigger text needs bigger buttons too, and a
+  transform would have scaled the layout off the side of the screen.
+*/
+:root[data-text="large"] { font-size: 118%; }
+:root[data-text="largest"] { font-size: 136%; }
+
+/*
+  Spacing rather than a different typeface. A dyslexia-friendly FONT cannot ship
+  here — no third-party runtime dependencies, and the app has to work offline —
+  but the spacing is most of what the research supports anyway, and it costs
+  three declarations.
+*/
+:root[data-spacing="roomy"] body {
+  line-height: 1.9;
+  letter-spacing: 0.045em;
+  word-spacing: 0.14em;
+}
+:root[data-spacing="roomy"] p,
+:root[data-spacing="roomy"] li { margin-bottom: 0.9em; }
+/* NEVER THE CODE OR THE EQUATIONS. A completion code is transcribed character
+   by character and a formula's subscripts are part of its meaning; loosening
+   either makes them harder to read, not easier. */
+:root[data-spacing="roomy"] .code,
+:root[data-spacing="roomy"] .equation,
+:root[data-spacing="roomy"] .worked { letter-spacing: normal; word-spacing: normal; }
+
+/*
+  One thing at a time. The step being worked stays; the equation card, the step
+  rail and the progress line go. The app is step-gated already, so this is what
+  it looked like underneath all along.
+*/
+:root[data-focus="on"] .problem-card,
+:root[data-focus="on"] .rail,
+:root[data-focus="on"] #work-progress { display: none; }
+
 * { box-sizing: border-box; }
 
 /*
@@ -466,6 +510,11 @@ input[type="text"] {
    get a code" says what the second tap does, and a red button only says that
    something is dangerous. */
 .work-leave-armed { background: var(--accent-soft); font-weight: 700; }
+
+/* The question and the way to hear it, on one line. */
+.stage-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--step); flex-wrap: wrap; }
+.stage-head .stage-prompt { margin: 0; flex: 1 1 14rem; }
+.speak { flex: 0 0 auto; }
 
 /* Focus lands here after a rejection, so it needs a ring like anything else
    that takes focus — a container with tabindex="-1" gets none by default. */

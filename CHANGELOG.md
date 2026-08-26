@@ -4,6 +4,54 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.3.0 — CAPABILITY
+
+Settings for how you read, and a button that reads it out.
+
+Behind the ⓘ there is now a **Reading** section:
+
+**Text size** — normal, large, largest. It moves the buttons and the spacing
+with it, not just the letters, so a bigger screen is still a usable one.
+
+**Spacing between letters and lines** — more space is easier for a lot of people
+to read. It leaves the completion code and the equations alone, because those
+are read character by character and loosening them makes them harder.
+
+**How much is on screen** — *Just the step I am on* hides the equation card, the
+step list and the progress line, leaving only the question you are answering.
+
+And on every step there is **Read this out**, which uses the speech your browser
+already has. It reads the question and the equation. It never reads the answer.
+Press it again to stop.
+
+**None of this goes anywhere.** Not into the code you hand in, not into a
+problem report, not to your teacher. How you read is nobody's business but
+yours, and the app is built so it cannot become anybody else's.
+
+There is also a short **Things worth knowing** section: there is no time limit,
+getting a step wrong costs nothing, and you can stop and come back.
+
+## 1.2.0 — CAPABILITY
+
+Closing the tab no longer loses your work.
+
+A refresh, a tab the browser restored, a Chromebook that went to sleep and came
+back — any of them used to throw away a half-finished set and everything you had
+typed. Now the app remembers, and when you come back it says **you have a
+problem open** with a button back to it.
+
+It puts you back on the same problem, at the same step, **with what you typed in
+the box even if you never pressed Check**.
+
+**A break costs you nothing.** The code you hand in says how long you had the app
+open, and time you spend away is not counted — stop for forty minutes and the
+number does not move. Stopping and coming back is the point.
+
+You are offered it, never dropped into it. If you meant to leave, leave — and a
+set you deliberately left with **Leave this set** is not offered back.
+
+Everything stays on your device. None of it is sent anywhere.
+
 ## 1.1.1 — ITERATION
 
 You can always get back to a problem you walked away from.

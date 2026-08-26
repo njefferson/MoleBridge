@@ -12,6 +12,7 @@
  */
 
 import { need, showOnly } from './dom.ts';
+import { isSavedSession, isWorthResuming, RESUME_KEY, type SavedSession } from '../engine/resume.ts';
 import { mountSetup } from './setup.ts';
 import { mountPractice } from './practice.ts';
 import { mountLearn } from './learn.ts';
@@ -26,7 +27,7 @@ import { mountInfo } from './info.ts';
 import { mountTheme } from './theme.ts';
 import { mountUpdates } from './updates.ts';
 import { VERSION } from '../version.ts';
-import { startSession, type Clock, type Session, type SessionConfig } from '../engine/steps.ts';
+import { resumeSession, startSession, type Clock, type Session, type SessionConfig } from '../engine/steps.ts';
 
 /**
  * The first door on the home screen, and the one focus lands on.
@@ -79,6 +80,56 @@ function boot(): void {
   */
   const resumeStrip = need('#resume-strip');
   const resumeMessage = need('#resume-message');
+
+  /*
+    ---- A SESSION SURVIVES THE TAB CLOSING ----
+
+    Written on every change rather than on `beforeunload`: a tab killed by the
+    operating system, a device that sleeps and never wakes the page, a lid shut
+    at the bell — none of those fire an unload handler reliably, and the moment
+    a save matters is the one nobody scheduled.
+
+    Every touch of storage is guarded. A managed Chromebook can refuse it
+    outright, and an app that throws on a device that will not remember things
+    is worse than one that simply forgets.
+  */
+  const saveSession = (live: Session, entry: readonly string[]): void => {
+    try {
+      const saved: SavedSession = { saved: 1, session: live, atMs: systemClock.now(), entry: [...entry] };
+      localStorage.setItem(RESUME_KEY, JSON.stringify(saved));
+    } catch {
+      /* A device that will not remember is a device that forgets. */
+    }
+  };
+
+  const forgetSession = (): void => {
+    try {
+      localStorage.removeItem(RESUME_KEY);
+    } catch {
+      /* As above. */
+    }
+  };
+
+  /** What was in the boxes when the tab closed, put back at the current stage. */
+  let pendingEntry: readonly string[] = [];
+
+  const readSaved = (): SavedSession | null => {
+    try {
+      const raw = localStorage.getItem(RESUME_KEY);
+      if (raw === null) return null;
+      const parsed: unknown = JSON.parse(raw);
+      // STRICT. A shape this build does not recognise would put a student in
+      // front of a problem it cannot grade, which is worse than starting again.
+      if (!isSavedSession(parsed) || !isWorthResuming(parsed)) {
+        forgetSession();
+        return null;
+      }
+      return parsed;
+    } catch {
+      forgetSession();
+      return null;
+    }
+  };
 
   const go = (screen: HTMLElement): void => {
     showOnly(screens, screen);
@@ -143,7 +194,11 @@ function boot(): void {
     onExplain(errorClass): void {
       reference.open(errorClass);
     },
+    onChanged(live: Session, entry: readonly string[]): void {
+      saveSession(live, entry);
+    },
     onLeave(): void {
+      forgetSession();
       // The session is dropped rather than parked. Nothing here can resume a
       // half-finished set, and pretending otherwise by keeping it would make
       // the next `begin` ambiguous about which session it is starting.
@@ -152,6 +207,9 @@ function boot(): void {
       need<HTMLButtonElement>(FIRST_DOOR).focus();
     },
     onFinished(finished: Session): void {
+      // A finished session is done with. Leaving it saved would drop the next
+      // visit back onto a screen the student had already left behind.
+      forgetSession();
       session = finished;
       doneScreen.show(finished);
       go(done);
@@ -218,6 +276,23 @@ function boot(): void {
   // The app opens on SETUP either way, with the orientation laid over it on a
   // first run. Behind a modal there is still an app to see, which answers "what
   // is this" better than a page of prose in front of it does.
+  /*
+    ---- OFFERED, NEVER FORCED ----
+
+    A restored session lands the student on the HOME screen with the strip
+    showing, not back inside the problem. Two reasons. A student who closed the
+    tab may have meant to leave, and reopening straight into a half-finished set
+    takes that choice away. And the strip is the control that already exists for
+    exactly this — "you have a problem open, back to it" — so the way back from
+    a reload is the same one as the way back from a lesson, learned once.
+  */
+  const saved = readSaved();
+  if (saved !== null) {
+    session = resumeSession(saved.session, systemClock, saved.atMs);
+    pendingEntry = saved.entry;
+    workScreen.begin(session, pendingEntry);
+  }
+
   go(home);
   if (info.hasBeenSeen()) {
     info.adoptOrientation();

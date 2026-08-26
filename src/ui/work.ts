@@ -42,6 +42,15 @@ export interface WorkHost {
   onExplain(errorClass: ErrorClass): void;
   /** Abandon the set and go back to the three doors. */
   onLeave(): void;
+  /**
+   * Called whenever the session or the boxes change, so it can be saved.
+   *
+   * ON EVERY CHANGE, not on a timer and not on `beforeunload`. A tab closed by
+   * the operating system, a device that sleeps and never wakes the page, a
+   * Chromebook lid shut at the bell — none of those fire an unload handler
+   * reliably, and the one moment a save matters is the one nobody scheduled.
+   */
+  onChanged(session: Session, entry: readonly string[]): void;
 }
 
 interface Elements {
@@ -62,7 +71,13 @@ interface Elements {
 /** The live work screen. */
 export interface WorkScreen {
   /** Put a session on screen and take the first entry. */
-  begin(session: Session): void;
+  /**
+   * Show a session — a new one, or one picked up again after the tab closed.
+   *
+   * `entry` is what was in the boxes when it closed, put back at the stage it
+   * was typed at. Empty for a fresh session.
+   */
+  begin(session: Session, entry?: readonly string[]): void;
 }
 
 /**
@@ -85,6 +100,12 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     reveal: need<HTMLButtonElement>('#work-reveal'),
     revealed: need('#work-revealed'),
   };
+
+  // Delegated for the same reason as the explain button: the boxes are rebuilt
+  // at every stage, and one listener on the container outlives all of them.
+  nodes.inputs.addEventListener('input', () => {
+    changed();
+  });
 
   // Delegated, because the button is rebuilt with every verdict. One listener
   // that outlives the markup beats one attached per wrong answer and leaked.
@@ -173,6 +194,14 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     nodes.revealed.hidden = false;
   });
 
+  /** The raw text in the boxes, unsubmitted — what a student would call their work. */
+  const rawEntry = (): string[] =>
+    [...nodes.inputs.querySelectorAll<HTMLInputElement>('input')].map((box) => box.value);
+
+  const changed = (): void => {
+    if (session !== null) host.onChanged(session, rawEntry());
+  };
+
   const readEntry = (problem: Problem, stage: Stage): StudentEntry | null => {
     if (stage.kind === 'COEFFICIENTS') {
       const fields = [...nodes.inputs.querySelectorAll<HTMLInputElement>('input')];
@@ -213,6 +242,7 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
 
     const result = submit(session, entry, clock);
     session = result.session;
+    changed();
 
     if (result.sessionComplete) {
       clear(nodes.feedback);
@@ -254,6 +284,56 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     confirmation is the one kind of question that should not arrive as another
     thing to dismiss.
   */
+  /*
+    ---- READ THIS OUT ----
+
+    Speech synthesis is output only. It raises no permission prompt, touches no
+    network and reads no device state — which is why it can exist in an app
+    whose whole posture is that it asks the browser for nothing.
+    `tools/permissions-check.mjs` names it as an allowance, and forbids
+    recognition in the same breath: the two are one letter apart in the same
+    corner of the platform, and recognition turns on a microphone.
+
+    NOT A SCREEN READER. A sighted student with a reading difficulty does not
+    run one, and read-aloud is among the commonest accommodations on a 504.
+
+    It reads the QUESTION and the equation. Never the answer, never the verdict:
+    the rule that the correct answer is not shown before the attempt does not
+    stop applying when the delivery is audio.
+  */
+  const speak = need<HTMLButtonElement>('#work-speak');
+  const canSpeak =
+    typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance === 'function';
+  speak.hidden = !canSpeak;
+  speak.addEventListener('click', () => {
+    if (!canSpeak || session === null) return;
+    // The same button stops it. A student who started it by accident, or who
+    // has heard enough, should not have to hunt for a second control.
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+      speak.textContent = 'Read this out';
+      return;
+    }
+    const said = [
+      nodes.equation.textContent ?? '',
+      nodes.prompt.textContent ?? '',
+      nodes.stagePrompt.textContent ?? '',
+      nodes.figures.textContent ?? '',
+    ]
+      .map((part) => part.trim())
+      .filter((part) => part !== '')
+      .join('. ');
+    const utterance = new SpeechSynthesisUtterance(said);
+    // Slower than the default, which is pitched for prose rather than for a
+    // sentence full of formulas and numbers.
+    utterance.rate = 0.9;
+    utterance.addEventListener('end', () => {
+      speak.textContent = 'Read this out';
+    });
+    speak.textContent = 'Stop reading';
+    speechSynthesis.speak(utterance);
+  });
+
   const leave = need<HTMLButtonElement>('#work-leave');
   let armed = false;
   const disarm = (): void => {
@@ -274,11 +354,23 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
   });
 
   return {
-    begin(started: Session): void {
+    begin(started: Session, entry: readonly string[] = []): void {
       disarm();
       session = started;
       clear(nodes.feedback);
       render();
+      // PUT BACK AFTER THE RENDER, because render() builds the boxes. Restoring
+      // before it would write into inputs that are about to be replaced.
+      if (entry.length > 0) {
+        const boxes = nodes.inputs.querySelectorAll<HTMLInputElement>('input');
+        boxes.forEach((box, at) => {
+          const was = entry[at];
+          if (was !== undefined) box.value = was;
+        });
+      }
+      // Saved as soon as it exists, so a tab closed before the first answer
+      // comes back to the right problem rather than to nothing.
+      changed();
     },
   };
 }

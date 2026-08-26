@@ -593,6 +593,59 @@ try {
   await page.locator('#work-leave').click();
   check(await page.locator('#screen-home').isVisible(), 'and the second tap leaves');
 
+  /* ---- a session survives the tab closing ---- */
+  //
+  // A REAL RELOAD, because nothing else proves this. Before, a refresh threw
+  // away a half-finished set and everything typed into it — which for a student
+  // whose accommodation is stopping mid-task made the app punish the
+  // accommodation.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-assignment').click();
+  await page.locator('#setup-roster').fill(String(ROSTER));
+  await page.locator('#setup-key').fill(KEY);
+  // TIER AND COUNT SET EXPLICITLY. Left to the form's defaults, the problem on
+  // screen was not the one generated below, and the first submit silently did
+  // not advance — which surfaced thirty seconds later as a missing answer box.
+  await page.locator(`#setup-tier button[data-tier="${TIER}"]`).click();
+  await page.locator(`#setup-count button[data-count="${COUNT}"]`).click();
+  await page.locator('#setup-start').click();
+
+  // Get one step right, so the restored session has a position to be wrong
+  // about, then type into the next one WITHOUT submitting.
+  {
+    const first = generateProblem(KEY, TIER, 0);
+    const answers = solve(first).coefficients;
+    const boxes = page.locator('#work-inputs input');
+    for (let at = 0; at < answers.length; at += 1) await boxes.nth(at).fill(String(answers[at]));
+    await page.locator('#work-submit').click();
+    await page.locator('#stage-answer').fill('123.456 g/mol');
+  }
+  const wasProgress = (await page.locator('#work-progress').textContent()) ?? '';
+
+  await page.reload({ waitUntil: 'load' });
+
+  check(await page.locator('#resume-strip').isVisible(), 'after a reload, the open problem is offered back');
+  const offered = (await page.locator('#resume-message').textContent()) ?? '';
+  check(offered.includes(KEY), `and names the set it belongs to (${offered.trim()})`);
+  // OFFERED, NOT FORCED. A student who closed the tab may have meant to leave.
+  check(await page.locator('#screen-home').isVisible(), 'and does not drag them back into it');
+
+  await page.locator('#resume-go').click();
+  check(await page.locator('#screen-work').isVisible(), 'and one tap goes back to the problem');
+  const nowProgress = (await page.locator('#work-progress').textContent()) ?? '';
+  check(nowProgress === wasProgress, `at the same place in the set (${nowProgress} was ${wasProgress})`);
+  const keptInBox = await page.locator('#stage-answer').inputValue();
+  check(keptInBox === '123.456 g/mol', `with what was typed and never submitted still in the box (${keptInBox})`);
+
+  // Leaving clears it: a set abandoned on purpose must not come back.
+  await page.locator('#work-leave').click();
+  await page.locator('#work-leave').click();
+  await page.reload({ waitUntil: 'load' });
+  check(
+    !(await page.locator('#resume-strip').isVisible()),
+    'a set left on purpose is not offered back after a reload',
+  );
+
   /* ---- the periodic table ---- */
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });
   await page.locator('#door-practice').click();
@@ -621,6 +674,88 @@ try {
 
   await page.locator('#table-close').click();
   check(await page.locator('#work-inputs').isVisible(), 'and closing it leaves the problem where it was');
+
+  /* ---- reading settings, and what they must never do ---- */
+  //
+  // Device-local accommodations: text size, spacing, and one-step-at-a-time.
+  // The load-bearing assertion is the LAST one — none of this reaches the code
+  // a student hands in. An accommodation somebody discloses by using it is not
+  // an accommodation.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-start').click();
+
+  const rootSize = () =>
+    page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+  const normalSize = await rootSize();
+
+  await page.locator('#info-open').click();
+  await page.locator('#reading-text input[value="largest"]').check();
+  const biggerSize = await rootSize();
+  check(biggerSize > normalSize, `largest text really is bigger (${normalSize} to ${biggerSize})`);
+
+  await page.locator('#reading-spacing input[value="roomy"]').check();
+  const spacing = await page.evaluate(() => getComputedStyle(document.body).letterSpacing);
+  check(spacing !== 'normal', `spacing opens up the letters (${spacing})`);
+  // NOT THE CODE OR THE FORMULAS. A completion code is transcribed character by
+  // character, and a formula's subscripts are part of its meaning.
+  await page.locator('#info-close').click();
+  const equationSpacing = await page.evaluate(() => {
+    const node = document.querySelector('.equation');
+    return node === null ? 'normal' : getComputedStyle(node).letterSpacing;
+  });
+  check(equationSpacing === 'normal', `the equation keeps its own spacing (${equationSpacing})`);
+
+  await page.locator('#info-open').click();
+  await page.locator('#reading-focus input[value="on"]').check();
+  await page.locator('#info-close').click();
+  check(!(await page.locator('#work-rail').isVisible()), 'one-step-at-a-time hides the step rail');
+  check(await page.locator('#work-inputs').isVisible(), 'and keeps the step you are on');
+
+  // It survives a reload, like every other preference here.
+  await page.reload({ waitUntil: 'load' });
+  const keptSize = await rootSize();
+  check(keptSize === biggerSize, `the reading settings survive a reload (${keptSize})`);
+
+  // BACK INTO THE PROBLEM FIRST. The reload above left a saved session, so the
+  // app is on the home screen offering it — which is 1.2.0 working, and is why
+  // the work screen's own controls are not on screen yet.
+  await page.locator('#resume-go').click();
+  await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+
+  /*
+    THE ONE THAT MATTERS, and the first version of it was worthless: it set the
+    three values itself and then checked they were in localStorage, which is
+    true by construction and could never fail.
+
+    What is actually worth asserting is that they do NOT reach the two things
+    that leave the device. The completion code is held to its declared fields by
+    `readout.test.ts`; the problem report is checked here, with every reading
+    setting turned on, because it is the other thing a student hands over.
+  */
+  await page.locator('#report-open').click();
+  await page.waitForFunction(
+    () => /what went wrong/i.test(document.querySelector('#report-body')?.textContent ?? ''),
+    undefined,
+    { timeout: TIMEOUT_MS },
+  );
+  const reportWithSettings = (await page.locator('#report-body').textContent()) ?? '';
+  for (const setting of ['largest', 'roomy', 'spacing', 'text size', 'read aloud']) {
+    check(
+      !reportWithSettings.toLowerCase().includes(setting),
+      `the problem report says nothing about "${setting}"`,
+    );
+  }
+  await page.locator('#report-close').click();
+
+  // Read-aloud: present, and it is the browser's own speech rather than
+  // anything that listens. The permissions gate is what holds the second half.
+  check(await page.locator('#work-speak').isVisible(), 'a step can be read out loud');
+  await page.locator('#work-speak').click();
+  check(
+    (await page.evaluate(() => typeof speechSynthesis !== 'undefined')) === true,
+    'using the browser\'s own speech, which asks for nothing',
+  );
 
   /* ---- the calculator, and what it must refuse ---- */
   //

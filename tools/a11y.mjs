@@ -330,6 +330,44 @@ const STATES = [
     },
   },
   {
+    /*
+      THE ACCOMMODATIONS ARE MEASURED, not offered and hoped for. Largest text
+      is where a layout breaks — targets overlap, a button's label wraps out of
+      its box, something that fitted at 16px stops fitting at 21.76px — and a
+      setting that breaks the screen for the reader who needed it is worse than
+      not offering it.
+    */
+    name: 'a problem at the largest text, spaced out, one step at a time',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.evaluate(() => {
+        localStorage.setItem('molebridge.text', 'largest');
+        localStorage.setItem('molebridge.spacing', 'roomy');
+        localStorage.setItem('molebridge.focus', 'on');
+      });
+      await page.reload({ waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-practice').click();
+      await page.locator('#practice-start').click();
+      await page.locator('#work-inputs input').first().waitFor({ state: 'visible' });
+    },
+  },
+  {
+    name: 'the reading settings themselves, at the largest text',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.evaluate(() => {
+        localStorage.setItem('molebridge.text', 'largest');
+        localStorage.setItem('molebridge.spacing', 'roomy');
+      });
+      await page.reload({ waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#info-open').click();
+      await page.locator('#reading-picker').scrollIntoViewIfNeeded();
+      await page.locator('#reading-text input').first().waitFor({ state: 'visible' });
+    },
+  },
+  {
     name: 'the reference, at one page',
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
