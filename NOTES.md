@@ -2037,6 +2037,13 @@ The user-visible cost is worth stating plainly: anybody who opened MoleBridge
 with no connection got the shell and none of the modules. The app is
 offline-first and that is most of what offline-first is for.
 
+**The sweep it was committed ahead of: PASS, 22754 measurements across 32
+states, three colour themes, both modes.** Recorded here rather than only said
+once, because the commit promised the result before promotion and a promise kept
+in a chat window is a promise kept nowhere. The state count did not move — the
+new link lives inside the welcome, which was already measured, which is the same
+§7e economy that made one edit serve two surfaces.
+
 ## /teacher was reader-facing copy, and nobody thought of it as copy
 
 1.6.0 made every sentence on that page neutral and left the address alone, so a
