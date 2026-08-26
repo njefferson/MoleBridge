@@ -4,6 +4,12 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.3.1 — ITERATION
+
+Nothing you will notice. The check that confirms a release reached the address
+your class opens was asking the wrong question, and said 1.3.0 had not arrived
+when it had.
+
 ## 1.3.0 — CAPABILITY
 
 Settings for how you read, and a button that reads it out.

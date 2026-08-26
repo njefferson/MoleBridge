@@ -356,15 +356,40 @@ jobs:
           echo ""
           echo "--- $DEPLOYED_URL ---"
 
-          # Cloudflare needs a moment between "deployment complete" and the edge
-          # serving it. Retry rather than sleep-and-hope.
-          for attempt in 1 2 3 4 5 6; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$DEPLOYED_URL/" || echo 000)
-            [ "$code" = "200" ] && break
-            echo "  attempt $attempt: $code, waiting"
-            sleep 5
+          # WAIT FOR THE RIGHT VERSION, NOT FOR ANY ANSWER. This retried until
+          # the URL returned 200 — which the APEX does instantly, serving the
+          # PREVIOUS release, because Cloudflare flips the production alias a
+          # moment after the per-deploy URL goes live. So the loop was satisfied
+          # by the old build, every check below then measured the old build, and
+          # the version check at the end was a coin toss on timing. It came up
+          # heads for three promotes and tails on the fourth.
+          #
+          # Waiting on the RELEASE makes this check mean what its name says: not
+          # "something is there" but "this release arrived at the address a class
+          # opens". And it can still fail — ninety seconds, then it gives up,
+          # because a version that never appears is a deploy that never landed
+          # and is exactly what this step exists to catch.
+          served=''
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            served=$(curl -sS --max-time 20 "$DEPLOYED_URL/sw.js" 2>/dev/null || echo '')
+            if printf '%s' "$served" | grep -q "$RELEASE"; then
+              # `if`, not `[ ... ] && echo`. This step runs under `set -e`, and
+              # an AND-list whose test is false returns non-zero OUTSIDE a
+              # condition context — which would abort the whole check on the
+              # ordinary case of the edge being ready first time.
+              if [ "$attempt" -gt 1 ]; then
+                echo "  (took $attempt attempts for the edge to catch up)"
+              fi
+              break
+            fi
+            echo "  attempt $attempt: not $RELEASE yet, waiting"
+            sleep 8
           done
-          [ "$code" = "200" ] || { echo "FAIL the deployed page answered $code"; exit 1; }
+          if ! printf '%s' "$served" | grep -q "$RELEASE"; then
+            echo "  FAIL  $DEPLOYED_URL never served $RELEASE"
+            overall=$(( overall + 1 ))
+            continue
+          fi
 
           headers=$(curl -sS -D - -o /dev/null --max-time 20 "$DEPLOYED_URL/" | tr 'A-Z' 'a-z')
           fail=0
@@ -410,13 +435,9 @@ jobs:
           # the served markup carries no version at all. `version-check.mjs`
           # already holds that cache name identical to src/version.ts, so this
           # rides on a fact another gate maintains.
-          served=$(curl -sS --max-time 20 "$DEPLOYED_URL/sw.js" || echo '')
-          if printf '%s' "$served" | grep -q "$RELEASE"; then
-            echo "  ok    it is serving $RELEASE"
-          else
-            echo "  FAIL  it answers, but not with $RELEASE"
-            fail=1
-          fi
+          # Already established by the wait above; said here so the log states
+          # what was verified rather than leaving it implied by an absence.
+          echo "  ok    it is serving $RELEASE"
 
           overall=$(( overall + fail ))
           done
