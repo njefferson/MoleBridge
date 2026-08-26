@@ -23,7 +23,7 @@ const SEEN_KEY = 'molebridge.orientation.seen';
 /** The live ⓘ panel. */
 export interface InfoPanel {
   /** Move the orientation block out of the welcome screen and in here. */
-  adoptOrientation(): void;
+  adoptOrientation(markSeen?: boolean): void;
   /** True where this device has been past the welcome screen before. */
   hasBeenSeen(): boolean;
 }
@@ -70,10 +70,20 @@ export function mountInfo(getSession: () => Session | null, updates: Updates): I
   });
 
   return {
-    adoptOrientation(): void {
+    /*
+      MOVED, NEVER COPIED (Doctrine §7e). `markSeen` is false on the one path
+      where the reader did not begin by pressing anything: a warm-up link opens
+      straight into a problem, because a teacher has just put it on the board and
+      a modal in front of twenty-eight students is friction at exactly the wrong
+      moment. The orientation still MOVES into the panel, so it survives and is
+      reachable — but the app must not record that somebody read a thing it never
+      showed them, so the welcome still appears the first time they open the app
+      on their own.
+    */
+    adoptOrientation(markSeen = true): void {
       const orientation = document.querySelector('#orientation');
       if (orientation !== null && orientation.parentElement !== slot) slot.append(orientation);
-      remember();
+      if (markSeen) remember();
     },
     hasBeenSeen(): boolean {
       try {
