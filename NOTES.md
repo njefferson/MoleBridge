@@ -1565,6 +1565,66 @@ every problem has every stage, so each drillable step carries the tier that
 produces it, `drillItem` is bounded rather than a `while (true)`, and the test
 generates eight of each.
 
+## J2: the app stopped assuming which room the reader is in
+
+MoleBridge was written for one chemistry classroom, and the copy came out that
+way. Twenty-nine places in the tree told the reader so: *your teacher has put
+these on the board*, *type it into the Canvas assignment*, *decode a class*,
+*half the class finished within N minutes*.
+
+Every one of them was accurate. Every one of them also told a homeschooled
+student — or a group of four, or a tutor, or an adult going back over this
+alone — that the thing in front of them belongs to somebody else and they are
+reading over a shoulder. Nothing about the app is wrong for those readers. Only
+the sentences were, which is what makes this the cheap kind of defect to leave
+in and the easy kind to reintroduce.
+
+**The replacement is not vagueness.** "Someone" is worse than "your teacher" for
+a fifteen-year-old in period three: it sounds like the app does not know what it
+is for. Each phrase was replaced with wording that is true in both rooms and no
+less specific in either — *whoever set the work*, *wherever you hand your work
+in*, *the codes you were handed*, *both of these came with the work you were
+set*. The graded door is called **Assignment** rather than **Class assignment**;
+`mode: 'assignment'` in the code never moved.
+
+**The teacher page is for whoever is marking, and that is still the right word
+for a parent teaching at home.** What excluded them there was the room around
+it: a class, a gradebook column, writing the link on the board. It is now
+*Decode a set of codes*, the paste box is *The codes* with the gradebook named
+as one thing that pastes in rather than the only thing, and the results heading
+is *Everyone together*.
+
+**`tools/language-check.mjs` is the gate, and it names the replacement.** A
+failure that only says no gets worked around, and the way around this one is a
+synonym that excludes exactly as much — so every forbidden phrase carries what
+to say instead. It reads `public/index.html`, the teacher page and every source
+file under `src/ui`, `src/learn`, `src/report` and `src/teacher`, with comments
+stripped: the note above the warm-up builder says a teacher writes the link on
+the board, because that is the thing that was asked for and the reason the
+feature exists. A gate that deleted the reasoning to satisfy a rule about the
+copy would be trading the wrong thing.
+
+**`src/ui/releases.ts` is not scanned**, and that is a decision rather than an
+oversight. It is generated from CHANGELOG.md, which is the record of what
+shipped and when. Editing old entries so a gate goes green is rewriting history
+to look like it never happened; the entries that say *Canvas* describe releases
+where the app said Canvas. New entries are written in the neutral voice because
+they are written now.
+
+**One collision, and it is the LESSONS §108 shape.** `<a class="skip">` contains
+the phrase "a class". A pattern flagging honest markup teaches people the gate
+is noise, so a match immediately followed by an `=` is not a match.
+
+**And the fix went to the one screen the check read.** The home screen said
+"Seven short lessons" with eight in the app; 0.13.0 replaced the number with
+prose that carries none and added a walk check. The LEARN screen said "Seven
+lessons" for four releases after that, because the check asked `#screen-home`
+and the sentence was one screen further in. **A check narrower than the rule it
+enforces is the defect wearing the fix's clothes.** It now reads `#main`, which
+is every screen at once including the hidden ones — and not the whole document,
+because the patch notes live in a dialog outside it and say "Lessons. Seven of
+them", which was true in the release it describes.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

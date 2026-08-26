@@ -7,8 +7,8 @@
 <!-- Written by theme.js from the stylesheet's own --page, so it is right in
      whichever mode is showing rather than in the one it was typed for. -->
 <meta name="theme-color" content="#1a1a1a">
-<title>MoleBridge — decode a class</title>
-<meta name="description" content="Paste a gradebook column of MoleBridge completion codes and see where the class got stuck.">
+<title>MoleBridge — decode a set of codes</title>
+<meta name="description" content="Paste a column of MoleBridge completion codes and see where they got stuck.">
 <meta name="robots" content="noindex">
 <!-- ONE DRAWING, everywhere. There was briefly a second, simpler file for the
      tab, on the argument that a mole is a blob at 16 pixels. It is — and the
@@ -41,11 +41,12 @@
 
 <main id="main">
   <section class="screen">
-    <h1>Decode a class</h1>
+    <h1>Decode a set of codes</h1>
 
     <p class="lede">
-      Paste the whole gradebook column. Names, section numbers and blank rows can
-      stay in — MoleBridge finds the codes and ignores everything else.
+      One code per line — a whole gradebook column pastes in as it is. Names,
+      section numbers and blank rows can stay in: MoleBridge finds the codes and
+      ignores everything else.
     </p>
 
     <!--
@@ -57,7 +58,7 @@
       <strong>Nothing but the codes is read.</strong> Student names in what you
       paste are discarded as the codes are picked out — not stored, not shown,
       not counted. A code identifies a roster number and nothing else, so the
-      mapping back to a person stays in your gradebook where it already lives.
+      mapping back to a person stays wherever you already keep it.
       Nothing here is sent anywhere or kept after you close the tab.
     </p>
 
@@ -75,7 +76,7 @@
       shared seed, and it is deliberately not a second engine path.
     -->
     <details class="card" id="warmup-builder">
-      <summary>Make a warm-up link for the board</summary>
+      <summary>Make a warm-up link</summary>
       <p class="hint">
         Five minutes at the start of a lesson. Everyone who opens the link gets
         the same problems, so they can be talked through afterwards. Nothing is
@@ -122,7 +123,7 @@
       <div class="field">
         <label for="teacher-key">Your assignment key</label>
         <p class="hint" id="teacher-key-hint">
-          The same one you put on the board. It decides which codes belong to
+          The same one you gave out. It decides which codes belong to
           this assignment.
         </p>
         <input type="text" id="teacher-key" autocomplete="off" autocapitalize="characters"
@@ -130,8 +131,8 @@
       </div>
 
       <div class="field">
-        <label for="teacher-paste">The gradebook column</label>
-        <p class="hint" id="teacher-paste-hint">One student per line, in any format.</p>
+        <label for="teacher-paste">The codes</label>
+        <p class="hint" id="teacher-paste-hint">One per line, in any format.</p>
         <textarea id="teacher-paste" rows="8" spellcheck="false"
                   aria-describedby="teacher-paste-hint" required></textarea>
       </div>
@@ -143,7 +144,7 @@
 
   <section class="screen" id="results" aria-labelledby="results-title" hidden>
     <div class="results-head">
-      <h2 id="results-title">The class</h2>
+      <h2 id="results-title">Everyone together</h2>
       <button type="button" class="button button-small button-quiet" id="print">Print this</button>
     </div>
 

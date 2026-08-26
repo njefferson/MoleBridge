@@ -4,6 +4,25 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.6.0 — ITERATION
+
+MoleBridge no longer assumes you are in a classroom.
+
+It was written for one, and the words came out that way: your teacher has put
+these on the board, type it into the Canvas assignment, decode a class. All of
+that was true in the room it was built for and told everybody else — anyone
+learning at home, a group of four, a tutor, an adult going back over this — that
+they were reading over somebody's shoulder.
+
+**Nothing about how it works has changed.** The same problems, the same codes,
+the same page for whoever is marking. Only the sentences: whoever set the work,
+wherever you hand your work in, the codes you were handed. Twenty-nine places
+said it the old way.
+
+**Also:** the Learn screen said "Seven lessons" when there are eight. The check
+that was added to stop exactly that only read the home screen; it now reads
+every screen.
+
 ## 1.5.0 — CAPABILITY
 
 Practise one step, as many times as you like.

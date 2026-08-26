@@ -90,7 +90,7 @@ export function mountDone(clock: Clock, host: DoneHost): DoneScreen {
     void (async () => {
       try {
         await navigator.clipboard.writeText(shown);
-        copyStatus.textContent = 'Copied. Paste it into the Canvas assignment.';
+        copyStatus.textContent = 'Copied. Paste it in wherever you hand your work in.';
       } catch {
         // Never claim a copy that did not happen: a student who believes the
         // code is on the clipboard pastes nothing and hands in nothing.

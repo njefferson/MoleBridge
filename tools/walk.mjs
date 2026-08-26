@@ -663,12 +663,21 @@ try {
   // This is 3d-printing-pal's checkOrientationTypes in the hub's own notes,
   // happening here — a welcome describing three job types after a fourth was
   // added. The fix is not a better number, it is prose that does not carry one.
+  // AND THE FIX WENT TO THE ONE SCREEN THE CHECK READ. The learn screen said
+  // "Seven lessons" for four releases after this gate was written, because the
+  // gate asked `#screen-home` and the sentence was one screen further in. A
+  // check narrower than the rule it enforces is the defect wearing the fix's
+  // clothes — so this reads every screen at once, hidden ones included.
+  //
+  // `#main` and not the whole document, deliberately: the patch notes live in a
+  // dialog outside it and say "Lessons. Seven of them", which was true in the
+  // release it describes. A record of what shipped is not a claim about now.
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });
-  const homeCopy = (await page.locator('#screen-home').textContent()) ?? '';
-  const counted = /\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+(short\s+)?lessons\b/i.exec(homeCopy);
+  const appCopy = (await page.locator('#main').textContent()) ?? '';
+  const counted = /\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+(short\s+)?lessons\b/i.exec(appCopy);
   check(
     counted === null,
-    `the home screen does not state how many lessons there are (${counted?.[0] ?? 'none'})`,
+    `no screen states how many lessons there are (${counted?.[0] ?? 'none'})`,
   );
 
   /* ---- the warm-up: a link, and five minutes ---- */

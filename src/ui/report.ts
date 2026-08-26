@@ -166,7 +166,7 @@ export function mountReport(
     void (async () => {
       try {
         await navigator.clipboard.writeText(body.textContent ?? '');
-        copyStatus.textContent = 'Copied. Paste it into a message to your teacher.';
+        copyStatus.textContent = 'Copied. Paste it into a message to whoever set the work.';
       } catch {
         // Writing to the clipboard needs no permission, but a browser can still
         // refuse — and a button that silently does nothing reads as the app
