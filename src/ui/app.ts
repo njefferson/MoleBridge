@@ -18,6 +18,7 @@ import { mountPractice } from './practice.ts';
 import { warmupFrom } from './warmup.ts';
 import { mountLearn } from './learn.ts';
 import { mountReference } from './reference.ts';
+import { mountDrill } from './drill.ts';
 import { mountCalculator } from './calculator.ts';
 import { mountTable } from './table.ts';
 import { mountReport } from './report.ts';
@@ -59,13 +60,15 @@ function boot(): void {
 
   const welcomePanel = need<HTMLDialogElement>('#welcome-panel');
   const home = need('#screen-home');
+  const drillPick = need('#screen-drill-pick');
+  const drillRun = need('#screen-drill');
   const practice = need('#screen-practice');
   const learn = need('#screen-learn');
   const lesson = need('#screen-lesson');
   const setup = need('#screen-setup');
   const work = need('#screen-work');
   const done = need('#screen-done');
-  const screens = [home, learn, lesson, practice, setup, work, done];
+  const screens = [home, learn, lesson, practice, setup, work, done, drillPick, drillRun];
 
   let session: Session | null = null;
 
@@ -185,11 +188,35 @@ function boot(): void {
   // assigned below; the lesson link is only ever followed by a click, which
   // cannot happen before boot finishes.
   let learnScreens: ReturnType<typeof mountLearn> | null = null;
+  let drillScreens: ReturnType<typeof mountDrill> | null = null;
   const reference = mountReference({
     openLesson(index: number): void {
       learnScreens?.openByIndex(index);
     },
+    /*
+      THE ROUTE THAT MATTERS. A student reading the page about the mistake they
+      just made is the one moment they are most likely to want twenty more of
+      exactly that step — so the offer is there, rather than three screens away
+      behind a menu they would have to know about.
+    */
+    openDrill(stageId: string): void {
+      drillScreens?.start(stageId);
+    },
   });
+
+  drillScreens = mountDrill(
+    {
+      onBack(): void {
+        go(home);
+      },
+      onExplain(errorClass): void {
+        reference.open(errorClass);
+      },
+    },
+    (screen) => {
+      go(screen);
+    },
+  );
 
   const workScreen = mountWork(systemClock, {
     onExplain(errorClass): void {
@@ -243,6 +270,9 @@ function boot(): void {
       },
       onReference(): void {
         reference.open();
+      },
+      onDrill(): void {
+        go(drillPick);
       },
     },
     (screen) => {

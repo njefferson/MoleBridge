@@ -1500,6 +1500,71 @@ builds the five minutes she asked for; it does not answer that. Her other
 suggestion — homeschool communities — is a fit observation worth taking
 seriously rather than a brush-off.
 
+## J1: practising one step, and refusing to reward anybody for it
+
+A student who inverts the mole ratio had to walk five other steps to reach the
+one they were failing. **That is a tax on the thing they came to fix.** Whole
+problems are INTERLEAVED practice, which is what makes a skill stick once you
+have it; a skill you do not have yet is built by BLOCKED practice — the same
+move again until it is yours. The app only had the first.
+
+**The engine was ready and nobody had asked.** `classify` is a pure function of a
+problem, a stage and an entry, so a drill is a loop around it: generate, present
+one stage, classify, discard. No session, no completion code, nothing recorded.
+
+`renderInputs` and a new `readEntryFrom` are exported from `work.ts` rather than
+rewritten. A second renderer would be a second place for the rule about what a
+student may see before answering to drift, and the drill shows the same stages to
+the same people.
+
+### The design rule, and why it is a test rather than a paragraph
+
+**No score. No streak. No target. No congratulation.** Streaks and badges teach a
+student to chase the animation, and they make stopping feel like failing — which
+is exactly wrong for the person who most needs to do twenty of these, and who is
+usually the one who has been told longest that they are bad at it.
+
+That is the kind of rule a later session undoes in one well-meaning commit. So
+`drill.test.ts` reads the source of both drill files and fails on `streak`,
+`badge`, `points`, a fraction like `3/7`, and every variant of "Great job". It
+strips comments before matching, because the comments say what must NOT be built
+— the same trap `permissions-check.mjs` fell into when it fired on its own prose.
+
+**What replaces praise is CHANGE.** A good tutor does not say "5 out of 7". They
+say "that one went upside down again, here is why", and at the end "you were
+getting these wrong the same way and now you are not". So the summary reports
+what happened and, only where it is true, that the repeated mistake stopped: a
+fact about the run rather than an opinion about the person. `stoppedHappening` is
+false unless the run was long enough for the question to mean anything.
+
+**Once is not a pattern.** A single mistake is never named — everybody makes
+slips, and naming one would be the app inventing a problem to have an opinion
+about. Twice is reported in the summary. Three times is said DURING the run,
+once, with what fixes it, and never again: a thing repeated is nagging.
+
+**The all-wrong summary is written separately.** The general sentence rendered it
+as "4 questions, and 0 of them were right" — accurate, and the exact reading the
+person doing twenty of these does not need. It says "You did 4. None of them came
+out right yet", which is the same fact without the zero in it.
+
+### Three things this found in the existing gates
+
+**A selector loose enough to catch a second list.** The drill's step list reuses
+`.lesson-row` for its shape, and the walk's unscoped `.lesson-row` count went
+from 8 to 16 the moment the screen existed — a check reporting somebody else's
+feature as a defect. Both counts are scoped to `#learn-list` now.
+
+**The class-to-step map is derived, not typed.** `E-RATIO-INVERTED` is the mole
+ratio by construction, so a table would be the same fact written twice and the
+copy is what goes stale. Five classes belong to no step ON PURPOSE — a slip in
+the arithmetic, a missing unit, rounding early and an unexplained answer happen
+anywhere — and the test names all five, so a sixth appearing is a decision.
+
+**A drill that could not generate its own step would be an empty screen.** Not
+every problem has every stage, so each drillable step carries the tier that
+produces it, `drillItem` is bounded rather than a `while (true)`, and the test
+generates eight of each.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

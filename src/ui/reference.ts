@@ -21,7 +21,7 @@
  */
 
 import { el, fill, need } from './dom.ts';
-import { REFERENCE, entryFor, lessonsForClass, type ReferenceEntry } from '../learn/reference.ts';
+import { REFERENCE, entryFor, lessonsForClass, drillForClass, type ReferenceEntry } from '../learn/reference.ts';
 import { LESSONS } from '../learn/lessons.ts';
 import type { ErrorClass } from '../engine/taxonomy.ts';
 
@@ -33,6 +33,8 @@ export interface ReferencePanel {
 export interface ReferenceHost {
   /** Take the student to a lesson by index, closing whatever is over the top. */
   openLesson(index: number): void;
+  /** Start a drill on the step this mistake belongs to. */
+  openDrill(stageId: string): void;
 }
 
 export function mountReference(host: ReferenceHost): ReferencePanel {
@@ -64,6 +66,26 @@ export function mountReference(host: ReferenceHost): ReferencePanel {
     // teach the same mistake — a conversion upside down is taught by the units
     // lesson and by percent yield — and which one this student needs depends on
     // the step they were on, which this cannot know.
+    /*
+      THE OFFER GOES HERE, on the page about the mistake they just made. That is
+      the one moment a student is most likely to want twenty more of exactly
+      that step; three screens away behind a menu they would have to know about
+      is the same as not offering it.
+
+      Worded as an offer and not as an instruction. "You should practise this"
+      is the app having an opinion about somebody it has met twice.
+    */
+    const drillable = drillForClass(entry.id);
+    if (drillable !== null) {
+      blocks.push(
+        el('button', {
+          className: 'button-small',
+          text: 'Practise just this step',
+          attrs: { type: 'button', 'data-drill-step': drillable },
+        }),
+      );
+    }
+
     const lessons = lessonsForClass(entry.id);
     if (lessons.length > 0) {
       blocks.push(el('h3', { text: lessons.length === 1 ? 'The lesson on this' : 'The lessons on this' }));
@@ -121,7 +143,14 @@ export function mountReference(host: ReferenceHost): ReferencePanel {
   });
 
   detail.addEventListener('click', (event) => {
-    const button = (event.target as HTMLElement).closest<HTMLElement>('[data-goto-lesson]');
+    const target = event.target as HTMLElement;
+    const toDrill = target.closest<HTMLElement>('[data-drill-step]');
+    if (toDrill !== null) {
+      panel.close();
+      host.openDrill(toDrill.dataset['drillStep'] ?? '');
+      return;
+    }
+    const button = target.closest<HTMLElement>('[data-goto-lesson]');
     if (button === null) return;
     const at = Number(button.dataset['gotoLesson']);
     panel.close();

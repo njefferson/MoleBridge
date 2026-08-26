@@ -220,6 +220,29 @@ export function lessonsForClass(id: ErrorClass): readonly number[] {
   return out;
 }
 
+/**
+ * The step to drill for a mistake, or null where no single step owns it.
+ *
+ * DERIVED FROM THE CLASS NAME, not typed out. The taxonomy's names carry their
+ * step in their prefix — `E-RATIO-INVERTED` is the mole ratio by construction —
+ * so a table here would be the same fact written twice, and the second copy is
+ * the one that goes stale when a class is added.
+ *
+ * Four classes belong to no step on purpose. A slip in the arithmetic, a missing
+ * unit, rounding too early and an answer MoleBridge could not explain all happen
+ * ANYWHERE, and offering to drill "the step you got that wrong at" would be the
+ * app pretending to know something it does not.
+ */
+export function drillForClass(id: ErrorClass): string | null {
+  if (id.startsWith('E-BAL-')) return 'S1';
+  if (id.startsWith('E-MM-')) return 'S2';
+  if (id.startsWith('E-MOL-')) return 'S3';
+  if (id.startsWith('E-RATIO-')) return 'S4';
+  if (id.startsWith('E-LIM-')) return 'S4c';
+  if (id.startsWith('E-CONV-')) return 'S6';
+  return null;
+}
+
 /** Every class, in the reference's order, for anything that needs to walk them. */
 export const REFERENCED_CLASSES: readonly ErrorClass[] = REFERENCE.map((entry) => entry.id);
 

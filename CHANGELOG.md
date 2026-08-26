@@ -4,6 +4,28 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.5.0 — CAPABILITY
+
+Practise one step, as many times as you like.
+
+If you keep getting the mole ratio upside down, you should not have to walk five
+other steps to reach the one you are working on. **Practise one step** on the
+Learn screen lets you pick a step and answer as many as you want — different
+numbers every time, the same move.
+
+It is also offered on the page about a mistake you just made, which is the
+moment you are most likely to want it.
+
+**Nothing is counted at you.** No score, no streak, no target, nothing to unlock.
+Each answer tells you which mistake it was, the same as anywhere else in the app.
+If the same mistake comes up three times it says so once, with what fixes it, and
+then leaves you alone.
+
+**You stop when you want.** When you do, it tells you what happened — how many,
+how many were right, and which mistake came up most. If that mistake stopped
+happening partway through, it says so, because that is the useful thing to know.
+It will not tell you to try again or to keep going.
+
 ## 1.4.0 — CAPABILITY
 
 A warm-up link, for five minutes at the start of a lesson.

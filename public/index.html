@@ -244,7 +244,51 @@
       something up should not have to get an answer wrong first to find it.
     -->
     <button type="button" class="button-small" id="learn-reference">Look up a mistake</button>
+    <button type="button" class="button-small" id="learn-drill">Practise one step</button>
     <button type="button" class="button-small" id="learn-back">Back</button>
+  </section>
+
+  <!--
+    ============ drilling one step ============
+
+    A student who inverts the mole ratio should not have to walk five other steps
+    to reach the one they are failing. Whole problems are interleaved practice,
+    which is what makes a skill stick once you have it; a skill you do not have
+    yet is built by doing the same move again until it is yours.
+
+    NO SCORE, NO STREAK, NO TARGET, NO CONGRATULATION. The student who most needs
+    to try something twenty times is usually the one who has been told longest
+    that they are bad at it, and an app that makes stopping feel like giving up
+    is the last thing they need. `drill.test.ts` holds this over the source.
+  -->
+  <section class="screen" id="screen-drill-pick" aria-labelledby="drill-pick-title" hidden>
+    <h1 id="drill-pick-title">Practise one step</h1>
+    <p class="lede">
+      Pick the step you want to work on and answer as many as you like. Nothing
+      is counted, nothing is kept, and you stop when you want to.
+    </p>
+    <ol class="lessons" id="drill-list"></ol>
+    <button type="button" class="button-small" id="drill-pick-back">Back</button>
+  </section>
+
+  <section class="screen" id="screen-drill" aria-labelledby="drill-title" hidden>
+    <h1 id="drill-title"></h1>
+    <p class="lede" id="drill-what"></p>
+
+    <div class="card stage-card">
+      <h2 class="stage-prompt" id="drill-question"></h2>
+      <div id="drill-inputs"></div>
+      <button type="button" class="button button-big" id="drill-check">Check this one</button>
+      <div class="feedback" id="drill-feedback" role="status" aria-live="polite" tabindex="-1"></div>
+      <button type="button" class="button-small" id="drill-next">Another one</button>
+    </div>
+
+    <!-- Said once per run per mistake. Twice would be nagging. -->
+    <p class="note noticed" id="drill-noticed" role="status" hidden></p>
+
+    <button type="button" class="button-small" id="drill-stop">That is enough for now</button>
+    <div class="card" id="drill-summary" hidden></div>
+    <button type="button" class="button-small" id="drill-done">Back</button>
   </section>
 
   <!-- ============ one lesson ============ -->
