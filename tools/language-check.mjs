@@ -28,12 +28,14 @@
  *
  * This first shipped scanning everything EXCEPT the patch notes, on the reasoning
  * that CHANGELOG.md is a record of what shipped and editing old entries is
- * rewriting history. The owner's instruction settled it the other way, and the
- * instruction is right: the notes are not an archive, they are the app talking
- * to whoever is reading it TODAY, and a homeschooling family reading twenty-nine
- * entries about a class and a gradebook learns the same wrong thing about who
- * the app is for as they would from any other screen. Nothing about what
- * happened in each release changed — only the room the sentence puts around it.
+ * rewriting history. That was wrong, and the distinction it missed is between
+ * the FACTS of a release, which are fixed, and the VOICE they are told in, which
+ * is the app's and belongs to now. The notes are not an archive; they are the
+ * app talking to whoever is reading it today, in the same panel as every other
+ * screen, and twenty-eight entries about a class and a gradebook teach a family
+ * learning at home the same wrong thing any other screen would. Nothing about
+ * what happened in each release changed — only the room the sentence puts
+ * around it.
  *
  * So CHANGELOG.md is scanned, and `src/ui/releases.ts` is not: it is generated
  * from CHANGELOG.md by `tools/changelog.mjs`, so the source is the honest place
@@ -111,10 +113,12 @@ const SURFACES = [
   join(REPO, 'CHANGELOG.md'),
   join(REPO, 'public', 'index.html'),
   join(REPO, 'public', 'teacher', 'index.html'),
+  join(REPO, 'public', 'changes', 'index.html'),
   ...everyFile(join(REPO, 'src', 'ui'), '.ts'),
   ...everyFile(join(REPO, 'src', 'learn'), '.ts'),
   ...everyFile(join(REPO, 'src', 'report'), '.ts'),
   ...everyFile(join(REPO, 'src', 'teacher'), '.ts'),
+  ...everyFile(join(REPO, 'src', 'changes'), '.ts'),
 ].filter((file) => file !== GENERATED && existsSync(file));
 
 let failures = 0;

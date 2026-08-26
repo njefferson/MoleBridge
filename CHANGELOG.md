@@ -4,6 +4,38 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.8.0 — ITERATION
+
+The notes stop after the newest few, and the rest have a page of their own.
+
+**What was wrong.** Every surface that showed release notes showed all of them.
+Thirty releases, in a panel — so the way out sat under everything you had not
+asked to read, and in the ⓘ everything below it (where the chemistry comes from,
+how to report a problem, the accessibility statement) was pushed off the bottom.
+
+**Now:** the newest five, and then a link to **everything that has changed** —
+a page inside MoleBridge that carries all of them. It is cached with the app, so
+it opens with no connection like everything else here, and it is not a link off
+to a website for programmers.
+
+If MoleBridge updated more than five times since you last had it open, it still
+says how many — being told there are nine and shown five is honest; being shown
+nine is a wall.
+
+**Also: every dialog is now checked for the way out.** A panel whose only exit
+is under everything it just showed you charges a scroll through the thing you
+opened it to get past. Nothing here had that defect; there was nothing stopping
+the next one from having it, and now there is.
+
+**And some buttons were smaller than they looked.** Any button that is really a
+link — the one back to MoleBridge from a page, and the new one to the history —
+was 36 pixels tall instead of 44, because of how a browser lays out a link
+compared to a button. On a touchscreen those eight pixels are the difference
+between hitting it and hitting it on the second try. They are all 44 now.
+
+**What is still missing.** The history page lists releases, and nothing on it
+lets you search or jump to one. With thirty entries that is a scroll.
+
 ## 1.7.0 — CAPABILITY
 
 MoleBridge tells you what changed, instead of just changing.

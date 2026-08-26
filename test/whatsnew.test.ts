@@ -12,7 +12,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { releasesSince } from '../src/ui/whatsnew.ts';
+import { forAPanel, NOTES_SHOWN, releasesSince } from '../src/ui/whatsnew.ts';
 import { RELEASES } from '../src/ui/releases.ts';
 import { VERSION } from '../src/version.ts';
 
@@ -73,4 +73,27 @@ test('the panel reads the real changelog, and the app is its newest entry', () =
   assert.equal(RELEASES[0]?.version, VERSION);
   assert.deepEqual(versions(releasesSince(VERSION, true)), []);
   assert.deepEqual(versions(releasesSince(null, true)), [VERSION]);
+});
+
+test('a panel shows the newest few and says how many it is not showing', () => {
+  // THE COUNT, NOT A BOOLEAN. A reader told there is "more" learns nothing; one
+  // told there are twenty-four more knows whether the page is worth opening.
+  const many = Array.from({ length: NOTES_SHOWN + 24 }, (_, at) => ({ version: `9.0.${at}` }));
+  const capped = forAPanel(many);
+  assert.equal(capped.notes.length, NOTES_SHOWN);
+  assert.equal(capped.more, 24);
+  assert.equal(capped.notes[0]?.version, '9.0.0', 'and they are the newest, not the oldest');
+});
+
+test('nothing is claimed to be hidden when nothing is', () => {
+  const few = [{ version: '1.1.0' }, { version: '1.0.0' }];
+  assert.deepEqual(forAPanel(few), { notes: few, more: 0 });
+  assert.deepEqual(forAPanel([]), { notes: [], more: 0 });
+});
+
+test('the cap never hides the release the reader is running', () => {
+  // The newest is the one they came for. A cap that could push it out of view
+  // would be worse than no cap: the panel would open on somebody else's news.
+  const capped = forAPanel(RELEASES);
+  assert.equal(capped.notes[0]?.version, VERSION);
 });

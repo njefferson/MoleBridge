@@ -552,12 +552,23 @@
     </div>
   </div>
   <div class="welcome-actions">
-    <button type="button" class="button button-big" id="welcome-begin">Get started</button>
+    <button type="button" class="button button-big" id="welcome-begin" data-way-out>Get started</button>
   </div>
 </dialog>
 
 <!--
   ============ what changed while you were away ============
+
+  `data-way-out` MARKS THE EXIT OF EVERY DIALOG IN THIS FILE, and the walk holds
+  one invariant over all of them: no way out is inside the box that scrolls. A
+  dialog whose only exit is under everything it just showed you charges a scroll
+  through the thing you opened it to get past.
+
+  DECLARED, NOT INFERRED. The obvious version looks for a control whose id ends
+  in "-close", which silently exempts every dialog leaving by "Get started" or
+  "Got it" — a naming convention is a filter wearing a costume, and a check that
+  only sees the surfaces already built to a pattern can never go red on one
+  nobody has looked at.
 
   §7h TOLD THE READER A NEW VERSION WAS WAITING AND THEN SAID NOTHING ABOUT IT.
   The strip offers the switch, the page reloads, and the app is different with
@@ -584,7 +595,7 @@
     <p class="hint">These notes stay behind the ⓘ, under What changed, whenever you want them again.</p>
   </div>
   <div class="welcome-actions">
-    <button type="button" class="button button-big" id="whatsnew-done">Got it</button>
+    <button type="button" class="button button-big" id="whatsnew-done" data-way-out>Got it</button>
   </div>
 </dialog>
 
@@ -618,7 +629,7 @@
 <dialog class="info info-wide" id="table-panel" aria-labelledby="table-title">
   <div class="info-head">
     <h2 id="table-title">Periodic table</h2>
-    <button type="button" class="icon-button" id="table-close">
+    <button type="button" class="icon-button" id="table-close" data-way-out>
       <span aria-hidden="true">✕</span>
       <span class="visually-hidden">Close</span>
     </button>
@@ -650,7 +661,7 @@
 <dialog class="info" id="calc-panel" aria-labelledby="calc-title">
   <div class="info-head">
     <h2 id="calc-title">Calculator</h2>
-    <button type="button" class="icon-button" id="calc-close">
+    <button type="button" class="icon-button" id="calc-close" data-way-out>
       <span aria-hidden="true">✕</span>
       <span class="visually-hidden">Close</span>
     </button>
@@ -685,7 +696,7 @@
 <dialog class="info" id="reference-panel" aria-labelledby="reference-title">
   <div class="info-head">
     <h2 id="reference-title">What can go wrong</h2>
-    <button type="button" class="icon-button" id="reference-close">
+    <button type="button" class="icon-button" id="reference-close" data-way-out>
       <span aria-hidden="true">✕</span>
       <span class="visually-hidden">Close</span>
     </button>
@@ -700,7 +711,7 @@
 <dialog class="info" id="report-panel" aria-labelledby="report-title">
   <div class="info-head">
     <h2 id="report-title">Report a problem</h2>
-    <button type="button" class="icon-button" id="report-close">
+    <button type="button" class="icon-button" id="report-close" data-way-out>
       <span aria-hidden="true">✕</span>
       <span class="visually-hidden">Close</span>
     </button>
@@ -740,7 +751,7 @@
 <dialog class="info" id="info-panel" aria-labelledby="info-title">
   <div class="info-head">
     <h2 id="info-title">About MoleBridge</h2>
-    <button type="button" class="icon-button" id="info-close">
+    <button type="button" class="icon-button" id="info-close" data-way-out>
       <span aria-hidden="true">✕</span>
       <span class="visually-hidden">Close</span>
     </button>

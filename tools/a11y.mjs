@@ -267,6 +267,17 @@ const STATES = [
     },
   },
   {
+    // The whole history, which is the longest page in the product by a wide
+    // margin — thirty releases of prose. A new surface joins this list in the
+    // SAME commit or it ships unmeasured; hub LESSONS §28 is that, and it cost
+    // a release elsewhere.
+    name: 'every release, on the history page',
+    async reach(page) {
+      await page.goto(`${page.__origin}/changes/`, { waitUntil: 'load' });
+      await page.locator('#changes-list .release').first().waitFor();
+    },
+  },
+  {
     name: 'the stale-version strip',
     async reach(page) {
       await startSession(page);

@@ -292,7 +292,27 @@ try {
   for (const owed of ['Installing', 'Chromebook', 'iPad', 'ViewBoard', 'IUPAC', 'Accessibility', 'What changed', 'Diagnostic']) {
     check(info.includes(owed), `the panel covers "${owed}"`);
   }
-  check(info.includes('0.1.0'), 'the patch notes name the release that is running');
+  // THIS SAID "the release that is running" AND ASSERTED `0.1.0`, which is the
+  // OLDEST release in the file. It passed for thirty releases because the panel
+  // rendered every one of them, so the literal was always present — and it went
+  // red the moment the list was capped, which is the first time it was ever
+  // asked the question its own sentence claims. A check's text and its
+  // predicate are two different things and only one of them runs.
+  check(
+    info.includes(RELEASES[0].version),
+    `the patch notes name the release that is running (${RELEASES[0].version})`,
+  );
+  // THE CONTROL, NOT THE PHRASE. Written first as a text match, it went green
+  // against the 1.8.0 release note — which is prose IN the panel describing
+  // this very link. The app's own copy is not evidence about the app; this
+  // repository has been caught by that once before, on the word "molar mass".
+  const historyLink = page.locator('#info-panel a[href="/changes/"]');
+  check(await historyLink.count() > 0, 'and a control leads to the rest of them');
+  const linkBox = await historyLink.first().boundingBox();
+  check(
+    linkBox !== null && linkBox.height >= 44,
+    `which a finger can hit (${linkBox === null ? 'not found' : `${Math.round(linkBox.height)}px`})`,
+  );
   check(info.includes('still missing'), 'and say what is still missing, not only what is new');
 
   /* ---- §7f: the diagnostic ---- */
@@ -545,7 +565,7 @@ try {
     [...document.querySelectorAll('.door')].map((node) => node.id));
   check(
     JSON.stringify(doorOrder) === JSON.stringify(['door-learn', 'door-practice', 'door-assignment']),
-    `the doors are in the order the owner asked for (${doorOrder.join(', ')})`,
+    `learning comes before the errand, on the menu (${doorOrder.join(', ')})`,
   );
 
   {
@@ -925,7 +945,69 @@ try {
     await page.locator('#whatsnew-panel[open]').isVisible(),
     'and it arrives the next time nothing is in front of them',
   );
+  // WAITED FOR AGAIN, and this one was found the hard way: leaving without it
+  // left the notes still owed, so the panel opened over the home screen in a
+  // later section and intercepted a click thirty seconds from here. A modal is
+  // shared state between parts of a walk that do not know about each other.
   await page.locator('#whatsnew-done').click();
+  await readingRecorded(RELEASES[0].version);
+
+  /* ---- no way out is inside the box that scrolls ---- */
+  //
+  // ONE INVARIANT OVER EVERY <dialog> IN THE DOCUMENT, with no app state, so it
+  // covers surfaces this walk has never found a route to and a new one is red
+  // from the day it exists. Hub LESSONS 141: an app shipped 142 releases with
+  // two dialogs carrying this defect untouched, under a check that reported
+  // "every scrolling surface with a way out" — because it found its subjects by
+  // looking for the class the FIX added, so a surface that never got the fix
+  // was not a failing row, it was not a row.
+  //
+  // THE WAY OUT IS DECLARED (`data-way-out`), not inferred from an id ending in
+  // "-close": that convention would silently exempt the two dialogs here that
+  // leave by "Get started" and "Got it", which are the two longest.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  const exits = await page.evaluate(() => {
+    const scrolls = (node) => {
+      const overflow = getComputedStyle(node).overflowY;
+      return overflow === 'auto' || overflow === 'scroll';
+    };
+    return [...document.querySelectorAll('dialog')].map((dialog) => {
+      const ways = [...dialog.querySelectorAll('[data-way-out]')];
+      const scrollers = [...dialog.querySelectorAll('*')].filter(scrolls);
+      return {
+        id: dialog.id,
+        ways: ways.length,
+        buried: ways
+          .filter((way) => scrollers.some((box) => box !== way && box.contains(way)))
+          .map((way) => way.id || (way.textContent ?? '').trim()),
+      };
+    });
+  });
+
+  check(exits.length > 0, `every dialog in the document is measured (${exits.length})`);
+  for (const dialog of exits) {
+    check(dialog.ways > 0, `#${dialog.id} declares a way out`);
+    check(
+      dialog.buried.length === 0,
+      `#${dialog.id} keeps its way out clear of the scrolling body${
+        dialog.buried.length === 0 ? '' : ` (${dialog.buried.join(', ')})`
+      }`,
+    );
+  }
+
+  /* ---- the whole history is a page in the app, not a link off it ---- */
+  //
+  // The dialog and the ⓘ show the newest few. A reader who wants the rest gets
+  // a page that is part of the app and cached with it — not a code host, which
+  // is a different audience's document in a different audience's language.
+  await page.goto(`${server.origin}/changes/`, { waitUntil: 'load' });
+  const everyRelease = await page.locator('#changes-list .release').count();
+  check(
+    everyRelease === RELEASES.length,
+    `the history page carries every release (${everyRelease} of ${RELEASES.length})`,
+  );
+  const historyStamp = (await page.locator('#build-stamp').textContent())?.trim() ?? '';
+  check(historyStamp === RELEASES[0].version, `and says which version it is (${historyStamp})`);
 
   /* ---- the periodic table ---- */
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });

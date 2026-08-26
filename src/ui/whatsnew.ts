@@ -56,6 +56,33 @@ import { RELEASES, type Release } from './releases.ts';
 export const SEEN_VERSION_KEY = 'molebridge.version.seen';
 
 /**
+ * How many releases any surface inside the app shows at once.
+ *
+ * FIVE, AND THEN A DOOR OUT. An app that has shipped thirty releases and shows
+ * all of them has built a wall: the way out of the dialog is under everything
+ * the reader did not ask to read, and the ⓘ panel's other sections are pushed
+ * off the bottom of it. The newest is the one they came for; four more is
+ * enough to see what they missed if they were away a fortnight. Everything
+ * older is a page — `/changes/`, part of the app and cached with it, so it
+ * opens with no connection like the rest of it.
+ */
+export const NOTES_SHOWN = 5;
+
+/** Where the whole history lives. In the app, on the same origin, offline. */
+export const HISTORY_PATH = '/changes/';
+
+/**
+ * The newest `NOTES_SHOWN` of them, and how many were left behind.
+ *
+ * The count is returned rather than a boolean because a reader told there is
+ * "more" learns nothing, and one told there are twenty-four more knows whether
+ * the page is worth opening.
+ */
+export function forAPanel<T>(all: readonly T[]): { readonly notes: readonly T[]; readonly more: number } {
+  return { notes: all.slice(0, NOTES_SHOWN), more: Math.max(0, all.length - NOTES_SHOWN) };
+}
+
+/**
  * Everything the reader has not been shown, newest first.
  *
  * PURE, and separated from the dialog for exactly that reason — the interesting

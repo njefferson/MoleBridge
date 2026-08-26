@@ -347,7 +347,8 @@ export function solve(problem: Problem): Solution {
  * constant: six figures for everything. A student who asked for the moles of
  * 8.135 g of KClO3 was told "0.0663836 mol", which claims six figures of
  * precision from a four-figure mass. **Every revealed intermediate was wrong in
- * the same way**, and it was the owner reading them on a real device who said so.
+ * the same way**, and nothing in the test suite could see it — it took reading
+ * the numbers on a real device, which is the one place they are read.
  *
  * The rules are the ordinary ones and the engine already implements them:
  * multiplication and division take the fewest significant figures among the

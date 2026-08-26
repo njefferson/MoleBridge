@@ -107,10 +107,11 @@ that to the teacher.
   stripped — a comment may describe the classroom, since that is the reason
   several features exist. **CHANGELOG.md IS IN SCOPE, and that was a
   correction.** The gate first shipped exempting the patch notes as a record of
-  what shipped; the owner's instruction settled it the other way, and it is
-  right — the notes are the app talking to whoever is reading it today, and
-  twenty-eight entries about a class and a gradebook teach a homeschooling
-  family the same wrong thing as any other screen. What happened in each release
+  what shipped. The distinction that reasoning missed is between the FACTS of a
+  release, which are fixed, and the VOICE they are told in, which is the app's
+  and belongs to now — the notes are the app talking to whoever is reading it
+  today, and twenty-eight entries about a class and a gradebook teach a family
+  learning at home the same wrong thing as any other screen. What happened in each release
   never changes; only the room the sentence puts around it. `src/ui/releases.ts`
   stays out because it is GENERATED from CHANGELOG.md, so the source is where
   the line holds and scanning a file that may not exist yet is a check that can

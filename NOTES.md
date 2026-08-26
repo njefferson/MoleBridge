@@ -308,8 +308,8 @@ a worked example with a hand-typed molar mass can disagree with what the app
 grades, silently and forever, in the one place a student is being told how it
 works.
 
-**The first version of that was only half true, and the owner asked the question
-that found it.** Eleven drill answers were bare literals — atom counts, balancing
+**The first version of that was only half true, and one question found it.**
+Eleven drill answers were bare literals — atom counts, balancing
 coefficients, mole ratios, limiting reactants, percent yields. And the test that
 looked like it covered them, *every drill's own stated answer passes its own
 checker*, is CIRCULAR for a literal: had the oxygen count been typed as 13, the
@@ -483,8 +483,8 @@ point at `icon.svg`.
 0.4.2 cut a claw notch out of the foot; it read as a slot, and the response was
 to remove it and describe that in the commit message as cutting detail that only
 ever cost something — a tidy sentence over a thing given up on, leaving a mole
-without the one feature a mole is known for. It was caught by the owner, not by
-any gate, and no gate could have caught it.
+without the one feature a mole is known for. It was caught by somebody looking
+at the drawing; no gate caught it, and no gate could have.
 
 **What fixed it was where the claws live, not how they are shaped.** A knockout
 is a mark ON a shape and dissolves as the shape shrinks; a point on the
@@ -1704,14 +1704,14 @@ CHANGELOG.md, with the reasoning written into its header: the changelog is the
 record of what shipped, and editing old entries so a gate goes green is
 rewriting history to look like it never happened.
 
-**The owner reversed it, and the reversal is right.** The notes are not an
-archive. They are the app talking to whoever is reading it TODAY, in the same
-ⓘ panel as everything else, and twenty-eight entries about a class, a board and
-a gradebook teach a family teaching at home the same wrong thing about who this
-is for as any other screen would. What happened in each release has not changed
-by a word; only the room the sentence puts around the reader. The honest
-distinction is between the FACTS of a release, which are fixed, and the voice
-they are told in, which is the app's and belongs to now.
+**That was wrong, and the distinction it missed is between the FACTS of a
+release and the VOICE they are told in.** The facts are fixed. The voice is the
+app's, and it belongs to now. The notes are not an archive: they are the app
+talking to whoever is reading it TODAY, in the same ⓘ panel as everything else,
+and twenty-eight entries about a class, a board and a gradebook teach a family
+learning at home the same wrong thing about who this is for as any other screen
+would. What happened in each release has not changed by a word; only the room
+the sentence puts around the reader.
 
 So CHANGELOG.md is scanned. `src/ui/releases.ts` is still not, and that is
 mechanical rather than principled: it is generated from CHANGELOG.md, so the
@@ -1724,6 +1724,117 @@ changelog — correctly. Rewriting it to describe the room rather than quote the
 sentences is better prose anyway, and it is the general shape: a note about
 language that has to name the language needs a different sentence, not an
 exemption.
+
+## The notes were a wall, and the way out was behind it
+
+Every surface that showed release notes showed all thirty. In the after-an-update
+dialog that put the way out under everything the reader had not asked to read; in
+the ⓘ panel it pushed every section below it — where the chemistry comes from,
+how to report a problem, the accessibility statement — off the bottom.
+
+**Five, then a door.** `NOTES_SHOWN` is one constant and `forAPanel` is one
+function, so the dialog and the ⓘ cannot disagree about it. The count of what is
+NOT shown is returned rather than a boolean, because a reader told there is
+"more" learns nothing and one told there are twenty-four more knows whether the
+page is worth opening.
+
+**`/changes/` is a page in the app, not a link off it.** It is generated from the
+same `RELEASES`, served from the same origin, picked up by the precache walk
+automatically, and therefore works with no connection like everything else. It is
+deliberately not a link to the repository: the reader of these notes is a student
+or whoever is teaching them, and a code host is a different audience's document
+in a different audience's language.
+
+## `.button-small` meant two different things, depending on the element
+
+The link to the history page was styled `button button-small`, which declares
+`min-height: 2.75rem` — 44px, the floor this app holds itself to. It rendered at
+36. **`min-height` is inert on an inline box**, and neither class had ever
+declared a `display`: a `<button>` is inline-BLOCK by default so the floor
+applied, and an `<a>` is inline, so the identical class produced a control eight
+pixels under the floor.
+
+**This is the `.choice` defect a second time, in a second place.** That one was a
+42px row from `min-height` on an inline `<label>`, and the fix then was to give
+that one rule a `display`. The general form was available and was not taken: a
+class that says *this is a button* has to make that true of the ELEMENT, not
+true of buttons. `.button`, `.button-small` and `.button-big` now declare their
+display, so the class means the same thing wherever it is put.
+
+**The accessibility gate found it, at 217x18, before the class was involved at
+all** — the first version was a bare inline anchor inside a sentence. Fixing
+that to a button class is what surfaced the 36px, which is the more interesting
+half: the app already had a control that was under its own floor wherever it was
+used on an anchor, including the link back from the page for whoever is marking.
+
+## Hub LESSONS 141, applied the day it was read
+
+**No way out is inside the box that scrolls**, checked over every `<dialog>` in
+the document with no app state — so it covers surfaces the walk has never found a
+route to, and a new one is red from the day it exists.
+
+The lesson's own finding is what makes the shape matter: an app shipped 142
+releases with two dialogs carrying this defect untouched, under a check that
+reported *every scrolling surface with a way out* — because the check found its
+subjects by looking for the class the FIX added. A surface that never got the fix
+was not a failing row; it was not a row at all.
+
+So the way out is **declared** (`data-way-out`) rather than inferred from an id
+ending in `-close`. That convention would have silently exempted the two longest
+dialogs here, which leave by **Get started** and **Got it**. A naming convention
+is a filter wearing a costume.
+
+Nothing here was failing. That is the point: the invariant costs seven attributes
+and one loop, and the next dialog is measured before anybody thinks to look.
+
+## A check's sentence and a check's predicate are two different things
+
+The walk asserted `info.includes('0.1.0')` under the label *the patch notes name
+the release that is running*. `0.1.0` is the OLDEST release in the file. It
+passed for thirty releases because the panel rendered every one of them, so the
+literal was always present — and it went red the moment the list was capped,
+which is the first time it was ever asked the question its own sentence claims.
+
+**An incidental truth held it up, and the fix that removed the incidental truth
+is what exposed it.** Nothing was looking for this and nothing could have been:
+the check was green, its text was accurate prose, and only its predicate was
+wrong. It now reads `RELEASES[0].version`.
+
+## Two things the walk taught about a modal being shared state
+
+The first attempt at the resumed-session case made the news due BEFORE navigating
+home, which put the panel over the home screen with nothing to click through to —
+the panel working exactly as the welcome does, at the cost of a thirty-second
+timeout.
+
+The second was worse and quieter: the block ended by pressing **Got it** without
+waiting for the version to be recorded, and `dialog.close()` fires its `close`
+event as a queued task. The write lost the race, the notes stayed owed, and the
+panel opened over a section thirty seconds further down the walk and intercepted
+a click there. **A modal is shared state between parts of a walk that do not know
+about each other**, so every dismissal now waits for the record rather than for
+the click.
+
+## The hub's own branches have diverged, and it now costs something
+
+`.doctrine-sync` is deliberately NOT moved by this session. The hub's `main` is
+six commits ahead of the SHA this repository last reconciled to — and the diff
+between them is not a fast-forward. Reading it across the divergence shows the
+hub's `main` **without** the `onAccent` palette role and **without** PALETTES §7b,
+both of which MoleBridge depends on: `--on-accent` is declared in
+`palettes/molebridge.json`, painted on every primary button, and measured by
+`palette-check.mjs` at the pinned SHA. CI pins `HUB_SHA` to that same commit, so
+the gates are currently green against a hub state that `main` does not have.
+
+Adopting would assert this repository had reconciled to a hub that is missing
+rules it relies on. It has not, and the resolution is not a session's to pick.
+**This is the concrete cost of the divergence and it is the owner's call.**
+
+Two hub LESSONS are owed and are not written for the same reason — writing them
+would land on one side of a diverged history. They are recorded here in full
+above: the check-sentence-versus-predicate finding, and §7h's missing half (an
+app that offers an update and never says what changed, which every sibling with
+an update strip has).
 
 ## Repository obligations still open
 

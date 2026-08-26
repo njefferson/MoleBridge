@@ -7,7 +7,7 @@
  * so there is one source and no second copy of the notes to drift.
  */
 
-import { releasesSince, SEEN_VERSION_KEY } from './whatsnew.ts';
+import { forAPanel, HISTORY_PATH, releasesSince, SEEN_VERSION_KEY } from './whatsnew.ts';
 import { el, fill, need } from './dom.ts';
 
 /** The live panel. */
@@ -71,20 +71,41 @@ export function mountWhatsNew(current: string): WhatsNew {
         return false;
       }
 
+      // CAPPED, AND THE COUNT IS STILL TOLD THE TRUTH. Somebody coming back
+      // after a long gap is owed the fact that it moved nine times; they are
+      // not owed nine sets of notes stacked between them and the way out.
+      const { notes, more } = forAPanel(since);
+
       lede.textContent =
         since.length === 1
           ? 'MoleBridge updated itself. This is what is different.'
           : `MoleBridge updated itself ${since.length} times since you last had it open. This is what is different.`;
 
-      fill(
-        body,
-        since.map((release) =>
+      fill(body, [
+        ...notes.map((release) =>
           el('div', { className: 'release' }, [
             el('h3', { text: `${release.version} — ${release.kind.toLowerCase()}` }),
             ...release.paragraphs.map((paragraph) => el('p', { text: paragraph })),
           ]),
         ),
-      );
+        el('p', {
+          className: 'hint',
+          text:
+            more === 0
+              ? 'Every release before this one is on its own page.'
+              : `${more} older ${more === 1 ? 'release is' : 'releases are'} not shown here.`,
+        }),
+        // A LINK IS A CONTROL A FINGER HAS TO HIT, and an inline anchor is 18px
+        // tall. The accessibility gate caught this one at 217x18 against the
+        // 44px floor — these apps are used on a tablet, by touch, and a route
+        // that is only reachable with a mouse pointer is the shape of defect
+        // the hub's own rule about conformance is about.
+        el('a', {
+          className: 'button button-small',
+          text: 'Everything that has changed',
+          attrs: { href: HISTORY_PATH },
+        }),
+      ]);
 
       panel.showModal();
       done.focus();
