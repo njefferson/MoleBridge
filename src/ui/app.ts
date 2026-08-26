@@ -15,6 +15,7 @@ import { need, showOnly } from './dom.ts';
 import { isSavedSession, isWorthResuming, RESUME_KEY, type SavedSession } from '../engine/resume.ts';
 import { mountSetup } from './setup.ts';
 import { mountPractice } from './practice.ts';
+import { warmupFrom } from './warmup.ts';
 import { mountLearn } from './learn.ts';
 import { mountReference } from './reference.ts';
 import { mountCalculator } from './calculator.ts';
@@ -286,6 +287,54 @@ function boot(): void {
     exactly this — "you have a problem open, back to it" — so the way back from
     a reload is the same one as the way back from a lesson, learned once.
   */
+  /*
+    ---- A WARM-UP LINK BEATS EVERYTHING ELSE ----
+
+    Checked before the saved session, deliberately. A teacher has just put a
+    link on the board and twenty-eight students have opened it; if a half
+    finished practice set from Friday were offered instead, every one of them
+    would be looking at the wrong thing while she waits. Opening a warm-up link
+    is an unambiguous instruction and it wins.
+
+    The saved session is not thrown away — it is left in storage, so it is still
+    offered the next time the app is opened without a link.
+  */
+  /*
+    ALSO ON `hashchange`, and that is not a nicety.
+
+    Navigating to a URL that differs only by its fragment is a SAME-DOCUMENT
+    navigation: the page does not reload and `boot` does not run again. So a
+    student who already has MoleBridge open — which after the first visit is
+    most of them, because it is installed to a home screen — and then taps the
+    link their teacher put in Classroom would get nothing at all. Everything
+    would look fine to her, and it would work perfectly for whoever had a fresh
+    tab, which is the worst kind of bug to be told about across a classroom.
+
+    Found by the walk driving the link from a page that was already open.
+  */
+  const startWarmup = (config: SessionConfig): void => {
+    info.adoptOrientation(false);
+    begin(config);
+    // The link is spent. Left in the address bar, a reload would restart the
+    // warm-up from the beginning rather than resuming it, which is the one
+    // thing a student who dropped their Chromebook does not need.
+    history.replaceState(null, '', location.pathname + location.search);
+  };
+
+  window.addEventListener('hashchange', () => {
+    const asked = warmupFrom(location.hash);
+    if (asked !== null) startWarmup(asked);
+  });
+
+  const warmup = warmupFrom(location.hash);
+  if (warmup !== null) {
+    // §7e: the orientation MOVES into the ⓘ so it survives and stays reachable,
+    // and is NOT marked as seen — nobody read it. The welcome still appears the
+    // first time this student opens the app without a link.
+    startWarmup(warmup);
+    return;
+  }
+
   const saved = readSaved();
   if (saved !== null) {
     session = resumeSession(saved.session, systemClock, saved.atMs);

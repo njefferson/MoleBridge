@@ -1440,6 +1440,66 @@ time, the whole check would have aborted. Caught by extracting the loop and
 running all three paths against a fake edge — ready immediately, ready on the
 third try, never ready — before it went anywhere near a promote.
 
+## I1: the warm-up, and the one thing a real teacher said yes to
+
+A chemistry teacher looked at this app and named exactly one use: a Monday
+warm-up. She sees the same students twice a week, so a period spent on practice
+is a period not spent on chemistry. **That is arithmetic, not a failure to see
+the point**, and the honest response was to build the thing she named rather
+than to explain the rest of it harder.
+
+The app was not built for it. Starting a set meant a door, a roster number, an
+assignment key, a set and a count — five decisions before a single problem, with
+twenty-eight teenagers and five minutes.
+
+**A LINK, because it is the shortest possible route.** She builds it on her own
+page, writes it on the board or drops it in Classroom, and a student who opens it
+is looking at the first problem. Everyone gets the same problems, which is what
+makes a warm-up discussable afterwards; a warm-up nobody can talk through is
+homework done early.
+
+**It is practice with a shared seed and NOT a second engine path.** No roster
+number because nothing is collected, no completion code because nothing is handed
+in — and both of those fall out of the mode rather than being special-cased. A
+mode that graded differently would be a second place for the rules to drift.
+
+### The bug that would have been reported across a classroom
+
+The link worked in isolation and failed in the walk. Not a service worker, which
+was the first guess: **a URL differing only by its fragment is a same-document
+navigation.** The page does not reload and `boot` does not run again.
+
+So a student who already had MoleBridge open — which after the first visit is
+most of them, because it installs to a home screen — and then tapped her link
+would get nothing at all. It would have worked perfectly for anyone with a fresh
+tab. **A bug that works for half a room is the worst kind to be told about from
+the front of it.** Fixed by also listening for `hashchange`, and the walk now
+drives the link from a tab that was already open BEFORE it drives it cold,
+because that is the case that broke.
+
+### Two things the gates caught the moment this existed
+
+**The home screen said "Seven short lessons" with eight in the app.** Nothing
+failed: no gate reads prose, and the number was right when it was typed. This is
+exactly the hub's record of `checkOrientationTypes` in 3d-printing-pal — a
+welcome describing three job types after a fourth was added. The fix is not a
+better number, it is prose that does not carry one, and the walk now fails on any
+count of lessons stated on the home screen.
+
+**The `<select>` elements in the builder were 19px tall** against the 44px touch
+floor, unstyled. Worth noting that the APP deliberately uses radios rather than a
+select — a native select on a ViewBoard opens a list nobody at the back can read
+— but that argument is about a screen projected to a room, and a teacher's
+planning page never is. A select is right here; it still has to clear the floor,
+because she might be doing this on a phone.
+
+### What a warm-up does NOT resolve
+
+She was not excited by the practice or the feedback, which is the thesis. This
+builds the five minutes she asked for; it does not answer that. Her other
+suggestion — homeschool communities — is a fit observation worth taking
+seriously rather than a brush-off.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

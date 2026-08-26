@@ -541,6 +541,28 @@ input[type="text"] {
 .readout-not { margin: var(--step) 0 0; padding-left: 1.25rem; color: var(--text-2); }
 .readout-not li { margin-bottom: calc(var(--step) * 0.5); }
 
+/*
+  A native select, which the APP deliberately never uses — its picker is radios,
+  because a select on a ViewBoard opens a list nobody at the back can read. That
+  argument is about a screen projected to a room. The teacher's own planning page
+  is never projected, and a compact control there beats nine radio buttons.
+
+  It still clears the touch floor, because she might be doing this on a phone —
+  and unstyled it was 19px, which the accessibility gate caught the moment the
+  warm-up builder existed.
+*/
+select {
+  min-height: var(--touch);
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: var(--text-1);
+  background: var(--surface-2);
+  border: 1px solid var(--rail);
+  border-radius: var(--radius);
+}
+
 /* ---------------- feedback ---------------- */
 
 .feedback { max-width: var(--measure); margin: 0 auto 2rem; }

@@ -21,6 +21,7 @@ import { clear, el, fill, need } from '../ui/dom.ts';
 import { VERSION } from '../version.ts';
 import { BUILD_SECRET } from '../code/secret.ts';
 import { assignmentKeyIdFor, normaliseAssignmentKey } from '../engine/assignment.ts';
+import { warmupLink } from '../ui/warmup.ts';
 import {
   decodeGradebook,
   errorsOn,
@@ -49,6 +50,43 @@ function boot(): void {
   const results = need('#results');
 
   need<HTMLButtonElement>('#print').addEventListener('click', () => window.print());
+
+  /*
+    ---- the warm-up link ----
+
+    Built HERE, on her page, because this is where she already is when she is
+    planning a lesson — and because a link a teacher has to compose by hand is a
+    link with a typo in it in front of a class.
+
+    `warmupLink` is the same function the app's own parser round-trips against in
+    `warmup.test.ts`, so what this writes on the board is what the app reads.
+  */
+  const code = need<HTMLInputElement>('#warmup-code');
+  const set = need<HTMLSelectElement>('#warmup-set');
+  const howMany = need<HTMLSelectElement>('#warmup-count');
+  const link = need('#warmup-link');
+  const linkStatus = need('#warmup-copy-status');
+
+  const paintLink = (): void => {
+    const typed = code.value.trim();
+    link.textContent =
+      typed === ''
+        ? 'Type a word above and the link appears here.'
+        : warmupLink(location.origin, typed, Number(set.value), Number(howMany.value));
+  };
+  for (const control of [code, set, howMany]) control.addEventListener('input', paintLink);
+  paintLink();
+
+  need<HTMLButtonElement>('#warmup-copy').addEventListener('click', () => {
+    void (async () => {
+      try {
+        await navigator.clipboard.writeText(link.textContent ?? '');
+        linkStatus.textContent = 'Copied.';
+      } catch {
+        linkStatus.textContent = 'Could not copy it — select the link above and copy it by hand.';
+      }
+    })();
+  });
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();

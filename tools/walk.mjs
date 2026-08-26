@@ -29,6 +29,7 @@ import { LESSONS } from '../src/learn/lessons.ts';
 import { REFERENCE } from '../src/learn/reference.ts';
 import { ERROR_CLASSES } from '../src/engine/taxonomy.ts';
 import { ELEMENTS } from '../src/chem/elements.ts';
+import { warmupLink, WARMUP_PROBLEMS } from '../src/ui/warmup.ts';
 
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 const KEY = 'WALK-A';
@@ -592,6 +593,84 @@ try {
   check(/code/i.test(armedText), `and the second tap says what it costs (${armedText.trim()})`);
   await page.locator('#work-leave').click();
   check(await page.locator('#screen-home').isVisible(), 'and the second tap leaves');
+
+  /* ---- no screen states a count the app can contradict ---- */
+  //
+  // THE HOME SCREEN SAID "Seven short lessons" WITH EIGHT IN THE APP. Nothing
+  // failed: no gate reads prose, and the number was right when it was typed.
+  // This is 3d-printing-pal's checkOrientationTypes in the hub's own notes,
+  // happening here — a welcome describing three job types after a fourth was
+  // added. The fix is not a better number, it is prose that does not carry one.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  const homeCopy = (await page.locator('#screen-home').textContent()) ?? '';
+  const counted = /\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+(short\s+)?lessons\b/i.exec(homeCopy);
+  check(
+    counted === null,
+    `the home screen does not state how many lessons there are (${counted?.[0] ?? 'none'})`,
+  );
+
+  /* ---- the warm-up: a link, and five minutes ---- */
+  //
+  // THE ONE USE A REAL TEACHER NAMED. She sees the same students twice a week,
+  // so a period spent on practice is a period not spent on chemistry — but five
+  // minutes at the start of a Monday is real. That has to cost a student ZERO
+  // taps, which is why it is a link rather than a screen.
+  const boardLink = warmupLink(server.origin, 'MONDAY7', 2, WARMUP_PROBLEMS);
+
+  // FROM A PAGE THAT IS ALREADY OPEN, first, because that is the case that
+  // broke. A URL differing only by its fragment is a same-document navigation:
+  // no reload, so boot never runs again. After the first visit — and MoleBridge
+  // installs to a home screen — most students tapping her link are in exactly
+  // this state, and it would have worked for everyone with a fresh tab.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.evaluate((href) => { location.href = href; }, boardLink);
+  await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  check(true, 'the link works from a tab that already had the app open');
+
+  await page.goto(boardLink, { waitUntil: 'load' });
+  check(await page.locator('#screen-work').isVisible(), 'a warm-up link opens straight into a problem');
+  const warmProgress = (await page.locator('#work-progress').textContent()) ?? '';
+  check(
+    warmProgress.includes(String(WARMUP_PROBLEMS)),
+    `and it is ${WARMUP_PROBLEMS} problems, not a lesson (${warmProgress.trim()})`,
+  );
+
+  // NO WELCOME IN FRONT OF A CLASS, and the orientation is not lost either:
+  // §7e wants it reachable, and the app must not record that somebody read a
+  // thing it never showed them.
+  check(
+    !(await page.locator('#welcome-panel[open]').isVisible()),
+    'without a first-run modal in front of twenty-eight students',
+  );
+  await page.locator('#info-open').click();
+  const infoAfterWarmup = (await page.locator('#info-panel').textContent()) ?? '';
+  check(infoAfterWarmup.includes('Installing'), 'and the orientation is still reachable behind the ⓘ');
+  await page.locator('#info-close').click();
+
+  // THE LINK IS SPENT. Left in the address bar, a reload restarts the warm-up
+  // from the beginning rather than resuming it.
+  const barAfter = await page.evaluate(() => location.hash);
+  check(barAfter === '', `the link is cleared from the address bar once used ("${barAfter}")`);
+
+  // EVERYONE GETS THE SAME PROBLEMS, which is what makes it discussable.
+  const firstEquation = (await page.locator('#work-equation').textContent()) ?? '';
+  const other = await browser.newContext();
+  const second = await other.newPage();
+  await second.goto(boardLink, { waitUntil: 'load' });
+  await second.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  const secondEquation = (await second.locator('#work-equation').textContent()) ?? '';
+  check(
+    firstEquation === secondEquation && firstEquation !== '',
+    `two students opening the same link get the same problem (${firstEquation.trim()})`,
+  );
+  await other.close();
+
+  // AND NOTHING IS HANDED IN. A warm-up is practice with a shared seed, so the
+  // engine's own wall means there is no completion code to produce.
+  check(
+    !(await page.locator('#work-reveal').isHidden()),
+    'the answer can still be asked for, because this is practice',
+  );
 
   /* ---- a session survives the tab closing ---- */
   //

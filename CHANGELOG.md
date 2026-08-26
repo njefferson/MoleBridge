@@ -4,6 +4,24 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.4.0 — CAPABILITY
+
+A warm-up link, for five minutes at the start of a lesson.
+
+On the teacher page there is now **Make a warm-up link for the board**. Type a
+word for the day, pick a set and how many problems, and it gives you a link.
+
+Write it on the board or drop it in Classroom. A student who opens it goes
+**straight into the first problem** — no roster number, no assignment key, no
+setting anything up. Everyone who opens the same link gets the same problems, so
+they can be talked through together afterwards.
+
+Nothing is collected and there is no code at the end. It is practice with a
+shared word, which means the answer is still there to ask for.
+
+Also: the home screen said "Seven short lessons" when there are eight. It no
+longer states a number that can go out of date.
+
 ## 1.3.1 — ITERATION
 
 Nothing you will notice. The check that confirms a release reached the address

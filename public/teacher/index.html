@@ -61,6 +61,63 @@
       Nothing here is sent anywhere or kept after you close the tab.
     </p>
 
+    <!--
+      ============ the warm-up link ============
+
+      THE ONE THING A TEACHER ASKED FOR. She sees the same students twice a week,
+      so a period spent on practice is a period not spent on chemistry — but five
+      minutes at the start of a Monday is real. That needs zero setup for the
+      student: she writes this link on the board or drops it in Classroom, and
+      opening it starts the same short set for everybody, which is what makes it
+      discussable afterwards.
+
+      Nothing is collected and there is no code at the end. It is practice with a
+      shared seed, and it is deliberately not a second engine path.
+    -->
+    <details class="card" id="warmup-builder">
+      <summary>Make a warm-up link for the board</summary>
+      <p class="hint">
+        Five minutes at the start of a lesson. Everyone who opens the link gets
+        the same problems, so they can be talked through afterwards. Nothing is
+        handed in and nothing is collected.
+      </p>
+
+      <div class="field">
+        <label for="warmup-code">A word for today</label>
+        <p class="hint" id="warmup-code-hint">
+          Anything — MONDAY7, UNIT3, GASLAWS. It decides which problems everyone
+          gets, so the same word always gives the same set.
+        </p>
+        <input type="text" id="warmup-code" autocomplete="off" autocapitalize="characters"
+               spellcheck="false" aria-describedby="warmup-code-hint" value="MONDAY">
+      </div>
+
+      <div class="field">
+        <label for="warmup-set">Which set</label>
+        <select id="warmup-set">
+          <option value="1">1 — one step at a time</option>
+          <option value="2" selected>2 — the usual</option>
+          <option value="3">3 — limiting reactant</option>
+          <option value="4">4 — percent yield</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="warmup-count">How many problems</label>
+        <select id="warmup-count">
+          <option value="1">1</option>
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+
+      <p class="code" id="warmup-link" tabindex="0" aria-label="The warm-up link"></p>
+      <button type="button" class="button-small" id="warmup-copy">Copy the link</button>
+      <p class="hint" id="warmup-copy-status" role="status"></p>
+    </details>
+
     <form id="decode-form" novalidate>
       <div class="field">
         <label for="teacher-key">Your assignment key</label>
