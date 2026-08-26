@@ -30,6 +30,8 @@ import { REFERENCE } from '../src/learn/reference.ts';
 import { ERROR_CLASSES } from '../src/engine/taxonomy.ts';
 import { ELEMENTS } from '../src/chem/elements.ts';
 import { warmupLink, WARMUP_PROBLEMS } from '../src/ui/warmup.ts';
+import { RELEASES } from '../src/ui/releases.ts';
+import { SEEN_VERSION_KEY } from '../src/ui/whatsnew.ts';
 
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 const KEY = 'WALK-A';
@@ -101,6 +103,13 @@ try {
   check(await page.locator('#welcome-panel[open]').isVisible(), 'the orientation opens over the app on a first run');
   check(await page.locator('#orientation').isVisible(), 'the orientation is in it');
   check(await page.locator('#screen-home').isVisible(), 'and the app is behind it, not replaced by it');
+  // AND NOT ALSO THE RELEASE NOTES. There is no news for somebody with no
+  // before, and two modals stacked on a first run would be the app talking
+  // over itself at the one moment a reader is deciding what it is.
+  check(
+    !(await page.locator('#whatsnew-panel[open]').isVisible()),
+    'and a newcomer is NOT also shown what changed',
+  );
 
   // THE BUTTON IS ON SCREEN. This is the defect that made it a dialog: as a
   // full-height screen the content pushed "Get started" below the fold, so the
@@ -283,7 +292,27 @@ try {
   for (const owed of ['Installing', 'Chromebook', 'iPad', 'ViewBoard', 'IUPAC', 'Accessibility', 'What changed', 'Diagnostic']) {
     check(info.includes(owed), `the panel covers "${owed}"`);
   }
-  check(info.includes('0.1.0'), 'the patch notes name the release that is running');
+  // THIS SAID "the release that is running" AND ASSERTED `0.1.0`, which is the
+  // OLDEST release in the file. It passed for thirty releases because the panel
+  // rendered every one of them, so the literal was always present — and it went
+  // red the moment the list was capped, which is the first time it was ever
+  // asked the question its own sentence claims. A check's text and its
+  // predicate are two different things and only one of them runs.
+  check(
+    info.includes(RELEASES[0].version),
+    `the patch notes name the release that is running (${RELEASES[0].version})`,
+  );
+  // THE CONTROL, NOT THE PHRASE. Written first as a text match, it went green
+  // against the 1.8.0 release note — which is prose IN the panel describing
+  // this very link. The app's own copy is not evidence about the app; this
+  // repository has been caught by that once before, on the word "molar mass".
+  const historyLink = page.locator('#info-panel a[href="/changes/"]');
+  check(await historyLink.count() > 0, 'and a control leads to the rest of them');
+  const linkBox = await historyLink.first().boundingBox();
+  check(
+    linkBox !== null && linkBox.height >= 44,
+    `which a finger can hit (${linkBox === null ? 'not found' : `${Math.round(linkBox.height)}px`})`,
+  );
   check(info.includes('still missing'), 'and say what is still missing, not only what is new');
 
   /* ---- §7f: the diagnostic ---- */
@@ -536,7 +565,7 @@ try {
     [...document.querySelectorAll('.door')].map((node) => node.id));
   check(
     JSON.stringify(doorOrder) === JSON.stringify(['door-learn', 'door-practice', 'door-assignment']),
-    `the doors are in the order the owner asked for (${doorOrder.join(', ')})`,
+    `learning comes before the errand, on the menu (${doorOrder.join(', ')})`,
   );
 
   {
@@ -795,6 +824,342 @@ try {
     !(await page.locator('#resume-strip').isVisible()),
     'a set left on purpose is not offered back after a reload',
   );
+
+  /* ---- what changed, after the app changed under you ---- */
+  //
+  // §7h TOLD THE READER A NEW VERSION WAS WAITING AND THEN SAID NOTHING ABOUT
+  // IT. The strip offers the switch, the page reloads, the app is different,
+  // and the account of what changed sat behind the ⓘ — which is a place you
+  // only open if you already suspect there is news.
+  //
+  // AFTER THE RELOAD RATHER THAN ON THE STRIP, because the page showing the
+  // strip is the OLD build: its release notes were generated before the release
+  // it is offering existed, so anything it said about the waiting version would
+  // be invented.
+  check(RELEASES.length >= 4, `there are enough releases to walk this (${RELEASES.length})`);
+
+  /** Wait until the device has actually recorded that it was shown `version`. */
+  const readingRecorded = (version) =>
+    page.waitForFunction(
+      ([key, want]) => localStorage.getItem(key) === want,
+      [SEEN_VERSION_KEY, version],
+      { timeout: TIMEOUT_MS },
+    );
+
+  // A RETURNING READER WITH NOTHING RECORDED — which is every existing reader
+  // on the release that starts recording it. They are not a newcomer and must
+  // not be treated as one.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.evaluate((key) => {
+    localStorage.setItem('molebridge.orientation.seen', 'yes');
+    localStorage.removeItem(key);
+  }, SEEN_VERSION_KEY);
+  await page.reload({ waitUntil: 'load' });
+
+  check(await page.locator('#whatsnew-panel[open]').isVisible(), 'a returning reader is shown what changed');
+  check(
+    !(await page.locator('#welcome-panel[open]').isVisible()),
+    'and not the first-run welcome on top of it',
+  );
+  const firstNotes = await page.locator('#whatsnew-body .release').count();
+  check(
+    firstNotes === 1,
+    `one release, which is the most it can say without inventing what they last saw (${firstNotes})`,
+  );
+  const headed = (await page.locator('#whatsnew-body .release h3').first().textContent()) ?? '';
+  check(headed.includes(RELEASES[0].version), `and it is the release they are running (${headed.trim()})`);
+
+  // WAITED FOR, NOT READ IMMEDIATELY — the same race that lost one run in three
+  // on the orientation move. `dialog.close()` fires its `close` event as a
+  // queued task rather than synchronously, and the version is recorded there
+  // (so that Escape and the backdrop count too), which means a reload issued
+  // straight after the click can outrun the write.
+  await page.locator('#whatsnew-done').click();
+  await readingRecorded(RELEASES[0].version);
+  await page.reload({ waitUntil: 'load' });
+  check(
+    !(await page.locator('#whatsnew-panel[open]').isVisible()),
+    'and once read it does not come back on the next launch',
+  );
+
+  // BEHIND BY THREE. A Chromebook that sat over a holiday comes back several
+  // releases behind, and being told only about the most recent one is how a
+  // reader concludes the app changes for no reason.
+  const wayBack = RELEASES[3].version;
+  await page.evaluate(([key, version]) => localStorage.setItem(key, version), [SEEN_VERSION_KEY, wayBack]);
+  await page.reload({ waitUntil: 'load' });
+  const catchUp = await page.locator('#whatsnew-body .release').count();
+  check(catchUp === 3, `three releases behind shows all three (${catchUp})`);
+  const listed = await page.locator('#whatsnew-body .release h3').allTextContents();
+  check(
+    !listed.some((line) => line.includes(wayBack)),
+    `and never the release they already had (${wayBack})`,
+  );
+
+  // ESCAPE COUNTS AS READ. A dialog closes on Escape and on the backdrop, and a
+  // reader who dismissed it that way has still been shown it — recording only
+  // on the button would mean the same notes on every launch, which is how
+  // people learn to dismiss a panel without reading it.
+  await page.keyboard.press('Escape');
+  await readingRecorded(RELEASES[0].version);
+  await page.reload({ waitUntil: 'load' });
+  check(
+    !(await page.locator('#whatsnew-panel[open]').isVisible()),
+    'dismissing with Escape counts as having been shown it',
+  );
+
+  // NOT OVER WORK IN PROGRESS, AND NOT LOST EITHER. A student resuming a saved
+  // session has a problem waiting with their working still in it. Release notes
+  // are not what that moment is for — and nothing is recorded, so the offer
+  // stands until they open the app with nothing in front of them.
+  //
+  // THE SET IS STARTED BEFORE THE NEWS IS OWED, in that order deliberately: the
+  // panel is modal, so making it due first puts it over the home screen and
+  // there is nothing to click through to. That is the panel working — it is the
+  // welcome's behaviour exactly — and it is also how this step was written the
+  // first time, which cost a thirty-second timeout to notice.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-assignment').click();
+  await page.locator('#setup-roster').fill(String(ROSTER));
+  await page.locator('#setup-key').fill(KEY);
+  await page.locator(`#setup-tier button[data-tier="${TIER}"]`).click();
+  await page.locator(`#setup-count button[data-count="${COUNT}"]`).click();
+  await page.locator('#setup-start').click();
+  await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  await page.evaluate(([key, version]) => localStorage.setItem(key, version), [SEEN_VERSION_KEY, wayBack]);
+  await page.reload({ waitUntil: 'load' });
+
+  check(await page.locator('#resume-strip').isVisible(), 'a resumed session is offered back');
+  check(
+    !(await page.locator('#whatsnew-panel[open]').isVisible()),
+    'and the release notes do NOT open over it',
+  );
+  const stillOwed = await page.evaluate((key) => localStorage.getItem(key), SEEN_VERSION_KEY);
+  check(stillOwed === wayBack, `and the news is still owed rather than swallowed (${stillOwed})`);
+
+  await page.locator('#resume-go').click();
+  await page.locator('#work-leave').click();
+  await page.locator('#work-leave').click();
+  await page.reload({ waitUntil: 'load' });
+  check(
+    await page.locator('#whatsnew-panel[open]').isVisible(),
+    'and it arrives the next time nothing is in front of them',
+  );
+  // WAITED FOR AGAIN, and this one was found the hard way: leaving without it
+  // left the notes still owed, so the panel opened over the home screen in a
+  // later section and intercepted a click thirty seconds from here. A modal is
+  // shared state between parts of a walk that do not know about each other.
+  await page.locator('#whatsnew-done').click();
+  await readingRecorded(RELEASES[0].version);
+
+  /* ---- no way out is inside the box that scrolls ---- */
+  //
+  // ONE INVARIANT OVER EVERY <dialog> IN THE DOCUMENT, with no app state, so it
+  // covers surfaces this walk has never found a route to and a new one is red
+  // from the day it exists. Hub LESSONS 141: an app shipped 142 releases with
+  // two dialogs carrying this defect untouched, under a check that reported
+  // "every scrolling surface with a way out" — because it found its subjects by
+  // looking for the class the FIX added, so a surface that never got the fix
+  // was not a failing row, it was not a row.
+  //
+  // THE WAY OUT IS DECLARED (`data-way-out`), not inferred from an id ending in
+  // "-close": that convention would silently exempt the two dialogs here that
+  // leave by "Get started" and "Got it", which are the two longest.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  const exits = await page.evaluate(() => {
+    const scrolls = (node) => {
+      const overflow = getComputedStyle(node).overflowY;
+      return overflow === 'auto' || overflow === 'scroll';
+    };
+    return [...document.querySelectorAll('dialog')].map((dialog) => {
+      const ways = [...dialog.querySelectorAll('[data-way-out]')];
+      const scrollers = [...dialog.querySelectorAll('*')].filter(scrolls);
+      return {
+        id: dialog.id,
+        ways: ways.length,
+        buried: ways
+          .filter((way) => scrollers.some((box) => box !== way && box.contains(way)))
+          .map((way) => way.id || (way.textContent ?? '').trim()),
+      };
+    });
+  });
+
+  check(exits.length > 0, `every dialog in the document is measured (${exits.length})`);
+  for (const dialog of exits) {
+    check(dialog.ways > 0, `#${dialog.id} declares a way out`);
+    check(
+      dialog.buried.length === 0,
+      `#${dialog.id} keeps its way out clear of the scrolling body${
+        dialog.buried.length === 0 ? '' : ` (${dialog.buried.join(', ')})`
+      }`,
+    );
+  }
+
+  /* ---- the whole history is a page in the app, not a link off it ---- */
+  //
+  // The dialog and the ⓘ show the newest few. A reader who wants the rest gets
+  // a page that is part of the app and cached with it — not a code host, which
+  // is a different audience's document in a different audience's language.
+  await page.goto(`${server.origin}/changes/`, { waitUntil: 'load' });
+  const everyRelease = await page.locator('#changes-list .release').count();
+  check(
+    everyRelease === RELEASES.length,
+    `the history page carries every release (${everyRelease} of ${RELEASES.length})`,
+  );
+  const historyStamp = (await page.locator('#build-stamp').textContent())?.trim() ?? '';
+  check(historyStamp === RELEASES[0].version, `and says which version it is (${historyStamp})`);
+
+  /* ---- the number goes back in the box, and the chain stays on screen ---- */
+  //
+  // TWO THINGS A STUDENT SHOULD NOT NEED PAPER FOR. The calculator's result had
+  // to be read off a panel and retyped, and the steps already passed took their
+  // numbers off the screen — while a revealed intermediate tells the student to
+  // carry the unrounded value into the next step, which cannot be done against
+  // a number that is gone.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-seed').fill('CARRY-WALK');
+  await page.locator(`#practice-tier button[data-value="2"]`).click();
+  await page.locator(`#practice-count button[data-value="3"]`).click();
+  await page.locator('#practice-start').click();
+  await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+
+  // The calculator hands its answer to the box the student was last in.
+  await page.locator('#work-inputs input').first().click();
+  await page.locator('#calc-open').click();
+  await page.locator('#calc-entry').fill('2*3');
+  const calcResult = (await page.locator('#calc-out').textContent())?.trim() ?? '';
+  check(calcResult === '6', `the calculator works the sum out (${calcResult})`);
+  check(await page.locator('#calc-use').isVisible(), 'and offers to put it in the answer box');
+  await page.locator('#calc-use').click();
+  const landed = await page.locator('#work-inputs input').first().inputValue();
+  check(landed === '6', `which is where it lands (${landed})`);
+  check(!(await page.locator('#calc-panel[open]').isVisible()), 'and the panel gets out of the way');
+
+  // NOT OFFERED WHERE THERE IS NOWHERE TO PUT IT. The calculator opens from
+  // every screen and most of them have no answer to fill in; a control that can
+  // never do anything here is not a control that is temporarily unavailable.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#calc-open').click();
+  check(
+    !(await page.locator('#calc-use').isVisible()),
+    'and it is not offered on a screen with no answer box',
+  );
+  await page.locator('#calc-close').click();
+
+  // Now walk a problem and watch the chain build up in the rail.
+  {
+    await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+    await page.locator('#door-practice').click();
+    await page.locator('#practice-seed').fill('CARRY-WALK');
+    await page.locator(`#practice-tier button[data-value="2"]`).click();
+    await page.locator(`#practice-count button[data-value="3"]`).click();
+    await page.locator('#practice-start').click();
+
+    const problem = generateProblem('CARRY-WALK', 2, 0);
+    const solution = solve(problem);
+    const stages = stagesFor(problem);
+
+    check(
+      (await page.locator('#work-rail .rail-value').count()) === 0,
+      'nothing is carried before the first step is finished',
+    );
+
+    // Two stages is enough: the first produces a value, the second has to be
+    // able to see it.
+    const coefficients = solution.coefficients;
+    const boxes = page.locator('#work-inputs input');
+    for (let at = 0; at < coefficients.length; at += 1) await boxes.nth(at).fill(String(coefficients[at]));
+    await page.locator('#work-submit').click();
+
+    const carriedNow = await page.locator('#work-rail .rail-value').allTextContents();
+    check(carriedNow.length === 1, `the finished step keeps what was put in it (${carriedNow.length})`);
+    const wanted = coefficients.join(', ');
+    check(
+      carriedNow[0]?.trim() === wanted,
+      `and it is what the student typed, not the grader's copy (${carriedNow[0]?.trim()} vs ${wanted})`,
+    );
+
+    // AND IT IS THEIRS, NOT THE EXACT VALUE. A deliberately rounded entry that
+    // is still inside tolerance must come back rounded — showing the exact one
+    // would silently correct them, and would repair rounding-early behind their
+    // back, which is a class this taxonomy names and reports.
+    const second = stages[1];
+    if (second !== undefined && second.kind !== 'CHOICE' && second.kind !== 'COEFFICIENTS') {
+      const exact = correctText(problem, solution, second);
+      const rounded = exact.replace(/^(\d+\.\d{3})\d+/, '$1');
+      await page.locator('#stage-answer').fill(rounded);
+      await page.locator('#work-submit').click();
+      const shown = (await page.locator('#work-rail .rail-value').allTextContents()).at(-1)?.trim() ?? '';
+      const advanced = (await page.locator('#work-rail .rail-value').count()) === 2;
+      check(
+        !advanced || shown === rounded,
+        `an accepted entry is shown as the student wrote it (${shown} vs ${rounded})`,
+      );
+    }
+
+    // ONE-STEP-AT-A-TIME MUST NOT TAKE THE CHAIN AWAY. That setting hides the
+    // rail, which is what the student asked for — and was hiding with it the
+    // numbers the next step needs. Exactly one of the two routes is on screen,
+    // and never neither.
+    await page.evaluate(() => localStorage.setItem('molebridge.focus', 'on'));
+    await page.reload({ waitUntil: 'load' });
+    await page.locator('#resume-go').click();
+    await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+
+    check(
+      !(await page.locator('#work-rail').isVisible()),
+      'one step at a time hides the row of steps, as it is meant to',
+    );
+    const soFar = page.locator('#work-so-far');
+    check(await soFar.isVisible(), 'and What you have so far takes its place');
+    check(
+      !(await page.locator('#work-so-far-list').isVisible()),
+      'folded away, so the setting still puts less on screen',
+    );
+    const summaryBox = await soFar.locator('summary').boundingBox();
+    check(
+      summaryBox !== null && summaryBox.height >= 44,
+      `which a finger can open (${summaryBox === null ? 'not found' : `${Math.round(summaryBox.height)}px`})`,
+    );
+    await soFar.locator('summary').click();
+    const keptValues = await page.locator('#work-so-far-list .so-far-value').allTextContents();
+    check(
+      keptValues.some((text) => text.trim() === wanted),
+      `and it holds what they typed (${keptValues.join(' | ')})`,
+    );
+
+    // BACK OFF AGAIN, so the two are never both hidden and never both shown.
+    await page.evaluate(() => localStorage.setItem('molebridge.focus', 'off'));
+    await page.reload({ waitUntil: 'load' });
+    await page.locator('#resume-go').click();
+    await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+    check(await page.locator('#work-rail').isVisible(), 'with the setting off the row of steps is back');
+    check(
+      !(await page.locator('#work-so-far').isVisible()),
+      'and the folded copy is not also there, which would be the same numbers twice',
+    );
+
+    // AND NONE OF IT LEAVES THE DEVICE. The problem report says in its own words
+    // that it carries no answers and no working.
+    await page.locator('#report-open').click();
+    await page.locator('#report-what input').first().check();
+    // WAITED FOR — the report repaints through a promise, and reading straight
+    // after the click races it. Third time in this file.
+    await page
+      .waitForFunction(
+        () => /what went wrong: [A-Z-]+/.test(document.querySelector('#report-body')?.textContent ?? ''),
+        undefined,
+        { timeout: TIMEOUT_MS },
+      )
+      .catch(() => {});
+    const reportBody = (await page.locator('#report-body').textContent()) ?? '';
+    check(
+      !reportBody.includes(wanted),
+      'and what was typed is NOT in the problem report',
+    );
+    await page.locator('#report-close').click();
+  }
 
   /* ---- the periodic table ---- */
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });

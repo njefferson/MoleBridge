@@ -13,6 +13,7 @@
 import { el, fill, need } from './dom.ts';
 import { VERSION } from '../version.ts';
 import { RELEASES } from './releases.ts';
+import { forAPanel, HISTORY_PATH } from './whatsnew.ts';
 import { buildDiagnostic, factsFrom } from './diagnostic.ts';
 import type { Updates } from './updates.ts';
 import type { Session } from '../engine/steps.ts';
@@ -173,15 +174,36 @@ function buildSections(): HTMLElement[] {
  * cannot show the notes for a release other than the one it is.
  */
 function whatChanged(): HTMLElement {
-  return section(
-    'What changed',
-    RELEASES.map((release) =>
+  // THE NEWEST FEW, THEN A DOOR OUT. This rendered all of them, which by the
+  // thirtieth release meant every section below it — where the chemistry comes
+  // from, how to report a problem, the accessibility statement — sat under a
+  // wall of patch notes nobody opened the panel to read. `/changes/` is part of
+  // the app and cached with it, so the whole history is one tap away and
+  // offline like the rest of it.
+  const { notes, more } = forAPanel(RELEASES);
+  return section('What changed', [
+    ...notes.map((release) =>
       el('div', { className: 'release' }, [
         el('h4', { text: `${release.version} — ${release.kind.toLowerCase()}` }),
         ...release.paragraphs.map((paragraph) => el('p', { text: paragraph })),
       ]),
     ),
-  );
+    el('p', {
+      className: 'hint',
+      text:
+        more === 0
+          ? 'Every release is on its own page.'
+          : `${more} older ${more === 1 ? 'release' : 'releases'}, and these ones again, on one page.`,
+    }),
+    // Styled as a control rather than an inline anchor: 18px of text is under
+    // the 44px a finger needs, which the accessibility gate said in exactly
+    // those terms the first time this shipped as a link inside a sentence.
+    el('a', {
+      className: 'button button-small',
+      text: 'Everything that has changed',
+      attrs: { href: HISTORY_PATH },
+    }),
+  ]);
 }
 
 /**

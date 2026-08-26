@@ -32,6 +32,7 @@
  */
 
 import type { Session } from './steps.ts';
+import { isCarried } from '../ui/carry.ts';
 
 /** The shape written to storage. Versioned, because a saved shape is a format. */
 export interface SavedSession {
@@ -41,6 +42,15 @@ export interface SavedSession {
   readonly atMs: number;
   /** What was in the boxes at the current stage, unsubmitted. */
   readonly entry: readonly string[];
+  /**
+   * What the student typed at the steps of this problem they have already
+   * passed, so a reload does not take the chain away from them.
+   *
+   * Optional, because a session saved by an older build has none and must still
+   * resume — the alternative is a student whose tab restored losing a set for a
+   * field that did not exist when they started it.
+   */
+  readonly carried?: readonly { readonly stage: string; readonly text: string }[];
 }
 
 /** Where it lives. Beside the lessons' own key, not inside it. */
@@ -60,6 +70,10 @@ export function isSavedSession(value: unknown): value is SavedSession {
   if (saved['saved'] !== 1) return false;
   if (typeof saved['atMs'] !== 'number' || !Number.isFinite(saved['atMs'])) return false;
   if (!Array.isArray(saved['entry']) || saved['entry'].some((item) => typeof item !== 'string')) return false;
+  // ABSENT IS VALID, PRESENT IS CHECKED. A build before the rail carried values
+  // saved none, and refusing those sessions would throw away a student's work
+  // to enforce a field they never had a chance to write.
+  if (saved['carried'] !== undefined && !isCarried(saved['carried'])) return false;
 
   const session = saved['session'];
   if (typeof session !== 'object' || session === null) return false;

@@ -247,6 +247,76 @@ const STATES = [
     },
   },
   {
+    // WHAT CHANGED, AFTER THE APP CHANGED UNDER THE READER. A modal of unknown
+    // length — three releases behind is three sets of notes — so it is measured
+    // for the same reason the welcome is: the pinned action bar and the
+    // scrolling body are the fix for a button below the fold, and a state that
+    // only measured the prose would not see it.
+    //
+    // Set up rather than waited for. A first-time visitor never sees this, and
+    // a state nobody can reach is a state nobody measures.
+    name: 'what changed while you were away',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.evaluate(() => {
+        localStorage.setItem('molebridge.orientation.seen', 'yes');
+        localStorage.setItem('molebridge.version.seen', '0.1.0');
+      });
+      await page.reload({ waitUntil: 'load' });
+      await page.locator('#whatsnew-panel[open]').waitFor();
+    },
+  },
+  {
+    // The whole history, which is the longest page in the product by a wide
+    // margin — thirty releases of prose. A new surface joins this list in the
+    // SAME commit or it ships unmeasured; hub LESSONS §28 is that, and it cost
+    // a release elsewhere.
+    name: 'every release, on the history page',
+    async reach(page) {
+      await page.goto(`${page.__origin}/changes/`, { waitUntil: 'load' });
+      await page.locator('#changes-list .release').first().waitFor();
+    },
+  },
+  {
+    // WHAT YOU HAVE SO FAR, OPEN, with one-step-at-a-time on and the text at its
+    // largest — the exact combination the control exists for, and the one where
+    // a list of numbers is most likely to overflow something. An open
+    // disclosure is a different rendered thing from a folded one and would ship
+    // unmeasured if only the folded state were walked.
+    name: 'what you have so far, open, one step at a time',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.evaluate(() => {
+        localStorage.setItem('molebridge.text', 'largest');
+        localStorage.setItem('molebridge.focus', 'on');
+      });
+      await startSession(page);
+      // ONE STEP ACTUALLY FINISHED. The first attempt filled every coefficient
+      // box with 1, which is wrong, so the stage never advanced and there was
+      // nothing to have so far — a state that cannot be reached is a FAILURE
+      // here rather than a skip, which is how it said so.
+      await fillCoefficients(page, solve(generateProblem(KEY, TIER, 0)));
+      await page.locator('#work-so-far:not([hidden])').waitFor();
+      await page.locator('#work-so-far summary').click();
+      await page.locator('#work-so-far-list li').first().waitFor();
+    },
+  },
+  {
+    // The calculator ON THE WORK SCREEN, with a result and the control that
+    // hands it back — which is a different state from the refusal one below it:
+    // that opens from a menu, where there is no answer box and the button is
+    // hidden. A new control that only appears in one context ships unmeasured
+    // if the measured context is the other one.
+    name: 'the calculator, offering its answer back',
+    async reach(page) {
+      await startSession(page);
+      await page.locator('#work-inputs input').first().click();
+      await page.locator('#calc-open').click();
+      await page.locator('#calc-entry').fill('180.156/2');
+      await page.locator('#calc-use:not([hidden])').waitFor();
+    },
+  },
+  {
     name: 'the stale-version strip',
     async reach(page) {
       await startSession(page);

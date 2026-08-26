@@ -4,15 +4,125 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.9.0 — CAPABILITY
+
+Nothing you work out gets taken away from you.
+
+**The calculator hands its answer back.** Work out a number and there is now a
+button that puts it straight into the box you were typing in — with the unit you
+had already started, so you are not adding that by hand either. Before this you
+read the number off the panel, closed it, and typed it again from memory.
+
+That was not just tedious. MoleBridge tells you which *mistake* produced your
+number, so a slipped digit while copying got reported back to you as a
+misconception you never had.
+
+**The steps you have finished now show what you put in them.** The row of steps
+across the top of a problem used to show only which ones were done. Each finished
+one now carries your number, so when step 5 needs the moles you worked out at
+step 3, they are on the screen in front of you rather than in your memory or on a
+scrap of paper.
+
+**It shows what you typed, not a tidied-up version.** If you rounded and it was
+close enough to be accepted, you get your rounded number back. That is
+deliberate: rounding early is one of the mistakes MoleBridge is built to name,
+and silently handing you a better number than the one you wrote would repair that
+mistake behind your back and never tell you that you had made it.
+
+**Still yours alone.** What you type stays on this device. It is not in the code
+you hand in, it is not in a problem report, and there is nowhere for it to go —
+the code has only ever carried counts.
+
+**And it works with *Just the step I am on* turned on.** That setting hides the
+row of steps, which is the point of it — but it was hiding your numbers with
+them, and the next step needs those. There is now **What you have so far** in
+their place: folded away so the screen still stays quiet, and holding everything
+you have worked out when you open it. Less on the screen, not less within reach.
+
+## 1.8.0 — ITERATION
+
+The notes stop after the newest few, and the rest have a page of their own.
+
+**What was wrong.** Every surface that showed release notes showed all of them.
+Thirty releases, in a panel — so the way out sat under everything you had not
+asked to read, and in the ⓘ everything below it (where the chemistry comes from,
+how to report a problem, the accessibility statement) was pushed off the bottom.
+
+**Now:** the newest five, and then a link to **everything that has changed** —
+a page inside MoleBridge that carries all of them. It is cached with the app, so
+it opens with no connection like everything else here, and it is not a link off
+to a website for programmers.
+
+If MoleBridge updated more than five times since you last had it open, it still
+says how many — being told there are nine and shown five is honest; being shown
+nine is a wall.
+
+**Also: every dialog is now checked for the way out.** A panel whose only exit
+is under everything it just showed you charges a scroll through the thing you
+opened it to get past. Nothing here had that defect; there was nothing stopping
+the next one from having it, and now there is.
+
+**And some buttons were smaller than they looked.** Any button that is really a
+link — the one back to MoleBridge from a page, and the new one to the history —
+was 36 pixels tall instead of 44, because of how a browser lays out a link
+compared to a button. On a touchscreen those eight pixels are the difference
+between hitting it and hitting it on the second try. They are all 44 now.
+
+**What is still missing.** The history page lists releases, and nothing on it
+lets you search or jump to one. With thirty entries that is a scroll.
+
+## 1.7.0 — CAPABILITY
+
+MoleBridge tells you what changed, instead of just changing.
+
+When a new version was ready you were offered it, you pressed **Use it now**, and
+the app came back different with no account of what was different. The notes
+existed — behind the ⓘ, under **What changed** — which is a place you only open
+if you already suspect there is news.
+
+**Now they come to you.** The first time you open MoleBridge after it updates
+itself, it shows you what changed. If you were away a while and it updated more
+than once, you get all of them rather than only the most recent, because being
+told about one of four changes is how an app comes to seem like it changes for
+no reason. Press **Got it** and it does not come back.
+
+**It waits for a moment when nothing is in front of you.** If you have a problem
+open and MoleBridge is offering it back, or you followed a warm-up link and are
+already looking at the first question, that is not the moment for release notes.
+They are not lost — you get them next time you open the app with nothing waiting.
+
+**Somebody opening MoleBridge for the first time is not shown any of this.**
+There is no news for somebody with no before; they get the welcome instead.
+
+**Also: the welcome was wrong about your work.** It said nothing was kept after
+you closed the tab and that stopping halfway meant starting again. That stopped
+being true in 1.2.0, when an unfinished set started surviving the tab closing,
+and nobody went back to correct the sentence. It now says what is actually
+kept — the problem you are in the middle of, your place in the lessons, and how
+you have set it up to read — and that every bit of it stays on this device.
+
+**And these notes have been rewritten, all of them, back to the first release.**
+They were written for one group of students in one room, and they named things a
+family teaching at home does not have: a board at the front, one particular
+piece of software for handing work in, thirty people working the same problems
+at once. Nothing about what happened in each release has changed. Only the room
+the sentences put around you.
+
+**What is still missing.** The notes tell you what changed since you last had
+MoleBridge open on **this device**. Open it somewhere new and it has no way to
+know what you have already read, so it shows you the release you are on and
+nothing further back.
+
 ## 1.6.0 — ITERATION
 
-MoleBridge no longer assumes you are in a classroom.
+MoleBridge no longer assumes you are learning in one particular place.
 
-It was written for one, and the words came out that way: your teacher has put
-these on the board, type it into the Canvas assignment, decode a class. All of
-that was true in the room it was built for and told everybody else — anyone
-learning at home, a group of four, a tutor, an adult going back over this — that
-they were reading over somebody's shoulder.
+It was built for one high school chemistry group and the words came out that
+way. It named a room with a whiteboard at the front, one piece of software for
+handing work in, and thirty people doing the same problems at once. All of that
+was true where it was built and told everybody else — a family teaching at home,
+a group of four, a tutor, an adult going back over this — that they were reading
+over somebody's shoulder.
 
 **Nothing about how it works has changed.** The same problems, the same codes,
 the same page for whoever is marking. Only the sentences: whoever set the work,
@@ -49,10 +159,10 @@ It will not tell you to try again or to keep going.
 
 A warm-up link, for five minutes at the start of a lesson.
 
-On the teacher page there is now **Make a warm-up link for the board**. Type a
-word for the day, pick a set and how many problems, and it gives you a link.
+On the page for whoever sets the work there is now **Make a warm-up link**. Type
+a word for the day, pick a set and how many problems, and it gives you a link.
 
-Write it on the board or drop it in Classroom. A student who opens it goes
+Hand it over however you already hand things over. A student who opens it goes
 **straight into the first problem** — no roster number, no assignment key, no
 setting anything up. Everyone who opens the same link gets the same problems, so
 they can be talked through together afterwards.
@@ -65,8 +175,8 @@ longer states a number that can go out of date.
 
 ## 1.3.1 — ITERATION
 
-Nothing you will notice. The check that confirms a release reached the address
-your class opens was asking the wrong question, and said 1.3.0 had not arrived
+Nothing you will notice. The check that confirms a release actually reached the
+address you open was asking the wrong question, and said 1.3.0 had not arrived
 when it had.
 
 ## 1.3.0 — CAPABILITY
@@ -90,7 +200,7 @@ already has. It reads the question and the equation. It never reads the answer.
 Press it again to stop.
 
 **None of this goes anywhere.** Not into the code you hand in, not into a
-problem report, not to your teacher. How you read is nobody's business but
+problem report, not to whoever marks it. How you read is nobody's business but
 yours, and the app is built so it cannot become anybody else's.
 
 There is also a short **Things worth knowing** section: there is no time limit,
@@ -143,7 +253,7 @@ of your working, anything about your device.
 
 **It is the code itself, read back.** Not a description of it written by whoever
 built the app — the app decodes the string you are about to hand in, using the
-same operation your teacher's page uses, and shows you what comes out. What you
+same operation the marking page uses, and shows you what comes out. What you
 read is what they will read.
 
 The progress code under "Moving to another device" says what it carries too, and
@@ -156,8 +266,8 @@ Version 1. Everything MoleBridge was for is in it.
 **Learn** takes you from reading a formula to percent yield in eight lessons.
 Nothing is locked; open any of them in any order, and your place is kept on the
 device. **Practice** gives you problems whenever you want them, shows the answer
-if you ask, and tells you what went wrong when you get one wrong. **Class
-assignment** is the graded route, with a code for Canvas at the end.
+if you ask, and tells you what went wrong when you get one wrong. **Assignment**
+is the graded route, with a code to hand in at the end.
 
 A **reference** with a page for every mistake MoleBridge can recognise, opening
 straight from the wrong answer that produced it. A **calculator** that does
@@ -190,8 +300,8 @@ the next step is rounding early — which MoleBridge marks — so the reveal giv
 you both: *"Carry 0.0663836 mol into the next step and round once, at the end."*
 That is the rule anyway, and this is the place to say it.
 
-**Learn is the first thing on the menu now**, then Practice, then your class
-assignment.
+**Learn is the first thing on the menu now**, then Practice, then the assignment
+you were set.
 
 ## 0.13.0 — CAPABILITY
 
@@ -199,7 +309,7 @@ You can leave a set now, and you can read what you got wrong.
 
 **There is a way out.** Once a set started there was no exit — you finished all
 twelve steps or you closed the tab. **Leave this set** now sits next to "Problem
-1 of 3". In practice it goes straight back. In a class assignment it asks twice,
+1 of 3". In practice it goes straight back. In an assignment it asks twice,
 because leaving one means no code.
 
 **The explanation is where you can see it.** When a step was wrong, the sentence
@@ -314,7 +424,8 @@ Telling someone it is broken, in two taps.
 
 There is a **⚑ button in the top bar on every screen**. Press it, pick whichever
 line is closest to what went wrong, and it writes a short report you can copy and
-paste into a message to your teacher. You do not have to describe anything.
+paste into a message to whoever set the work. You do not have to describe
+anything.
 
 **There is nowhere in it to type**, and that is on purpose. The report carries
 which version you are running, what the device is, whether the app is up to date,
@@ -372,9 +483,9 @@ to somebody else. Nothing is handed in and nothing is recorded.
 It shows you that step only, so you can work backwards to it and find out where
 it comes from, and asking about one step does not give away the rest.
 
-**Class assignment** is unchanged: the problems your teacher set, answers stay
-hidden, and you finish with the code to type into Canvas. **It is the only door
-that produces a code.** Practice cannot make one — not "does not", cannot.
+**Assignment** is unchanged: the problems you were set, answers stay hidden, and
+you finish with the code to hand in. **It is the only door that produces a
+code.** Practice cannot make one — not "does not", cannot.
 
 Lessons are coming and will join this menu. They are not here yet, and there is
 no door for them until there is something behind it.
@@ -538,8 +649,8 @@ faint on the light background.
 
 What is kept, and where: your choice is stored in this browser on this device
 only. It is not sent anywhere, it is not part of your completion code, and it
-does not follow you to another computer — so a school machine you share will
-show whatever the last person picked.
+does not follow you to another computer — so a machine you share will show
+whatever the last person picked.
 
 **What is still missing.** The app's icon is still the old blue one and is being
 redrawn; the colour you pick changes the app, not the icon on your home screen
@@ -548,14 +659,13 @@ finished, and no running total across sessions.
 
 ## 0.2.0 — CAPABILITY
 
-Your teacher can decode a whole class at once now. Nothing has changed about how
-you work a problem or about the code you hand in.
+Whoever marks your work can now decode a whole batch of codes at once. Nothing
+has changed about how you work a problem or about the code you hand in.
 
-What that means for you: the code you type into Canvas is read alongside
-everybody else's, and what your teacher sees is which steps the class found
-hard. It carries your roster number, never your name — MoleBridge has never had
-anywhere to put one, and the page your teacher pastes into throws away
-everything except the codes.
+What that means for you: the code you hand in is read alongside everybody
+else's, and what they see is which steps people found hard. It carries your
+roster number, never your name — MoleBridge has never had anywhere to put one,
+and the page they paste into throws away everything except the codes.
 
 **What is still missing.** The same things as before: no way to review a problem
 you have already finished, and no running total across sessions. The code still
@@ -572,10 +682,10 @@ MoleBridge tells you which mistake produces that exact number rather than just
 marking it wrong, and where the mistake is an algebra one it shows you three
 lines of the algebra using your own numbers.
 
-At the end you get a completion code to type into Canvas.
+At the end you get a completion code to hand in.
 
 Five kinds of problem: mass to mass, mass to particles, mass to volume at STP,
-limiting reactant, and percent yield. Your teacher's assignment key decides
+limiting reactant, and percent yield. The assignment key you were given decides
 which problems you get, and everyone with the same key gets the same ones.
 
 Works with no connection once it has loaded, and can be installed to your home
@@ -584,5 +694,5 @@ screen or shelf.
 **What is still missing, so you know rather than wonder.** There is no way to
 review a problem you have already finished. There is no running total across
 sessions — close the tab and the count starts again, because nothing is stored
-anywhere. And the code carries counts only: it cannot show your teacher which
-particular problem went wrong.
+anywhere. And the code carries counts only: it cannot show whoever marks it
+which particular problem went wrong.

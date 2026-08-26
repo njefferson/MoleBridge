@@ -398,6 +398,34 @@
 
     <ol class="rail" id="work-rail" aria-label="Steps in this problem"></ol>
 
+    <!--
+      ============ what you have so far ============
+
+      ONE-STEP-AT-A-TIME PUTS LESS ON THE SCREEN; IT MUST NOT PUT LESS WITHIN
+      REACH. That setting hides the rail, which is the right default for the
+      student who turned it on — and it was also hiding the numbers they worked
+      out at the earlier steps, which stoichiometry requires them to carry
+      forward. An accommodation that removes the thing the task needs has
+      stopped being an accommodation.
+
+      So the values stay reachable, folded away rather than deleted: the student
+      decides when to look, the app never decides for them.
+
+      SHOWN ONLY WHERE THE RAIL IS NOT. With the rail on screen this would be
+      the same numbers twice. The swap is done in CSS off the same
+      `data-focus` attribute the rail's own rule reads, so there is one place
+      that knows which of the two is showing and no way for both to be hidden
+      at once.
+
+      It stays open once opened, because it is static markup that `render()`
+      only fills — a student who unfolded it at step 3 does not have to unfold
+      it again at step 4.
+    -->
+    <details class="so-far" id="work-so-far" hidden>
+      <summary>What you have so far</summary>
+      <ol class="so-far-list" id="work-so-far-list"></ol>
+    </details>
+
     <form class="card stage-card" id="work-form" novalidate>
       <div class="stage-head">
         <h2 class="stage-prompt" id="work-stage-prompt"></h2>
@@ -541,17 +569,61 @@
         <li>At the end you get a short code. Type it in wherever you hand your work in.</li>
       </ol>
 
-      <h2>Nothing is stored and nothing is sent</h2>
+      <h2>Nothing is sent, and what is kept stays here</h2>
       <p>
-        MoleBridge has no account and no server. Nothing you type leaves the
-        device, and nothing is kept after you close the tab — so if you stop
-        halfway, you start again. That is the trade for it working with no
-        connection and holding nothing about you.
+        MoleBridge has no account and no server. Nothing you type ever leaves
+        the device. What it keeps, it keeps on this device only: the problem you
+        are in the middle of, so closing the tab does not cost you your work;
+        your place in the lessons; and how you have set it up to read. None of
+        that is sent anywhere and none of it is in the code you hand in.
       </p>
     </div>
   </div>
   <div class="welcome-actions">
-    <button type="button" class="button button-big" id="welcome-begin">Get started</button>
+    <button type="button" class="button button-big" id="welcome-begin" data-way-out>Get started</button>
+  </div>
+</dialog>
+
+<!--
+  ============ what changed while you were away ============
+
+  `data-way-out` MARKS THE EXIT OF EVERY DIALOG IN THIS FILE, and the walk holds
+  one invariant over all of them: no way out is inside the box that scrolls. A
+  dialog whose only exit is under everything it just showed you charges a scroll
+  through the thing you opened it to get past.
+
+  DECLARED, NOT INFERRED. The obvious version looks for a control whose id ends
+  in "-close", which silently exempts every dialog leaving by "Get started" or
+  "Got it" — a naming convention is a filter wearing a costume, and a check that
+  only sees the surfaces already built to a pattern can never go red on one
+  nobody has looked at.
+
+  §7h TOLD THE READER A NEW VERSION WAS WAITING AND THEN SAID NOTHING ABOUT IT.
+  The strip offers the switch, the page reloads, and the app is different with
+  no account of what changed — the notes existed, behind the ⓘ, which is a place
+  you only open if you already suspect there is news.
+
+  AFTER THE RELOAD RATHER THAN ON THE STRIP, and that is forced rather than
+  chosen: the page showing the strip is the OLD build, whose release notes were
+  generated before the release it is offering existed. It could not describe the
+  waiting version without inventing it. `whatsnew.ts` has the argument.
+
+  THE WELCOME'S SHAPE, REUSED DELIBERATELY. `welcome-dialog` scrolls the body
+  inside the panel and pins the action bar to the bottom of it, which is the fix
+  for the defect that had "Get started" below the fold on a real device. A
+  second panel of unknown length is the same problem exactly.
+-->
+<dialog class="info welcome-dialog" id="whatsnew-panel" aria-labelledby="whatsnew-title">
+  <div class="info-head">
+    <h2 id="whatsnew-title">What changed</h2>
+  </div>
+  <div class="info-body">
+    <p class="lede" id="whatsnew-lede"></p>
+    <div id="whatsnew-body"></div>
+    <p class="hint">These notes stay behind the ⓘ, under What changed, whenever you want them again.</p>
+  </div>
+  <div class="welcome-actions">
+    <button type="button" class="button button-big" id="whatsnew-done" data-way-out>Got it</button>
   </div>
 </dialog>
 
@@ -585,7 +657,7 @@
 <dialog class="info info-wide" id="table-panel" aria-labelledby="table-title">
   <div class="info-head">
     <h2 id="table-title">Periodic table</h2>
-    <button type="button" class="icon-button" id="table-close">
+    <button type="button" class="icon-button" id="table-close" data-way-out>
       <span aria-hidden="true">✕</span>
       <span class="visually-hidden">Close</span>
     </button>
@@ -617,7 +689,7 @@
 <dialog class="info" id="calc-panel" aria-labelledby="calc-title">
   <div class="info-head">
     <h2 id="calc-title">Calculator</h2>
-    <button type="button" class="icon-button" id="calc-close">
+    <button type="button" class="icon-button" id="calc-close" data-way-out>
       <span aria-hidden="true">✕</span>
       <span class="visually-hidden">Close</span>
     </button>
@@ -629,6 +701,20 @@
     <input type="text" id="calc-entry" inputmode="text" autocomplete="off" spellcheck="false">
     <p class="calc-out" id="calc-out" role="status"></p>
     <div class="calc-keys" id="calc-keys"></div>
+    <!--
+      THE NUMBER GOES BACK IN THE BOX. Reading a nine-figure result off a panel,
+      closing it, and typing it again is a transcription — and a slipped digit
+      here is not a neutral cost: this app attributes a wrong number to a
+      conceptual failure, so a mistyped one gets attributed to a misconception
+      the student did not have.
+
+      Hidden unless there is a box to put it in and a result to put there.
+      Writing OUT is not the same direction as reading IN: the calculator still
+      cannot see the problem, still refuses a formula, and still knows nothing
+      about the stage. The student did the arithmetic; this only saves them
+      copying it.
+    -->
+    <button type="button" class="button" id="calc-use" hidden>Put this in the answer box</button>
     <p class="hint">
       This does numbers only. It will not work out a molar mass or convert a
       unit for you — those are the parts you are practising, and MoleBridge can
@@ -652,7 +738,7 @@
 <dialog class="info" id="reference-panel" aria-labelledby="reference-title">
   <div class="info-head">
     <h2 id="reference-title">What can go wrong</h2>
-    <button type="button" class="icon-button" id="reference-close">
+    <button type="button" class="icon-button" id="reference-close" data-way-out>
       <span aria-hidden="true">✕</span>
       <span class="visually-hidden">Close</span>
     </button>
@@ -667,7 +753,7 @@
 <dialog class="info" id="report-panel" aria-labelledby="report-title">
   <div class="info-head">
     <h2 id="report-title">Report a problem</h2>
-    <button type="button" class="icon-button" id="report-close">
+    <button type="button" class="icon-button" id="report-close" data-way-out>
       <span aria-hidden="true">✕</span>
       <span class="visually-hidden">Close</span>
     </button>
@@ -707,7 +793,7 @@
 <dialog class="info" id="info-panel" aria-labelledby="info-title">
   <div class="info-head">
     <h2 id="info-title">About MoleBridge</h2>
-    <button type="button" class="icon-button" id="info-close">
+    <button type="button" class="icon-button" id="info-close" data-way-out>
       <span aria-hidden="true">✕</span>
       <span class="visually-hidden">Close</span>
     </button>

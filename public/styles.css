@@ -390,6 +390,57 @@ li { margin: 0.3rem 0; }
   font-weight: 600;
 }
 .rail-tick { font-weight: 700; }
+/*
+  WHAT THEY PUT IN THE STEP, beside its name. The chain is the whole of
+  stoichiometry: the molar mass feeds the moles and the moles feed the ratio,
+  and the app used to ask for each one and then take it off the screen.
+
+  `--text-1` rather than the pill's muted `--text-3`: this is a number the
+  student is meant to READ and carry into the box in front of them, not a label
+  saying which step they are on. Tabular figures so a column of digits does not
+  wobble, and it wraps rather than truncating — a truncated intermediate is
+  worse than none, because it looks like a number you could use.
+*/
+/*
+  WHAT YOU HAVE SO FAR — the same numbers as the rail, for the student who has
+  turned the rail off. Exactly one of the two is on screen at any time, decided
+  here rather than in script, off the attribute `theme.js` writes before the
+  first paint.
+
+  `hidden` in the markup and un-hidden by JS when there is something to show, so
+  it never appears as an empty promise at the first step; this rule then decides
+  whether it may show at all. Both conditions have to hold, which is why the
+  attribute selector uses `display` rather than removing the element.
+*/
+.so-far { display: none; }
+:root[data-focus="on"] .so-far:not([hidden]) { display: block; margin: 0 0 1.25rem; }
+.so-far > summary {
+  /* A summary is a control a finger has to hit, and `min-height` on the default
+     `display: list-item` is honoured — but the padding is what makes the whole
+     row a target rather than just the words. */
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0.2rem;
+  font-weight: 600;
+  color: var(--text-1);
+  cursor: pointer;
+}
+.so-far-list {
+  margin: 0.25rem 0 0;
+  padding: 0 0 0 1.25rem;
+  color: var(--text-1);
+}
+.so-far-list li { margin: 0 0 0.35rem; }
+.so-far-name { color: var(--text-2); }
+.so-far-value { font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.rail-value {
+  color: var(--text-1);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
 
 /* ---------------- entering an answer ---------------- */
 
@@ -446,7 +497,21 @@ input[type="text"] {
 }
 .choice-on { background: var(--accent-soft); font-weight: 650; box-shadow: inset 0 0 0 2px var(--rail); }
 
+/*
+  DISPLAY IS PART OF WHAT THESE CLASSES PROMISE, and leaving it out made them
+  mean two different things. `min-height` is inert on an inline box. A <button>
+  is inline-BLOCK by default so the floor applied; an <a> is inline, so the same
+  class on an anchor produced a 36px control against a 44px floor — the class
+  said 2.75rem and the anchor was having none of it.
+
+  This is the `.choice` defect a second time, in a second place: that one was a
+  42px row from `min-height` on an inline <label>. Setting display here is what
+  makes "this is a button" true of the element rather than true of buttons.
+*/
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: var(--touch);
   padding: 0.7rem 1.3rem;
   font: inherit;
@@ -458,7 +523,7 @@ input[type="text"] {
   cursor: pointer;
 }
 .button:hover { filter: brightness(1.06); }
-.button-big { width: 100%; font-size: 1.1875rem; min-height: 3.5rem; }
+.button-big { display: flex; width: 100%; font-size: 1.1875rem; min-height: 3.5rem; }
 /*
   A COMPLETE BUTTON, not a size modifier — and it was a size modifier for
   fifteen releases. Every `class="button-small"` in the app carries that class
@@ -476,9 +541,11 @@ input[type="text"] {
   they are painted as one rather than given the accent fill of the primary.
 */
 .button-small {
-  /* 2.75rem, not 2.5. A 40px control is under the 44px floor a finger on a
-     board at the front of a room needs, and "small" is about how loud it looks
-     rather than how hard it is to hit. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 2.75rem, not 2.5. A 40px control is under the 44px floor a finger needs,
+     and "small" is about how loud it looks rather than how hard it is to hit. */
   min-height: 2.75rem;
   padding: 0.5rem 0.9rem;
   font: inherit;

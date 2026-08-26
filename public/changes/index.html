@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<!-- Written by theme.js from the stylesheet's own --page, so it is right in
+     whichever mode is showing rather than in the one it was typed for. -->
+<meta name="theme-color" content="#1a1a1a">
+<title>MoleBridge — everything that has changed</title>
+<meta name="description" content="Every MoleBridge release, newest first, in the words a reader gets rather than a developer's log.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/styles.css">
+<!--
+  BLOCKING, AFTER THE STYLESHEET, AND NOT A MODULE — the same three properties
+  as every other page here. It sets the theme before the first paint, a module
+  would be deferred until after it, and an inline script would cost the
+  Content-Security-Policy its `unsafe-inline`-free form.
+-->
+<script src="/theme.js"></script>
+</head>
+<body class="teacher">
+
+<a class="skip" href="#main">Skip to the releases</a>
+
+<header class="chrome">
+  <div class="chrome-left">
+    <span class="brand">MoleBridge</span>
+    <span class="stamp" id="build-stamp" title="The version you are running">…</span>
+  </div>
+  <a class="button button-small button-quiet" href="/">Back to MoleBridge</a>
+</header>
+
+<main id="main">
+  <!--
+    A PAGE, NOT A LONGER PANEL. The app shows the newest few and stops, because
+    a panel a reader has to scroll past thirty releases to leave is a panel that
+    punishes them for opening it. Everything else lives here — the same notes,
+    from the same CHANGELOG.md, on a page that is part of the app and is cached
+    with it, so it opens with no connection like everything else does.
+
+    NOT A LINK OFF TO A CODE HOST. The reader of these notes is a student or
+    whoever is teaching them, and a repository page is a different audience's
+    document in a different audience's language.
+  -->
+  <section class="screen">
+    <h1>Everything that has changed</h1>
+    <p class="lede">
+      Every release of MoleBridge, newest first, written for whoever is using it.
+      The app shows you the most recent few when it updates itself; this is all
+      of them.
+    </p>
+    <div id="changes-list"></div>
+  </section>
+</main>
+
+<noscript>
+  <div class="screen">
+    <h1>This page needs JavaScript</h1>
+    <p>
+      The release notes are assembled on your own device — there is no server
+      here to do it instead, which is why nothing about you leaves the machine.
+    </p>
+  </div>
+</noscript>
+
+<script type="module" src="/app/changes/main.js"></script>
+</body>
+</html>

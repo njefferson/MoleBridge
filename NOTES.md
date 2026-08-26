@@ -308,8 +308,8 @@ a worked example with a hand-typed molar mass can disagree with what the app
 grades, silently and forever, in the one place a student is being told how it
 works.
 
-**The first version of that was only half true, and the owner asked the question
-that found it.** Eleven drill answers were bare literals — atom counts, balancing
+**The first version of that was only half true, and one question found it.**
+Eleven drill answers were bare literals — atom counts, balancing
 coefficients, mole ratios, limiting reactants, percent yields. And the test that
 looked like it covered them, *every drill's own stated answer passes its own
 checker*, is CIRCULAR for a literal: had the oxygen count been typed as 13, the
@@ -483,8 +483,8 @@ point at `icon.svg`.
 0.4.2 cut a claw notch out of the foot; it read as a slot, and the response was
 to remove it and describe that in the commit message as cutting detail that only
 ever cost something — a tidy sentence over a thing given up on, leaving a mole
-without the one feature a mole is known for. It was caught by the owner, not by
-any gate, and no gate could have caught it.
+without the one feature a mole is known for. It was caught by somebody looking
+at the drawing; no gate caught it, and no gate could have.
 
 **What fixed it was where the claws live, not how they are shaped.** A knockout
 is a mark ON a shape and dissolves as the shape shrinks; a point on the
@@ -1624,6 +1624,338 @@ enforces is the defect wearing the fix's clothes.** It now reads `#main`, which
 is every screen at once including the hidden ones — and not the whole document,
 because the patch notes live in a dialog outside it and say "Lessons. Seven of
 them", which was true in the release it describes.
+
+## The app changed under the reader and never said what for
+
+§7h was built and half of it was missing. The strip told a reader a new version
+was waiting, they pressed **Use it now**, the page reloaded, and the app was
+different with no account of what changed. The notes existed the whole time,
+behind the ⓘ under **What changed** — which is a place somebody opens only if
+they already suspect there is news, and the whole point of an app that updates
+itself is that they have no reason to.
+
+**It has to happen AFTER the switch, and that is forced rather than chosen.**
+The obvious design is a "what's in it" line on the strip itself. It cannot be
+honest: the page showing that strip is the OLD build, and its `RELEASES` array
+was generated from the changelog as it stood when that build was made. The
+running code has never heard of the release it is offering. Anything it said
+about the waiting version would be invented. The first moment anything in the
+app actually knows is after the reload, in the new build.
+
+**Three rules about when it may interrupt**, each of which is a walk assertion:
+
+- A newcomer is never told. There is no news for somebody with no before, and
+  two modals stacked on a first run is the app talking over itself at the one
+  moment a reader is deciding what it is. The version is recorded silently, so
+  their next update is news.
+- Not over work in progress. A warm-up link puts a student in front of a problem
+  within a second of tapping it, and a resumed session has their working still
+  in it. Neither moment is for release notes — and neither loses them, because
+  the version is not recorded, so the offer stands until they open the app with
+  nothing waiting. Same posture as the strip's **Not yet**: dismissed, not
+  resolved.
+- Everything since, not just the last one. A device that sat over a holiday
+  comes back several releases behind, and being told about one of four changes
+  is how an app comes to seem like it changes for no reason.
+
+**The case the feature creates for itself, which would have made the release
+that adds it show nobody anything.** Every existing reader arrives at the first
+build that records a version with nothing recorded — indistinguishable, from
+that key alone, from somebody who has never opened the app. They are not the
+same person and the app already knows which is which: a reader who has been here
+before has read the orientation. So `releasesSince` takes a `returning` flag,
+and a returning reader with no recorded version gets the release in front of
+them — the most that can be said without inventing what they last saw.
+
+**The decision is DOM-free and the dialog is next door**, which is the
+`warmup.ts` split for the same reason. Every case worth getting right here is
+about absence: never run the app, skipped four releases, carrying a version this
+build has never heard of. None of them is convenient to arrange in a browser,
+and a decision that can only be tested by driving Chromium is a decision that
+gets tested once. The node type check found this rather than judgement did —
+importing the panel into a test dragged `dom.ts` into a config with no DOM lib.
+
+**Two things this turned up that nothing was looking for.**
+
+The welcome said nothing was kept after the tab closed and that stopping halfway
+meant starting again. That stopped being true in **1.2.0**, when an unfinished
+set started surviving the tab closing, and nobody went back to the sentence. The
+app was telling a student their work would be lost while it was saving it. It
+now names what is kept — the problem in progress, the place in the lessons, how
+it is set up to read — and that all of it stays on the device.
+
+And the walk's first attempt at the resumed-session case set the news as due
+BEFORE navigating home, which put a modal over the home screen with nothing to
+click through to. That is the panel working exactly as the welcome does; it cost
+a thirty-second timeout to see, and the order is now written down beside it.
+
+**The `close` event is where the version is recorded**, not the button, because
+Escape and the backdrop close a dialog too and a reader who dismissed it that
+way has still been shown it. Recording only on the button would mean the same
+notes on every launch, which is how people learn to dismiss a panel without
+reading it. It is also a queued task rather than a synchronous one — the same
+race that lost one walk run in three on the orientation move — so the walk waits
+for the write rather than reloading straight after the click.
+
+## The release notes were a record, and that was the wrong call
+
+`tools/language-check.mjs` shipped in 1.6.0 exempting `src/ui/releases.ts` and
+CHANGELOG.md, with the reasoning written into its header: the changelog is the
+record of what shipped, and editing old entries so a gate goes green is
+rewriting history to look like it never happened.
+
+**That was wrong, and the distinction it missed is between the FACTS of a
+release and the VOICE they are told in.** The facts are fixed. The voice is the
+app's, and it belongs to now. The notes are not an archive: they are the app
+talking to whoever is reading it TODAY, in the same ⓘ panel as everything else,
+and twenty-eight entries about a class, a board and a gradebook teach a family
+learning at home the same wrong thing about who this is for as any other screen
+would. What happened in each release has not changed by a word; only the room
+the sentence puts around the reader.
+
+So CHANGELOG.md is scanned. `src/ui/releases.ts` is still not, and that is
+mechanical rather than principled: it is generated from CHANGELOG.md, so the
+source is where the line holds, and scanning a file that may not exist yet is a
+check that can silently skip.
+
+**The entry describing the fix could not quote what it fixed.** The 1.6.0 note
+listed the exact phrases that had been removed, which the gate then found in the
+changelog — correctly. Rewriting it to describe the room rather than quote the
+sentences is better prose anyway, and it is the general shape: a note about
+language that has to name the language needs a different sentence, not an
+exemption.
+
+## The notes were a wall, and the way out was behind it
+
+Every surface that showed release notes showed all thirty. In the after-an-update
+dialog that put the way out under everything the reader had not asked to read; in
+the ⓘ panel it pushed every section below it — where the chemistry comes from,
+how to report a problem, the accessibility statement — off the bottom.
+
+**Five, then a door.** `NOTES_SHOWN` is one constant and `forAPanel` is one
+function, so the dialog and the ⓘ cannot disagree about it. The count of what is
+NOT shown is returned rather than a boolean, because a reader told there is
+"more" learns nothing and one told there are twenty-four more knows whether the
+page is worth opening.
+
+**`/changes/` is a page in the app, not a link off it.** It is generated from the
+same `RELEASES`, served from the same origin, picked up by the precache walk
+automatically, and therefore works with no connection like everything else. It is
+deliberately not a link to the repository: the reader of these notes is a student
+or whoever is teaching them, and a code host is a different audience's document
+in a different audience's language.
+
+## `.button-small` meant two different things, depending on the element
+
+The link to the history page was styled `button button-small`, which declares
+`min-height: 2.75rem` — 44px, the floor this app holds itself to. It rendered at
+36. **`min-height` is inert on an inline box**, and neither class had ever
+declared a `display`: a `<button>` is inline-BLOCK by default so the floor
+applied, and an `<a>` is inline, so the identical class produced a control eight
+pixels under the floor.
+
+**This is the `.choice` defect a second time, in a second place.** That one was a
+42px row from `min-height` on an inline `<label>`, and the fix then was to give
+that one rule a `display`. The general form was available and was not taken: a
+class that says *this is a button* has to make that true of the ELEMENT, not
+true of buttons. `.button`, `.button-small` and `.button-big` now declare their
+display, so the class means the same thing wherever it is put.
+
+**The accessibility gate found it, at 217x18, before the class was involved at
+all** — the first version was a bare inline anchor inside a sentence. Fixing
+that to a button class is what surfaced the 36px, which is the more interesting
+half: the app already had a control that was under its own floor wherever it was
+used on an anchor, including the link back from the page for whoever is marking.
+
+## Hub LESSONS 141, applied the day it was read
+
+**No way out is inside the box that scrolls**, checked over every `<dialog>` in
+the document with no app state — so it covers surfaces the walk has never found a
+route to, and a new one is red from the day it exists.
+
+The lesson's own finding is what makes the shape matter: an app shipped 142
+releases with two dialogs carrying this defect untouched, under a check that
+reported *every scrolling surface with a way out* — because the check found its
+subjects by looking for the class the FIX added. A surface that never got the fix
+was not a failing row; it was not a row at all.
+
+So the way out is **declared** (`data-way-out`) rather than inferred from an id
+ending in `-close`. That convention would have silently exempted the two longest
+dialogs here, which leave by **Get started** and **Got it**. A naming convention
+is a filter wearing a costume.
+
+Nothing here was failing. That is the point: the invariant costs seven attributes
+and one loop, and the next dialog is measured before anybody thinks to look.
+
+## A check's sentence and a check's predicate are two different things
+
+The walk asserted `info.includes('0.1.0')` under the label *the patch notes name
+the release that is running*. `0.1.0` is the OLDEST release in the file. It
+passed for thirty releases because the panel rendered every one of them, so the
+literal was always present — and it went red the moment the list was capped,
+which is the first time it was ever asked the question its own sentence claims.
+
+**An incidental truth held it up, and the fix that removed the incidental truth
+is what exposed it.** Nothing was looking for this and nothing could have been:
+the check was green, its text was accurate prose, and only its predicate was
+wrong. It now reads `RELEASES[0].version`.
+
+## Two things the walk taught about a modal being shared state
+
+The first attempt at the resumed-session case made the news due BEFORE navigating
+home, which put the panel over the home screen with nothing to click through to —
+the panel working exactly as the welcome does, at the cost of a thirty-second
+timeout.
+
+The second was worse and quieter: the block ended by pressing **Got it** without
+waiting for the version to be recorded, and `dialog.close()` fires its `close`
+event as a queued task. The write lost the race, the notes stayed owed, and the
+panel opened over a section thirty seconds further down the walk and intercepted
+a click there. **A modal is shared state between parts of a walk that do not know
+about each other**, so every dismissal now waits for the record rather than for
+the click.
+
+## The hub's own branches have diverged, and it now costs something
+
+`.doctrine-sync` is deliberately NOT moved by this session. The hub's `main` is
+six commits ahead of the SHA this repository last reconciled to — and the diff
+between them is not a fast-forward. Reading it across the divergence shows the
+hub's `main` **without** the `onAccent` palette role and **without** PALETTES §7b,
+both of which MoleBridge depends on: `--on-accent` is declared in
+`palettes/molebridge.json`, painted on every primary button, and measured by
+`palette-check.mjs` at the pinned SHA. CI pins `HUB_SHA` to that same commit, so
+the gates are currently green against a hub state that `main` does not have.
+
+Adopting would assert this repository had reconciled to a hub that is missing
+rules it relies on. It has not, and the resolution is not a session's to pick.
+**This is the concrete cost of the divergence and it is the owner's call.**
+
+Two hub LESSONS are owed and are not written for the same reason — writing them
+would land on one side of a diverged history. They are recorded here in full
+above: the check-sentence-versus-predicate finding, and §7h's missing half (an
+app that offers an update and never says what changed, which every sibling with
+an update strip has).
+
+## Two things the app made a student hold in their head
+
+Both were asked as questions and both turned out to be defects rather than
+preferences.
+
+**The calculator could not hand its answer back.** `CalculatorPanel` exposed
+`open()` and nothing else. A student worked out a nine-figure intermediate, read
+it off the panel, closed it and typed it again.
+
+The header of `calculator.ts` says the panel has "no way to pull a number out of
+the problem", and that rule is right and is untouched — it is what keeps the
+calculator from becoming a solver. **Writing the result back is the other
+direction.** The student did the arithmetic; the calculator still cannot see the
+stage, still refuses a formula, and all that moves is a string they were about
+to copy by hand.
+
+**And the copying was not a neutral cost.** This app attributes a wrong number
+to a conceptual failure. A transcription slip is not a misconception, but it
+produces a wrong number, so the app would name a misconception the student never
+had — and the student would go and read the lesson for it. The feature is a
+correctness fix wearing convenience clothes.
+
+The unit comes with it. A box partway through "12.5 g/mol" gets "180.156 g/mol"
+back, not a bare number to which the unit must be re-added — that would trade
+one piece of retyping for another. Where no unit was typed, none is invented,
+because the unit is graded and inventing one is the app answering a part of the
+question it was not asked.
+
+**The steps already finished showed no values.** The rail listed step names with
+a tick. Stoichiometry is a chain — the molar mass feeds the moles, the moles feed
+the ratio, the ratio feeds the answer — and the app asked for each link and then
+took it off the screen.
+
+**The app was already instructing them to do the impossible.** 0.14.0's reveal
+says to carry the unrounded value into the next step and round once at the end.
+That instruction cannot be followed against a number that is no longer anywhere.
+The only way to comply was paper, which is the thing this was supposed to
+replace.
+
+## What the rail shows is what THEY typed, and that is the load-bearing choice
+
+Not the exact value the grader holds. Two reasons, and the second is the one
+that matters.
+
+An entry accepted inside tolerance is not the exact value, so showing the exact
+one silently corrects the student — the app doing a step it did not admit to.
+
+And **rounding early is a named error class in this taxonomy.** A student who
+rounds at step 3 and carries their own rounded number into step 5 produces
+exactly the wrong answer that class predicts; the app attributes it and tells
+them. If the rail handed back the unrounded value instead, the app would be
+quietly repairing the mistake it exists to teach them about, and they would
+finish the problem correctly having never found out. The walk asserts this
+directly: an entry of `28.010 g/mol`, accepted inside tolerance, comes back as
+`28.010 g/mol`.
+
+## Where the carried values live, and the wall around them
+
+In the UI and in the saved session on this device. **Not in `Session`**, whose
+counters are what the completion code is built from — the code has never carried
+anything a student typed, and the way to keep that true is for the grader to
+have nowhere to put it.
+
+`carry.test.ts` holds the wall structurally: the engine, the codec and the
+report must not IMPORT the carry module, and a freshly started `Session` must
+have no field whose name could hold a student's own text. The walk adds the
+other end — a value typed into a step is not in the problem report.
+
+**The first version of that test was a word search** for "carried" in three
+sources, and it failed on two comments about significant-figure guard digits. A
+predicate that does not match its own sentence, one hour after writing the hub
+lesson about exactly that. The check is structural now.
+
+`SavedSession.carried` is OPTIONAL, and that is not laziness. A session saved by
+an earlier build has no such field, and refusing to resume those would throw
+away a student's half-finished set to enforce a field they never had a chance to
+write.
+
+## An accommodation that removed what the task requires
+
+`data-focus="on"` — *just the step I am on* — hides the rail. That is exactly
+what the student who turned it on asked for, and the moment the rail started
+carrying the numbers from earlier steps it was also hiding the one thing the
+next step cannot be done without.
+
+**Less on the screen is the request. Less within reach is not.** So the values
+stay available, folded away rather than deleted: `What you have so far` appears
+where the rail is hidden, closed, and holds the same list from the same source.
+The student decides when to look; the app never decides for them.
+
+**Which of the two is showing is settled in CSS**, off the same `data-focus`
+attribute the rail's own rule reads, so there is one place that knows and no way
+for both to be hidden at once. The walk asserts both directions — with the
+setting on the rail is gone and the disclosure is there; with it off the rail is
+back and the disclosure is not, because the same numbers twice is its own kind
+of clutter.
+
+`hidden` in the markup and un-hidden only when there is something to show, so it
+is never an empty promise at the first step. Its summary clears the 44px floor —
+48px measured — because a disclosure is a control a finger has to open.
+
+**And the a11y state for it could not be reached the first time.** The setup
+filled every coefficient box with `1`, which is wrong, so the stage never
+advanced and there was nothing to have so far. The gate said so and failed
+rather than skipping, which is the whole reason an unreachable state is a
+failure in this file.
+
+## Three selector mistakes in one walk block, all the same shape
+
+`#practice-tier button[data-tier=…]` — the setup form uses `data-tier`, the
+practice form uses `data-value`. `#practice-count button[data-value="1"]` — the
+practice counts are 3, 5 and 10; there is no 1. `#report-symptoms button` — the
+control is `#report-what input`.
+
+All three were written from memory of a nearby part of the same file rather than
+read. Each cost a thirty-second timeout, and the third also needed the
+now-familiar wait: the report repaints through a promise, so reading straight
+after the click races it. **That is the third time in this file** — the other two
+were `dialog.close()` firing as a queued task and the version being recorded in
+its handler.
 
 ## Repository obligations still open
 

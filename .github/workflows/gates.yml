@@ -39,7 +39,7 @@ env:
   # green while running a palette check that had never heard of either, which is
   # the stale-mirror shape in hub LESSONS 53: not a smaller gate, a different
   # one.
-  HUB_SHA: 5cbee300c2c11ef900048375ef8d0d43828aaa15
+  HUB_SHA: a75d92d55081c82b4f67c757a7db670f079c85cf
 
 jobs:
   gates:

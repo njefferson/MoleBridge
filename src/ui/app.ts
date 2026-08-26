@@ -28,6 +28,8 @@ import { mountDone } from './done.ts';
 import { mountInfo } from './info.ts';
 import { mountTheme } from './theme.ts';
 import { mountUpdates } from './updates.ts';
+import { mountWhatsNew } from './whatsnew-panel.ts';
+import type { Carried } from './carry.ts';
 import { VERSION } from '../version.ts';
 import { resumeSession, startSession, type Clock, type Session, type SessionConfig } from '../engine/steps.ts';
 
@@ -97,9 +99,15 @@ function boot(): void {
     outright, and an app that throws on a device that will not remember things
     is worse than one that simply forgets.
   */
-  const saveSession = (live: Session, entry: readonly string[]): void => {
+  const saveSession = (live: Session, entry: readonly string[], carried: readonly Carried[] = []): void => {
     try {
-      const saved: SavedSession = { saved: 1, session: live, atMs: systemClock.now(), entry: [...entry] };
+      const saved: SavedSession = {
+        saved: 1,
+        session: live,
+        atMs: systemClock.now(),
+        entry: [...entry],
+        carried: [...carried],
+      };
       localStorage.setItem(RESUME_KEY, JSON.stringify(saved));
     } catch {
       /* A device that will not remember is a device that forgets. */
@@ -159,12 +167,36 @@ function boot(): void {
     periodicTable.open();
   });
 
+  /*
+    WHICH BOX THE CALCULATOR HANDS ITS ANSWER BACK TO.
+
+    The last input the student was actually in, remembered as they move, because
+    the balance stage has one box per coefficient and "the answer box" is not a
+    single place. Opening a dialog moves focus into the dialog, so this has to be
+    recorded as it happens rather than read at the moment the panel opens.
+
+    Falls back to the first box on the stage — a student who taps the calculator
+    before typing anything has still told you where the number is going — and to
+    null anywhere that is not the work screen, where the button is hidden
+    because there is nothing to fill in.
+  */
+  let lastBox: HTMLInputElement | null = null;
+  document.addEventListener('focusin', (event) => {
+    const node = event.target;
+    if (node instanceof HTMLInputElement && node.closest('#work-inputs') !== null) lastBox = node;
+  });
+
   const calculator = mountCalculator();
   need<HTMLButtonElement>('#calc-open').addEventListener('click', () => {
-    calculator.open();
+    const onWork = !need('#screen-work').hidden;
+    const box = lastBox !== null && lastBox.isConnected
+      ? lastBox
+      : need('#work-inputs').querySelector<HTMLInputElement>('input');
+    calculator.open(onWork ? box : null);
   });
 
   const updates = mountUpdates();
+  const whatsNew = mountWhatsNew(VERSION);
   const info = mountInfo(() => session, updates);
   mountTheme();
 
@@ -222,8 +254,8 @@ function boot(): void {
     onExplain(errorClass): void {
       reference.open(errorClass);
     },
-    onChanged(live: Session, entry: readonly string[]): void {
-      saveSession(live, entry);
+    onChanged(live: Session, entry: readonly string[], carried: readonly Carried[]): void {
+      saveSession(live, entry, carried);
     },
     onLeave(): void {
       forgetSession();
@@ -369,14 +401,35 @@ function boot(): void {
   if (saved !== null) {
     session = resumeSession(saved.session, systemClock, saved.atMs);
     pendingEntry = saved.entry;
-    workScreen.begin(session, pendingEntry);
+    workScreen.begin(session, pendingEntry, saved.carried ?? []);
   }
 
   go(home);
+
+  /*
+    WHAT CHANGED, WITHOUT HAVING TO GO LOOKING — §7d and the half of §7h that
+    was missing. The strip offers a waiting version and the page reloads into a
+    different app; until now nothing said what for. `whatsnew.ts` carries why it
+    has to happen here, after the switch, rather than on the strip.
+
+    THE ORIENTATION IS WHAT TELLS A NEWCOMER FROM A RETURNING READER. Both
+    arrive at this build with no version recorded — it is the release that
+    starts recording one — and they are owed opposite things: a newcomer has no
+    news, and somebody who was already using MoleBridge should not be shown
+    nothing purely because the app was not keeping track when they left.
+
+    NOT OVER A RESUMED SESSION. `saved` means there is a problem waiting with
+    their working still in it, and release notes are not what that moment is
+    for. Nothing is recorded in that case, so the offer stands until they open
+    the app with nothing in front of them — the same posture as the update
+    strip's Not yet, which dismisses without resolving.
+  */
   if (info.hasBeenSeen()) {
     info.adoptOrientation();
+    if (saved === null) whatsNew.offer(true);
   } else {
     welcomePanel.showModal();
+    whatsNew.offer(false);
   }
 }
 

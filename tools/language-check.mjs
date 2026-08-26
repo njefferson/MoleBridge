@@ -24,10 +24,45 @@
  * BOTH rooms and no less specific in either: whoever set the work, wherever you
  * hand it in, the codes you were handed.
  *
- * `src/ui/releases.ts` is not scanned. It is generated from CHANGELOG.md, which
- * is the record of what shipped and when; editing old entries so a gate goes
- * green is rewriting history to look like it never happened. New entries are
- * written in the neutral voice because they are written now.
+ * ## The release notes are in scope, and that was a correction
+ *
+ * This first shipped scanning everything EXCEPT the patch notes, on the reasoning
+ * that CHANGELOG.md is a record of what shipped and editing old entries is
+ * rewriting history. That was wrong, and the distinction it missed is between
+ * the FACTS of a release, which are fixed, and the VOICE they are told in, which
+ * is the app's and belongs to now. The notes are not an archive; they are the
+ * app talking to whoever is reading it today, in the same panel as every other
+ * screen, and twenty-eight entries about a class and a gradebook teach a family
+ * learning at home the same wrong thing any other screen would. Nothing about
+ * what happened in each release changed — only the room the sentence puts
+ * around it.
+ *
+ * ## The register question, decided here rather than mid-commit
+ *
+ * Hub LESSONS 146: a word gate encodes a rule about what may be SAID TO
+ * somebody, and the same words are legitimate when the subject is the software
+ * rather than the reader. A note describing the copy this app USED to carry has
+ * to name that copy, and every rewrite that satisfies a gate instead says less
+ * than the note it replaced.
+ *
+ * The line for this gate: a release note that ADDRESSES the reader is in scope
+ * — "type it into the Canvas assignment" tells a homeschooler the app is
+ * somebody else's whether it is on a screen or in a note. A note DESCRIBING the
+ * old copy is the other register, and the answer there is to describe the room
+ * rather than quote the sentence, which is better prose anyway: 1.6.0 says the
+ * app named a whiteboard at the front and one piece of software for handing
+ * work in, and needs no exemption to say it.
+ *
+ * No mechanism is built for that second case, deliberately, because it has come
+ * up once and the rewrite was an improvement. If it recurs and a rewrite starts
+ * saying LESS than the note it replaced, that is the signal to narrow by
+ * register rather than to exempt a file — and the test of the narrowing is that
+ * it can still be planted red.
+ *
+ * So CHANGELOG.md is scanned, and `src/ui/releases.ts` is not: it is generated
+ * from CHANGELOG.md by `tools/changelog.mjs`, so the source is the honest place
+ * to hold the line, and scanning a file that may not exist yet would be a check
+ * that can silently skip.
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
@@ -97,12 +132,15 @@ function everyFile(directory, ending) {
 const GENERATED = join(REPO, 'src', 'ui', 'releases.ts');
 
 const SURFACES = [
+  join(REPO, 'CHANGELOG.md'),
   join(REPO, 'public', 'index.html'),
   join(REPO, 'public', 'teacher', 'index.html'),
+  join(REPO, 'public', 'changes', 'index.html'),
   ...everyFile(join(REPO, 'src', 'ui'), '.ts'),
   ...everyFile(join(REPO, 'src', 'learn'), '.ts'),
   ...everyFile(join(REPO, 'src', 'report'), '.ts'),
   ...everyFile(join(REPO, 'src', 'teacher'), '.ts'),
+  ...everyFile(join(REPO, 'src', 'changes'), '.ts'),
 ].filter((file) => file !== GENERATED && existsSync(file));
 
 let failures = 0;
