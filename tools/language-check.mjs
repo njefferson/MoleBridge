@@ -37,6 +37,28 @@
  * what happened in each release changed — only the room the sentence puts
  * around it.
  *
+ * ## The register question, decided here rather than mid-commit
+ *
+ * Hub LESSONS 146: a word gate encodes a rule about what may be SAID TO
+ * somebody, and the same words are legitimate when the subject is the software
+ * rather than the reader. A note describing the copy this app USED to carry has
+ * to name that copy, and every rewrite that satisfies a gate instead says less
+ * than the note it replaced.
+ *
+ * The line for this gate: a release note that ADDRESSES the reader is in scope
+ * — "type it into the Canvas assignment" tells a homeschooler the app is
+ * somebody else's whether it is on a screen or in a note. A note DESCRIBING the
+ * old copy is the other register, and the answer there is to describe the room
+ * rather than quote the sentence, which is better prose anyway: 1.6.0 says the
+ * app named a whiteboard at the front and one piece of software for handing
+ * work in, and needs no exemption to say it.
+ *
+ * No mechanism is built for that second case, deliberately, because it has come
+ * up once and the rewrite was an improvement. If it recurs and a rewrite starts
+ * saying LESS than the note it replaced, that is the signal to narrow by
+ * register rather than to exempt a file — and the test of the narrowing is that
+ * it can still be planted red.
+ *
  * So CHANGELOG.md is scanned, and `src/ui/releases.ts` is not: it is generated
  * from CHANGELOG.md by `tools/changelog.mjs`, so the source is the honest place
  * to hold the line, and scanning a file that may not exist yet would be a check
