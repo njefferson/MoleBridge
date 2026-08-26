@@ -4,6 +4,39 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.9.0 — CAPABILITY
+
+Nothing you work out gets taken away from you.
+
+**The calculator hands its answer back.** Work out a number and there is now a
+button that puts it straight into the box you were typing in — with the unit you
+had already started, so you are not adding that by hand either. Before this you
+read the number off the panel, closed it, and typed it again from memory.
+
+That was not just tedious. MoleBridge tells you which *mistake* produced your
+number, so a slipped digit while copying got reported back to you as a
+misconception you never had.
+
+**The steps you have finished now show what you put in them.** The row of steps
+across the top of a problem used to show only which ones were done. Each finished
+one now carries your number, so when step 5 needs the moles you worked out at
+step 3, they are on the screen in front of you rather than in your memory or on a
+scrap of paper.
+
+**It shows what you typed, not a tidied-up version.** If you rounded and it was
+close enough to be accepted, you get your rounded number back. That is
+deliberate: rounding early is one of the mistakes MoleBridge is built to name,
+and silently handing you a better number than the one you wrote would repair that
+mistake behind your back and never tell you that you had made it.
+
+**Still yours alone.** What you type stays on this device. It is not in the code
+you hand in, it is not in a problem report, and there is nowhere for it to go —
+the code has only ever carried counts.
+
+**What is still missing.** If you have turned on *Just the step I am on*, the row
+of steps is hidden, and so are the numbers in it — that setting exists to put
+less on screen, and this has not been reconciled with it yet.
+
 ## 1.8.0 — ITERATION
 
 The notes stop after the newest few, and the rest have a page of their own.

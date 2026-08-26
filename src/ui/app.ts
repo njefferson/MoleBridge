@@ -29,6 +29,7 @@ import { mountInfo } from './info.ts';
 import { mountTheme } from './theme.ts';
 import { mountUpdates } from './updates.ts';
 import { mountWhatsNew } from './whatsnew-panel.ts';
+import type { Carried } from './carry.ts';
 import { VERSION } from '../version.ts';
 import { resumeSession, startSession, type Clock, type Session, type SessionConfig } from '../engine/steps.ts';
 
@@ -98,9 +99,15 @@ function boot(): void {
     outright, and an app that throws on a device that will not remember things
     is worse than one that simply forgets.
   */
-  const saveSession = (live: Session, entry: readonly string[]): void => {
+  const saveSession = (live: Session, entry: readonly string[], carried: readonly Carried[] = []): void => {
     try {
-      const saved: SavedSession = { saved: 1, session: live, atMs: systemClock.now(), entry: [...entry] };
+      const saved: SavedSession = {
+        saved: 1,
+        session: live,
+        atMs: systemClock.now(),
+        entry: [...entry],
+        carried: [...carried],
+      };
       localStorage.setItem(RESUME_KEY, JSON.stringify(saved));
     } catch {
       /* A device that will not remember is a device that forgets. */
@@ -160,9 +167,32 @@ function boot(): void {
     periodicTable.open();
   });
 
+  /*
+    WHICH BOX THE CALCULATOR HANDS ITS ANSWER BACK TO.
+
+    The last input the student was actually in, remembered as they move, because
+    the balance stage has one box per coefficient and "the answer box" is not a
+    single place. Opening a dialog moves focus into the dialog, so this has to be
+    recorded as it happens rather than read at the moment the panel opens.
+
+    Falls back to the first box on the stage — a student who taps the calculator
+    before typing anything has still told you where the number is going — and to
+    null anywhere that is not the work screen, where the button is hidden
+    because there is nothing to fill in.
+  */
+  let lastBox: HTMLInputElement | null = null;
+  document.addEventListener('focusin', (event) => {
+    const node = event.target;
+    if (node instanceof HTMLInputElement && node.closest('#work-inputs') !== null) lastBox = node;
+  });
+
   const calculator = mountCalculator();
   need<HTMLButtonElement>('#calc-open').addEventListener('click', () => {
-    calculator.open();
+    const onWork = !need('#screen-work').hidden;
+    const box = lastBox !== null && lastBox.isConnected
+      ? lastBox
+      : need('#work-inputs').querySelector<HTMLInputElement>('input');
+    calculator.open(onWork ? box : null);
   });
 
   const updates = mountUpdates();
@@ -224,8 +254,8 @@ function boot(): void {
     onExplain(errorClass): void {
       reference.open(errorClass);
     },
-    onChanged(live: Session, entry: readonly string[]): void {
-      saveSession(live, entry);
+    onChanged(live: Session, entry: readonly string[], carried: readonly Carried[]): void {
+      saveSession(live, entry, carried);
     },
     onLeave(): void {
       forgetSession();
@@ -371,7 +401,7 @@ function boot(): void {
   if (saved !== null) {
     session = resumeSession(saved.session, systemClock, saved.atMs);
     pendingEntry = saved.entry;
-    workScreen.begin(session, pendingEntry);
+    workScreen.begin(session, pendingEntry, saved.carried ?? []);
   }
 
   go(home);

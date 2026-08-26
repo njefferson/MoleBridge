@@ -1009,6 +1009,116 @@ try {
   const historyStamp = (await page.locator('#build-stamp').textContent())?.trim() ?? '';
   check(historyStamp === RELEASES[0].version, `and says which version it is (${historyStamp})`);
 
+  /* ---- the number goes back in the box, and the chain stays on screen ---- */
+  //
+  // TWO THINGS A STUDENT SHOULD NOT NEED PAPER FOR. The calculator's result had
+  // to be read off a panel and retyped, and the steps already passed took their
+  // numbers off the screen — while a revealed intermediate tells the student to
+  // carry the unrounded value into the next step, which cannot be done against
+  // a number that is gone.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-seed').fill('CARRY-WALK');
+  await page.locator(`#practice-tier button[data-value="2"]`).click();
+  await page.locator(`#practice-count button[data-value="3"]`).click();
+  await page.locator('#practice-start').click();
+  await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+
+  // The calculator hands its answer to the box the student was last in.
+  await page.locator('#work-inputs input').first().click();
+  await page.locator('#calc-open').click();
+  await page.locator('#calc-entry').fill('2*3');
+  const calcResult = (await page.locator('#calc-out').textContent())?.trim() ?? '';
+  check(calcResult === '6', `the calculator works the sum out (${calcResult})`);
+  check(await page.locator('#calc-use').isVisible(), 'and offers to put it in the answer box');
+  await page.locator('#calc-use').click();
+  const landed = await page.locator('#work-inputs input').first().inputValue();
+  check(landed === '6', `which is where it lands (${landed})`);
+  check(!(await page.locator('#calc-panel[open]').isVisible()), 'and the panel gets out of the way');
+
+  // NOT OFFERED WHERE THERE IS NOWHERE TO PUT IT. The calculator opens from
+  // every screen and most of them have no answer to fill in; a control that can
+  // never do anything here is not a control that is temporarily unavailable.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#calc-open').click();
+  check(
+    !(await page.locator('#calc-use').isVisible()),
+    'and it is not offered on a screen with no answer box',
+  );
+  await page.locator('#calc-close').click();
+
+  // Now walk a problem and watch the chain build up in the rail.
+  {
+    await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+    await page.locator('#door-practice').click();
+    await page.locator('#practice-seed').fill('CARRY-WALK');
+    await page.locator(`#practice-tier button[data-value="2"]`).click();
+    await page.locator(`#practice-count button[data-value="3"]`).click();
+    await page.locator('#practice-start').click();
+
+    const problem = generateProblem('CARRY-WALK', 2, 0);
+    const solution = solve(problem);
+    const stages = stagesFor(problem);
+
+    check(
+      (await page.locator('#work-rail .rail-value').count()) === 0,
+      'nothing is carried before the first step is finished',
+    );
+
+    // Two stages is enough: the first produces a value, the second has to be
+    // able to see it.
+    const coefficients = solution.coefficients;
+    const boxes = page.locator('#work-inputs input');
+    for (let at = 0; at < coefficients.length; at += 1) await boxes.nth(at).fill(String(coefficients[at]));
+    await page.locator('#work-submit').click();
+
+    const carriedNow = await page.locator('#work-rail .rail-value').allTextContents();
+    check(carriedNow.length === 1, `the finished step keeps what was put in it (${carriedNow.length})`);
+    const wanted = coefficients.join(', ');
+    check(
+      carriedNow[0]?.trim() === wanted,
+      `and it is what the student typed, not the grader's copy (${carriedNow[0]?.trim()} vs ${wanted})`,
+    );
+
+    // AND IT IS THEIRS, NOT THE EXACT VALUE. A deliberately rounded entry that
+    // is still inside tolerance must come back rounded — showing the exact one
+    // would silently correct them, and would repair rounding-early behind their
+    // back, which is a class this taxonomy names and reports.
+    const second = stages[1];
+    if (second !== undefined && second.kind !== 'CHOICE' && second.kind !== 'COEFFICIENTS') {
+      const exact = correctText(problem, solution, second);
+      const rounded = exact.replace(/^(\d+\.\d{3})\d+/, '$1');
+      await page.locator('#stage-answer').fill(rounded);
+      await page.locator('#work-submit').click();
+      const shown = (await page.locator('#work-rail .rail-value').allTextContents()).at(-1)?.trim() ?? '';
+      const advanced = (await page.locator('#work-rail .rail-value').count()) === 2;
+      check(
+        !advanced || shown === rounded,
+        `an accepted entry is shown as the student wrote it (${shown} vs ${rounded})`,
+      );
+    }
+
+    // AND NONE OF IT LEAVES THE DEVICE. The problem report says in its own words
+    // that it carries no answers and no working.
+    await page.locator('#report-open').click();
+    await page.locator('#report-what input').first().check();
+    // WAITED FOR — the report repaints through a promise, and reading straight
+    // after the click races it. Third time in this file.
+    await page
+      .waitForFunction(
+        () => /what went wrong: [A-Z-]+/.test(document.querySelector('#report-body')?.textContent ?? ''),
+        undefined,
+        { timeout: TIMEOUT_MS },
+      )
+      .catch(() => {});
+    const reportBody = (await page.locator('#report-body').textContent()) ?? '';
+    check(
+      !reportBody.includes(wanted),
+      'and what was typed is NOT in the problem report',
+    );
+    await page.locator('#report-close').click();
+  }
+
   /* ---- the periodic table ---- */
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });
   await page.locator('#door-practice').click();

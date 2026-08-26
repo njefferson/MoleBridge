@@ -390,6 +390,23 @@ li { margin: 0.3rem 0; }
   font-weight: 600;
 }
 .rail-tick { font-weight: 700; }
+/*
+  WHAT THEY PUT IN THE STEP, beside its name. The chain is the whole of
+  stoichiometry: the molar mass feeds the moles and the moles feed the ratio,
+  and the app used to ask for each one and then take it off the screen.
+
+  `--text-1` rather than the pill's muted `--text-3`: this is a number the
+  student is meant to READ and carry into the box in front of them, not a label
+  saying which step they are on. Tabular figures so a column of digits does not
+  wobble, and it wraps rather than truncating — a truncated intermediate is
+  worse than none, because it looks like a number you could use.
+*/
+.rail-value {
+  color: var(--text-1);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
 
 /* ---------------- entering an answer ---------------- */
 

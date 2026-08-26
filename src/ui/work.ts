@@ -14,6 +14,7 @@
  */
 
 import { clear, el, fill, focusFirst, need } from './dom.ts';
+import type { Carried } from './carry.ts';
 import { solve, type Problem, type Solution } from '../engine/problem.ts';
 import { stagesFor, type ErrorClass, type Stage, type StudentEntry } from '../engine/taxonomy.ts';
 import {
@@ -50,7 +51,7 @@ export interface WorkHost {
    * Chromebook lid shut at the bell — none of those fire an unload handler
    * reliably, and the one moment a save matters is the one nobody scheduled.
    */
-  onChanged(session: Session, entry: readonly string[]): void;
+  onChanged(session: Session, entry: readonly string[], carried: readonly Carried[]): void;
 }
 
 interface Elements {
@@ -77,7 +78,7 @@ export interface WorkScreen {
    * `entry` is what was in the boxes when it closed, put back at the stage it
    * was typed at. Empty for a fresh session.
    */
-  begin(session: Session, entry?: readonly string[]): void;
+  begin(session: Session, entry?: readonly string[], carried?: readonly Carried[]): void;
 }
 
 /**
@@ -118,6 +119,24 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
   let session: Session | null = null;
   /** The species index a CHOICE stage currently has selected, or null. */
   let choice: number | null = null;
+  /*
+    WHAT THEY TYPED AT THE STEPS THEY HAVE FINISHED, this problem.
+
+    Stoichiometry is a chain — the molar mass feeds the moles, the moles feed
+    the ratio — and the app asked for each one and then took it off the screen.
+    A revealed intermediate even tells the student to carry the unrounded value
+    into the next step, which cannot be done against a number that is gone.
+
+    THEIRS, NOT THE GRADER'S. An entry accepted inside tolerance is not the
+    exact value, and showing the exact one would silently correct them. It would
+    also repair rounding-early — a named class in this taxonomy — behind their
+    back, so the app would be hiding the mistake it exists to teach them about.
+
+    Emptied at every new problem, and never part of `Session`: the completion
+    code is built from Session's counters and has never carried anything a
+    student typed.
+  */
+  let carried: Carried[] = [];
 
   const render = (): void => {
     if (session === null || session.finished) return;
@@ -134,7 +153,7 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     nodes.figures.textContent =
       `Give the final answer to ${problem.answerSigFigs} significant figures.`;
 
-    renderRail(nodes.rail, stages, session.stageIndex);
+    renderRail(nodes.rail, stages, session.stageIndex, carried);
     nodes.stagePrompt.textContent = stage.prompt;
     choice = null;
     renderInputs(nodes.inputs, problem, stage);
@@ -199,7 +218,23 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     [...nodes.inputs.querySelectorAll<HTMLInputElement>('input')].map((box) => box.value);
 
   const changed = (): void => {
-    if (session !== null) host.onChanged(session, rawEntry());
+    if (session !== null) host.onChanged(session, rawEntry(), carried);
+  };
+
+  /**
+   * What to show in the rail for the step just finished.
+   *
+   * A CHOICE stage has no box — the student pressed a button — so the label on
+   * what they chose is what they did, and it is read off the pressed control
+   * rather than recomputed from the problem.
+   */
+  const committedText = (stage: Stage): string => {
+    if (stage.kind === 'CHOICE') {
+      const picked = nodes.inputs.querySelector<HTMLButtonElement>('button[aria-checked="true"]');
+      return picked?.textContent?.trim() ?? '';
+    }
+    const boxes = rawEntry().map((text) => text.trim()).filter((text) => text !== '');
+    return boxes.join(stage.kind === 'COEFFICIENTS' ? ', ' : ' ');
   };
 
   const readEntry = (problem: Problem, stage: Stage): StudentEntry | null => {
@@ -250,6 +285,13 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
       return;
     }
     if (result.advanced) {
+      // RECORDED BEFORE THE RENDER, which rebuilds the boxes this reads from.
+      const said = committedText(stage);
+      // A finished problem starts the chain again; carrying the last one's
+      // numbers into the next would be showing a student values that belong to
+      // a question they are no longer answering.
+      carried = result.problemComplete ? [] : [...carried, { stage: stage.id, text: said }];
+      changed();
       showAdvance(nodes.feedback, result, problem);
       render();
       return;
@@ -354,9 +396,10 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
   });
 
   return {
-    begin(started: Session, entry: readonly string[] = []): void {
+    begin(started: Session, entry: readonly string[] = [], said: readonly Carried[] = []): void {
       disarm();
       session = started;
+      carried = [...said];
       clear(nodes.feedback);
       render();
       // PUT BACK AFTER THE RENDER, because render() builds the boxes. Restoring
@@ -376,12 +419,24 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
 }
 
 /** The step list down the side, with what is done, what is here, what is next. */
-function renderRail(rail: HTMLElement, stages: readonly Stage[], at: number): void {
+function renderRail(
+  rail: HTMLElement,
+  stages: readonly Stage[],
+  at: number,
+  carried: readonly Carried[],
+): void {
+  const said = new Map(carried.map((one) => [one.stage, one.text]));
   fill(
     rail,
     stages.map((stage, index) => {
       const state = index < at ? 'done' : index === at ? 'here' : 'ahead';
       const label = index < at ? 'done' : index === at ? 'you are here' : 'still to come';
+      // ONLY FOR STEPS ALREADY PASSED. The map is only ever written on the way
+      // out of a stage, so there is nothing here to leak forwards — but it is
+      // read by index as well, because "never before the attempt" is a rule
+      // worth being structurally unable to break rather than merely careful
+      // about.
+      const value = index < at ? said.get(stage.id) ?? '' : '';
       return el(
         'li',
         {
@@ -392,6 +447,7 @@ function renderRail(rail: HTMLElement, stages: readonly Stage[], at: number): vo
           el('span', { className: 'rail-tick', text: index < at ? '✓' : '', attrs: { 'aria-hidden': 'true' } }),
           el('span', { className: 'rail-name', text: RAIL_NAMES[stage.id] ?? stage.id }),
           el('span', { className: 'visually-hidden', text: `, ${label}` }),
+          value === '' ? null : el('span', { className: 'rail-value', text: value }),
         ],
       );
     }),

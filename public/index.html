@@ -673,6 +673,20 @@
     <input type="text" id="calc-entry" inputmode="text" autocomplete="off" spellcheck="false">
     <p class="calc-out" id="calc-out" role="status"></p>
     <div class="calc-keys" id="calc-keys"></div>
+    <!--
+      THE NUMBER GOES BACK IN THE BOX. Reading a nine-figure result off a panel,
+      closing it, and typing it again is a transcription — and a slipped digit
+      here is not a neutral cost: this app attributes a wrong number to a
+      conceptual failure, so a mistyped one gets attributed to a misconception
+      the student did not have.
+
+      Hidden unless there is a box to put it in and a result to put there.
+      Writing OUT is not the same direction as reading IN: the calculator still
+      cannot see the problem, still refuses a formula, and still knows nothing
+      about the stage. The student did the arithmetic; this only saves them
+      copying it.
+    -->
+    <button type="button" class="button" id="calc-use" hidden>Put this in the answer box</button>
     <p class="hint">
       This does numbers only. It will not work out a molar mass or convert a
       unit for you — those are the parts you are practising, and MoleBridge can

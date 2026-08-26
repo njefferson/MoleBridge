@@ -1836,6 +1836,98 @@ above: the check-sentence-versus-predicate finding, and §7h's missing half (an
 app that offers an update and never says what changed, which every sibling with
 an update strip has).
 
+## Two things the app made a student hold in their head
+
+Both were asked as questions and both turned out to be defects rather than
+preferences.
+
+**The calculator could not hand its answer back.** `CalculatorPanel` exposed
+`open()` and nothing else. A student worked out a nine-figure intermediate, read
+it off the panel, closed it and typed it again.
+
+The header of `calculator.ts` says the panel has "no way to pull a number out of
+the problem", and that rule is right and is untouched — it is what keeps the
+calculator from becoming a solver. **Writing the result back is the other
+direction.** The student did the arithmetic; the calculator still cannot see the
+stage, still refuses a formula, and all that moves is a string they were about
+to copy by hand.
+
+**And the copying was not a neutral cost.** This app attributes a wrong number
+to a conceptual failure. A transcription slip is not a misconception, but it
+produces a wrong number, so the app would name a misconception the student never
+had — and the student would go and read the lesson for it. The feature is a
+correctness fix wearing convenience clothes.
+
+The unit comes with it. A box partway through "12.5 g/mol" gets "180.156 g/mol"
+back, not a bare number to which the unit must be re-added — that would trade
+one piece of retyping for another. Where no unit was typed, none is invented,
+because the unit is graded and inventing one is the app answering a part of the
+question it was not asked.
+
+**The steps already finished showed no values.** The rail listed step names with
+a tick. Stoichiometry is a chain — the molar mass feeds the moles, the moles feed
+the ratio, the ratio feeds the answer — and the app asked for each link and then
+took it off the screen.
+
+**The app was already instructing them to do the impossible.** 0.14.0's reveal
+says to carry the unrounded value into the next step and round once at the end.
+That instruction cannot be followed against a number that is no longer anywhere.
+The only way to comply was paper, which is the thing this was supposed to
+replace.
+
+## What the rail shows is what THEY typed, and that is the load-bearing choice
+
+Not the exact value the grader holds. Two reasons, and the second is the one
+that matters.
+
+An entry accepted inside tolerance is not the exact value, so showing the exact
+one silently corrects the student — the app doing a step it did not admit to.
+
+And **rounding early is a named error class in this taxonomy.** A student who
+rounds at step 3 and carries their own rounded number into step 5 produces
+exactly the wrong answer that class predicts; the app attributes it and tells
+them. If the rail handed back the unrounded value instead, the app would be
+quietly repairing the mistake it exists to teach them about, and they would
+finish the problem correctly having never found out. The walk asserts this
+directly: an entry of `28.010 g/mol`, accepted inside tolerance, comes back as
+`28.010 g/mol`.
+
+## Where the carried values live, and the wall around them
+
+In the UI and in the saved session on this device. **Not in `Session`**, whose
+counters are what the completion code is built from — the code has never carried
+anything a student typed, and the way to keep that true is for the grader to
+have nowhere to put it.
+
+`carry.test.ts` holds the wall structurally: the engine, the codec and the
+report must not IMPORT the carry module, and a freshly started `Session` must
+have no field whose name could hold a student's own text. The walk adds the
+other end — a value typed into a step is not in the problem report.
+
+**The first version of that test was a word search** for "carried" in three
+sources, and it failed on two comments about significant-figure guard digits. A
+predicate that does not match its own sentence, one hour after writing the hub
+lesson about exactly that. The check is structural now.
+
+`SavedSession.carried` is OPTIONAL, and that is not laziness. A session saved by
+an earlier build has no such field, and refusing to resume those would throw
+away a student's half-finished set to enforce a field they never had a chance to
+write.
+
+## Three selector mistakes in one walk block, all the same shape
+
+`#practice-tier button[data-tier=…]` — the setup form uses `data-tier`, the
+practice form uses `data-value`. `#practice-count button[data-value="1"]` — the
+practice counts are 3, 5 and 10; there is no 1. `#report-symptoms button` — the
+control is `#report-what input`.
+
+All three were written from memory of a nearby part of the same file rather than
+read. Each cost a thirty-second timeout, and the third also needed the
+now-familiar wait: the report repaints through a promise, so reading straight
+after the click races it. **That is the third time in this file** — the other two
+were `dialog.close()` firing as a queued task and the version being recorded in
+its handler.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

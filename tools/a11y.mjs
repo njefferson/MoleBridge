@@ -278,6 +278,21 @@ const STATES = [
     },
   },
   {
+    // The calculator ON THE WORK SCREEN, with a result and the control that
+    // hands it back — which is a different state from the refusal one below it:
+    // that opens from a menu, where there is no answer box and the button is
+    // hidden. A new control that only appears in one context ships unmeasured
+    // if the measured context is the other one.
+    name: 'the calculator, offering its answer back',
+    async reach(page) {
+      await startSession(page);
+      await page.locator('#work-inputs input').first().click();
+      await page.locator('#calc-open').click();
+      await page.locator('#calc-entry').fill('180.156/2');
+      await page.locator('#calc-use:not([hidden])').waitFor();
+    },
+  },
+  {
     name: 'the stale-version strip',
     async reach(page) {
       await startSession(page);

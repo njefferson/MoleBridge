@@ -9,13 +9,36 @@
  *
  * The refusal lives in `src/learn/calculator.ts` and is tested there against
  * all 118 element symbols. This file is the keypad.
+ *
+ * ## Handing the number back is the other direction, and it is safe
+ *
+ * "No way to pull a number out of the problem" is about READING IN, and it is
+ * what keeps this from becoming a solver. Writing the result back into the box
+ * the student was already typing in is the opposite: they did the arithmetic,
+ * the calculator still cannot see the stage, and all that moves is a string
+ * they were about to copy by hand.
+ *
+ * It is worth more than the keystrokes. A slipped digit in a nine-figure
+ * intermediate is not a neutral cost here — the app attributes a wrong number
+ * to a conceptual failure, so a transcription error gets reported as a
+ * misconception the student never had.
  */
 
 import { need } from './dom.ts';
 import { calculate, formatCalc } from '../learn/calculator.ts';
+import { withNumber } from './carry.ts';
 
 export interface CalculatorPanel {
-  open(): void;
+  /**
+   * Show it.
+   *
+   * `into` is the box the number goes back to, or null where there is nowhere
+   * to put it — the calculator opens from every screen, and most of them have
+   * no answer to fill in. The button is hidden in that case rather than
+   * disabled, because a control that never does anything on this screen is not
+   * a control that is temporarily unavailable.
+   */
+  open(into?: HTMLInputElement | null): void;
 }
 
 /** The keys, in the order they are laid out. `C` clears; `=` evaluates. */
@@ -32,6 +55,7 @@ export function mountCalculator(): CalculatorPanel {
   const entry = need<HTMLInputElement>('#calc-entry');
   const out = need('#calc-out');
   const keys = need('#calc-keys');
+  const use = need<HTMLButtonElement>('#calc-use');
 
   const evaluate = (): void => {
     const result = calculate(entry.value);
@@ -78,8 +102,27 @@ export function mountCalculator(): CalculatorPanel {
     panel.close();
   });
 
+  let target: HTMLInputElement | null = null;
+
+  use.addEventListener('click', () => {
+    const value = out.classList.contains('calc-value') ? (out.textContent ?? '') : '';
+    if (target === null || value === '') return;
+    // The unit the student had already typed is kept — see `withNumber`. A bare
+    // number handed back to a box that said "g/mol" would trade one piece of
+    // retyping for another.
+    target.value = withNumber(target.value, value);
+    // The box has to be told, or the screen still believes it is empty: the
+    // work screen listens for `input` to enable Check, and setting `.value`
+    // from script fires nothing.
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+    panel.close();
+    target.focus();
+  });
+
   return {
-    open(): void {
+    open(into: HTMLInputElement | null = null): void {
+      target = into;
+      use.hidden = into === null;
       // CLEARED ON EVERY OPEN. Nothing carries between problems, which is the
       // difference between a tool and a scratchpad the app is keeping for you.
       entry.value = '';
