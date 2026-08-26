@@ -134,7 +134,7 @@ function buildSections(): HTMLElement[] {
       }),
       el('p', {
         text:
-          'The molar volume of a gas is the conventional classroom 22.4 litres per mole, at '
+          'The molar volume of a gas is the conventional 22.4 litres per mole, at '
           + '0 °C and 1 atmosphere. Avogadro’s number is exact by definition and does not '
           + 'limit the significant figures of an answer.',
       }),
@@ -148,7 +148,7 @@ function buildSections(): HTMLElement[] {
     section('If something is wrong', [
       el('p', {
         text:
-          'Tell your teacher what problem you were on and what you typed. If MoleBridge '
+          'Tell whoever set the work what problem you were on and what you typed. If MoleBridge '
           + 'said it could not explain your answer, that is worth reporting — it means the '
           + 'app has a gap, not that you did something strange.',
       }),

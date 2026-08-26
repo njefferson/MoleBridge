@@ -125,7 +125,7 @@ export function mountSetup(host: SetupHost): void {
     const rosterId = Number(roster.value.trim());
     if (!isValidRosterId(rosterId)) {
       complain(
-        `A roster number is a whole number from ${MIN_ROSTER_ID} to ${MAX_ROSTER_ID}. Your teacher gave you one.`,
+        `A roster number is a whole number from ${MIN_ROSTER_ID} to ${MAX_ROSTER_ID}. You were given one.`,
         roster,
       );
       return;
@@ -133,7 +133,7 @@ export function mountSetup(host: SetupHost): void {
 
     const assignmentKey = normaliseAssignmentKey(key.value);
     if (assignmentKey === '') {
-      complain('The assignment key is on the board. Without it, everyone would get different problems.', key);
+      complain('The assignment key came with the work. Without it, everyone would get different problems.', key);
       return;
     }
 

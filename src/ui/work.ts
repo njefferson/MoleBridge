@@ -412,8 +412,15 @@ const RAIL_NAMES: Readonly<Record<string, string>> = {
   S7: 'Percent yield',
 };
 
-/** Draw the entry controls this stage needs. */
-function renderInputs(host: HTMLElement, problem: Problem, stage: Stage): void {
+/**
+ * Draw the entry controls this stage needs.
+ *
+ * EXPORTED so the drill screen uses this one rather than growing its own. A
+ * second renderer would be a second place for the rules about what a student
+ * may see before answering to drift — and the drill shows the same stages to
+ * the same students.
+ */
+export function renderInputs(host: HTMLElement, problem: Problem, stage: Stage): void {
   if (stage.kind === 'COEFFICIENTS') {
     fill(host, [
       el('p', { className: 'hint', text: 'One coefficient for every substance, including the ones that are 1.' }),
@@ -548,6 +555,27 @@ function showWrong(feedback: HTMLElement, result: SubmitResult, _solution: Solut
   }
 
   fill(feedback, children);
+}
+
+/**
+ * What is in the controls, as an entry the grader takes — or null where the
+ * student has not answered yet.
+ *
+ * EXPORTED alongside `renderInputs` for the same reason: the pair has to agree
+ * about what a stage's controls are, and two copies would not.
+ */
+export function readEntryFrom(host: HTMLElement, stage: Stage): StudentEntry | null {
+  if (stage.kind === 'COEFFICIENTS') {
+    const fields = [...host.querySelectorAll<HTMLInputElement>('input')];
+    if (fields.length === 0 || fields.some((field) => field.value.trim() === '')) return null;
+    return { kind: 'coefficients', values: fields.map((field) => Number(field.value.trim())) };
+  }
+  if (stage.kind === 'CHOICE') {
+    const picked = host.querySelector<HTMLElement>('[data-species][aria-checked="true"]');
+    return picked === null ? null : { kind: 'choice', speciesIndex: Number(picked.dataset['species']) };
+  }
+  const text = host.querySelector<HTMLInputElement>('input')?.value.trim() ?? '';
+  return text === '' ? null : { kind: 'text', text };
 }
 
 /** A diagnosis, written as a sentence: a capital at the front, a stop at the end. */

@@ -563,6 +563,16 @@ select {
   border-radius: var(--radius);
 }
 
+/* A thing the app noticed across several answers, not about one of them. */
+.noticed {
+  margin: var(--step) 0;
+  padding: 0.9rem 1.1rem;
+  background: var(--surface-1);
+  border-left: 3px solid var(--rail);
+  border-radius: var(--radius);
+  color: var(--text-1);
+}
+
 /* ---------------- feedback ---------------- */
 
 .feedback { max-width: var(--measure); margin: 0 auto 2rem; }

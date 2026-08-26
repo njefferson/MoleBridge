@@ -96,6 +96,17 @@ that to the teacher.
   the problem report with every setting turned on. And the app must never store
   or transmit *which* accommodations a student has — that is her IEP paperwork
   and her gradebook, not a web app with no accounts.
+- **NEVER WRITE THE ROOM AROUND THE READER.** This was built for one chemistry
+  classroom and the copy came out that way — *your teacher has put these on the
+  board*, *type it into the Canvas assignment*, *decode a class*. Every one was
+  accurate and every one told a homeschooler, a tutor or an adult working alone
+  that the app belongs to somebody else. `npm run language` forbids each phrase
+  by name and prints the replacement, because the way around this gate is a
+  synonym that excludes exactly as much: say *whoever set the work*, *wherever
+  you hand your work in*, *the codes you were handed*. It reads with comments
+  stripped — a comment may describe the classroom, since that is the reason
+  several features exist — and it skips `src/ui/releases.ts`, which is generated
+  from CHANGELOG.md and is a record rather than a surface.
 - **Speech synthesis is allowed; speech RECOGNITION is not.** They are one
   letter apart in the same corner of the platform, and recognition turns on a
   microphone. `tools/permissions-check.mjs` names the allowance and forbids the

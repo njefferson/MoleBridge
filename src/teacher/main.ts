@@ -140,10 +140,10 @@ function renderSummary(host: HTMLElement, summary: ClassSummary): void {
       el('li', { text: `${summary.problemsAttempted} problems finished between them.` }),
       el('li', { text: `${firstTryRate}% of those had every step right first time.` }),
       el('li', { text: `${summary.algebraTriggers} times the algebra help came up.` }),
-      el('li', { text: `Half the class finished within ${summary.medianDurationMin} minutes.` }),
+      el('li', { text: `Half of them finished within ${summary.medianDurationMin} minutes.` }),
     ]),
 
-    el('h3', { text: 'Where the class got stuck' }),
+    el('h3', { text: 'Where they got stuck' }),
     totalErrors === 0
       ? el('p', { className: 'note', text: 'No step went wrong anywhere. That is worth being suspicious of — check the key is the one they used.' })
       : el(

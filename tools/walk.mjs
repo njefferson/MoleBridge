@@ -409,13 +409,17 @@ try {
   // went red the moment an eighth lesson was added — which is a check reporting
   // a deliberate change as a defect, and the kind of red that teaches people to
   // edit the number without reading why.
-  const lessonCount = await page.locator('.lesson-row').count();
+  // SCOPED TO THE LESSON LIST. `.lesson-row` is the shared row shape and the
+  // drill's step list uses it too, so an unscoped count found sixteen the moment
+  // that screen existed — a selector loose enough to catch a second list is a
+  // check that reports someone else's feature as a defect.
+  const lessonCount = await page.locator('#learn-list .lesson-row').count();
   check(lessonCount === LESSONS.length, `all ${LESSONS.length} lessons are listed (${lessonCount})`);
 
   // NOTHING IS LOCKED, and this is the assertion that says so. Every row must
   // be a live control on a first run — a disabled one would be a promise that
   // the lesson before it is required, which is not true here.
-  const enabled = await page.locator('.lesson-row:not([disabled])').count();
+  const enabled = await page.locator('#learn-list .lesson-row:not([disabled])').count();
   check(enabled === lessonCount, `and every one of them opens (${enabled} of ${lessonCount})`);
 
   await page.locator('.lesson-row').first().click();
@@ -594,6 +598,64 @@ try {
   await page.locator('#work-leave').click();
   check(await page.locator('#screen-home').isVisible(), 'and the second tap leaves');
 
+  /* ---- practising one step, as long as you like ---- */
+  //
+  // THE ROUTE A STRUGGLING STUDENT TAKES: get it wrong, read what the mistake
+  // was, and practise that one step rather than walking five others to reach it.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
+  await page.locator('#practice-start').click();
+  {
+    const boxes = page.locator('#work-inputs input');
+    const count = await boxes.count();
+    for (let at = 0; at < count; at += 1) await boxes.nth(at).fill('9');
+    await page.locator('#work-submit').click();
+    await page.locator('#work-feedback .note-wrong').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  }
+  await page.locator('#work-feedback [data-explain]').click();
+  const drillOffer = page.locator('#reference-detail [data-drill-step]');
+  check((await drillOffer.count()) > 0, 'the page about a mistake offers to drill that step');
+  await drillOffer.first().click();
+  check(await page.locator('#screen-drill').isVisible(), 'and one tap starts it');
+
+  // AS MANY AS YOU LIKE. Answer several, right and wrong, and confirm the app
+  // keeps handing them over without ever asking for a target.
+  let asked = 0;
+  for (let round = 0; round < 4; round += 1) {
+    const boxes = page.locator('#drill-inputs input');
+    const count = await boxes.count();
+    if (count === 0) break;
+    for (let at = 0; at < count; at += 1) await boxes.nth(at).fill(round === 0 ? '9' : '1');
+    await page.locator('#drill-check').click();
+    await page.locator('#drill-feedback .note').first().waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+    asked += 1;
+    await page.locator('#drill-next').click();
+  }
+  check(asked >= 3, `it keeps giving new ones (${asked})`);
+
+  // NOTHING THAT REWARDS OR SHAMES, on the screen a student actually reads.
+  const drillText = (await page.locator('#screen-drill').textContent()) ?? '';
+  for (const forbidden of ['streak', 'badge', 'great job', 'well done', 'keep it up', 'score']) {
+    check(!drillText.toLowerCase().includes(forbidden), `the drill screen never says "${forbidden}"`);
+  }
+  check(!/\b\d+\s*\/\s*\d+\b/.test(drillText), 'and never shows a mark out of anything');
+
+  // STOPPING IS NOT A STATE THE APP HAS AN OPINION ABOUT.
+  await page.locator('#drill-stop').click();
+  const said = (await page.locator('#drill-summary').textContent()) ?? '';
+  check(said.trim() !== '', 'stopping says what happened');
+  check(
+    !/try again|keep going|next time|you should/i.test(said),
+    `and does not tell them what to do about it (${said.trim().slice(0, 80)})`,
+  );
+
+  // And it is reachable without getting anything wrong first.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-learn').click();
+  await page.locator('#learn-drill').click();
+  const steps = await page.locator('#drill-list [data-drill]').count();
+  check(steps >= 6, `every step can be chosen deliberately (${steps})`);
+
   /* ---- no screen states a count the app can contradict ---- */
   //
   // THE HOME SCREEN SAID "Seven short lessons" WITH EIGHT IN THE APP. Nothing
@@ -601,12 +663,21 @@ try {
   // This is 3d-printing-pal's checkOrientationTypes in the hub's own notes,
   // happening here — a welcome describing three job types after a fourth was
   // added. The fix is not a better number, it is prose that does not carry one.
+  // AND THE FIX WENT TO THE ONE SCREEN THE CHECK READ. The learn screen said
+  // "Seven lessons" for four releases after this gate was written, because the
+  // gate asked `#screen-home` and the sentence was one screen further in. A
+  // check narrower than the rule it enforces is the defect wearing the fix's
+  // clothes — so this reads every screen at once, hidden ones included.
+  //
+  // `#main` and not the whole document, deliberately: the patch notes live in a
+  // dialog outside it and say "Lessons. Seven of them", which was true in the
+  // release it describes. A record of what shipped is not a claim about now.
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });
-  const homeCopy = (await page.locator('#screen-home').textContent()) ?? '';
-  const counted = /\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+(short\s+)?lessons\b/i.exec(homeCopy);
+  const appCopy = (await page.locator('#main').textContent()) ?? '';
+  const counted = /\b(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+(short\s+)?lessons\b/i.exec(appCopy);
   check(
     counted === null,
-    `the home screen does not state how many lessons there are (${counted?.[0] ?? 'none'})`,
+    `no screen states how many lessons there are (${counted?.[0] ?? 'none'})`,
   );
 
   /* ---- the warm-up: a link, and five minutes ---- */

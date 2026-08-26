@@ -18,6 +18,8 @@ export interface LearnHost {
   onBack(): void;
   /** Open the reference at the list, for somebody looking something up. */
   onReference(): void;
+  /** Open the list of steps that can be drilled. */
+  onDrill(): void;
 }
 
 export interface LearnScreens {
@@ -167,6 +169,9 @@ export function mountLearn(host: LearnHost, show: (screen: HTMLElement) => void)
   });
   need<HTMLButtonElement>('#learn-reference').addEventListener('click', () => {
     host.onReference();
+  });
+  need<HTMLButtonElement>('#learn-drill').addEventListener('click', () => {
+    host.onDrill();
   });
 
   /* ---- the progress code ---- */

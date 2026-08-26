@@ -1500,6 +1500,131 @@ builds the five minutes she asked for; it does not answer that. Her other
 suggestion — homeschool communities — is a fit observation worth taking
 seriously rather than a brush-off.
 
+## J1: practising one step, and refusing to reward anybody for it
+
+A student who inverts the mole ratio had to walk five other steps to reach the
+one they were failing. **That is a tax on the thing they came to fix.** Whole
+problems are INTERLEAVED practice, which is what makes a skill stick once you
+have it; a skill you do not have yet is built by BLOCKED practice — the same
+move again until it is yours. The app only had the first.
+
+**The engine was ready and nobody had asked.** `classify` is a pure function of a
+problem, a stage and an entry, so a drill is a loop around it: generate, present
+one stage, classify, discard. No session, no completion code, nothing recorded.
+
+`renderInputs` and a new `readEntryFrom` are exported from `work.ts` rather than
+rewritten. A second renderer would be a second place for the rule about what a
+student may see before answering to drift, and the drill shows the same stages to
+the same people.
+
+### The design rule, and why it is a test rather than a paragraph
+
+**No score. No streak. No target. No congratulation.** Streaks and badges teach a
+student to chase the animation, and they make stopping feel like failing — which
+is exactly wrong for the person who most needs to do twenty of these, and who is
+usually the one who has been told longest that they are bad at it.
+
+That is the kind of rule a later session undoes in one well-meaning commit. So
+`drill.test.ts` reads the source of both drill files and fails on `streak`,
+`badge`, `points`, a fraction like `3/7`, and every variant of "Great job". It
+strips comments before matching, because the comments say what must NOT be built
+— the same trap `permissions-check.mjs` fell into when it fired on its own prose.
+
+**What replaces praise is CHANGE.** A good tutor does not say "5 out of 7". They
+say "that one went upside down again, here is why", and at the end "you were
+getting these wrong the same way and now you are not". So the summary reports
+what happened and, only where it is true, that the repeated mistake stopped: a
+fact about the run rather than an opinion about the person. `stoppedHappening` is
+false unless the run was long enough for the question to mean anything.
+
+**Once is not a pattern.** A single mistake is never named — everybody makes
+slips, and naming one would be the app inventing a problem to have an opinion
+about. Twice is reported in the summary. Three times is said DURING the run,
+once, with what fixes it, and never again: a thing repeated is nagging.
+
+**The all-wrong summary is written separately.** The general sentence rendered it
+as "4 questions, and 0 of them were right" — accurate, and the exact reading the
+person doing twenty of these does not need. It says "You did 4. None of them came
+out right yet", which is the same fact without the zero in it.
+
+### Three things this found in the existing gates
+
+**A selector loose enough to catch a second list.** The drill's step list reuses
+`.lesson-row` for its shape, and the walk's unscoped `.lesson-row` count went
+from 8 to 16 the moment the screen existed — a check reporting somebody else's
+feature as a defect. Both counts are scoped to `#learn-list` now.
+
+**The class-to-step map is derived, not typed.** `E-RATIO-INVERTED` is the mole
+ratio by construction, so a table would be the same fact written twice and the
+copy is what goes stale. Five classes belong to no step ON PURPOSE — a slip in
+the arithmetic, a missing unit, rounding early and an unexplained answer happen
+anywhere — and the test names all five, so a sixth appearing is a decision.
+
+**A drill that could not generate its own step would be an empty screen.** Not
+every problem has every stage, so each drillable step carries the tier that
+produces it, `drillItem` is bounded rather than a `while (true)`, and the test
+generates eight of each.
+
+## J2: the app stopped assuming which room the reader is in
+
+MoleBridge was written for one chemistry classroom, and the copy came out that
+way. Twenty-nine places in the tree told the reader so: *your teacher has put
+these on the board*, *type it into the Canvas assignment*, *decode a class*,
+*half the class finished within N minutes*.
+
+Every one of them was accurate. Every one of them also told a homeschooled
+student — or a group of four, or a tutor, or an adult going back over this
+alone — that the thing in front of them belongs to somebody else and they are
+reading over a shoulder. Nothing about the app is wrong for those readers. Only
+the sentences were, which is what makes this the cheap kind of defect to leave
+in and the easy kind to reintroduce.
+
+**The replacement is not vagueness.** "Someone" is worse than "your teacher" for
+a fifteen-year-old in period three: it sounds like the app does not know what it
+is for. Each phrase was replaced with wording that is true in both rooms and no
+less specific in either — *whoever set the work*, *wherever you hand your work
+in*, *the codes you were handed*, *both of these came with the work you were
+set*. The graded door is called **Assignment** rather than **Class assignment**;
+`mode: 'assignment'` in the code never moved.
+
+**The teacher page is for whoever is marking, and that is still the right word
+for a parent teaching at home.** What excluded them there was the room around
+it: a class, a gradebook column, writing the link on the board. It is now
+*Decode a set of codes*, the paste box is *The codes* with the gradebook named
+as one thing that pastes in rather than the only thing, and the results heading
+is *Everyone together*.
+
+**`tools/language-check.mjs` is the gate, and it names the replacement.** A
+failure that only says no gets worked around, and the way around this one is a
+synonym that excludes exactly as much — so every forbidden phrase carries what
+to say instead. It reads `public/index.html`, the teacher page and every source
+file under `src/ui`, `src/learn`, `src/report` and `src/teacher`, with comments
+stripped: the note above the warm-up builder says a teacher writes the link on
+the board, because that is the thing that was asked for and the reason the
+feature exists. A gate that deleted the reasoning to satisfy a rule about the
+copy would be trading the wrong thing.
+
+**`src/ui/releases.ts` is not scanned**, and that is a decision rather than an
+oversight. It is generated from CHANGELOG.md, which is the record of what
+shipped and when. Editing old entries so a gate goes green is rewriting history
+to look like it never happened; the entries that say *Canvas* describe releases
+where the app said Canvas. New entries are written in the neutral voice because
+they are written now.
+
+**One collision, and it is the LESSONS §108 shape.** `<a class="skip">` contains
+the phrase "a class". A pattern flagging honest markup teaches people the gate
+is noise, so a match immediately followed by an `=` is not a match.
+
+**And the fix went to the one screen the check read.** The home screen said
+"Seven short lessons" with eight in the app; 0.13.0 replaced the number with
+prose that carries none and added a walk check. The LEARN screen said "Seven
+lessons" for four releases after that, because the check asked `#screen-home`
+and the sentence was one screen further in. **A check narrower than the rule it
+enforces is the defect wearing the fix's clothes.** It now reads `#main`, which
+is every screen at once including the hidden ones — and not the whole document,
+because the patch notes live in a dialog outside it and say "Lessons. Seven of
+them", which was true in the release it describes.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

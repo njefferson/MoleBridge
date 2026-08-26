@@ -368,6 +368,38 @@ const STATES = [
     },
   },
   {
+    // The drill mid-run, with an answer already judged — the state a student
+    // spends the most time in, and the one carrying the "noticed" strip.
+    name: 'a drill, one step, after a wrong answer',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-learn').click();
+      await page.locator('#learn-drill').click();
+      await page.locator('#drill-list [data-drill="S4"]').click();
+      await page.locator('#drill-inputs input').first().fill('9');
+      await page.locator('#drill-check').click();
+      await page.locator('#drill-feedback .note').first().waitFor({ state: 'visible' });
+    },
+  },
+  {
+    name: 'a drill, stopped, saying what happened',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.locator('#welcome-begin').click();
+      await page.locator('#door-learn').click();
+      await page.locator('#learn-drill').click();
+      await page.locator('#drill-list [data-drill="S4"]').click();
+      for (let round = 0; round < 3; round += 1) {
+        await page.locator('#drill-inputs input').first().fill('9');
+        await page.locator('#drill-check').click();
+        await page.locator('#drill-next').click();
+      }
+      await page.locator('#drill-stop').click();
+      await page.locator('#drill-summary').waitFor({ state: 'visible' });
+    },
+  },
+  {
     name: 'the reference, at one page',
     async reach(page) {
       await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
