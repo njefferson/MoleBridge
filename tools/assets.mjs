@@ -32,6 +32,24 @@ const SIZES = [
 /** Never precached: the worker itself, and the list it reads. */
 const NOT_PRECACHED = new Set(['sw.js', 'precache.json']);
 
+/**
+ * Cloudflare Pages CONSUMES a leading-underscore file at the root — `_headers`,
+ * `_redirects`, `_routes.json`, `_worker.js` — as configuration and does not
+ * deploy it as an asset. Requesting one in production returns 404.
+ *
+ * `/_headers` was in this list from the day the list existed, and the worker
+ * installs with `cache.addAll`, which is ALL-OR-NOTHING: one 404 rejects the
+ * whole call, and the catch beneath it falls back to caching three files. So
+ * production had a shell with no modules in it while every local check said
+ * offline worked — because the walk serves `public/` off disk, where `_headers`
+ * is a perfectly ordinary file that resolves.
+ *
+ * A GATE CANNOT SEE THIS FROM THE INSIDE. The difference is not in the bytes;
+ * it is in what the host chooses to serve, and the only place that is true is
+ * the host. The deploy job now asserts it from the runner.
+ */
+const isPagesConfig = (name) => name.startsWith('_');
+
 function walk(directory) {
   const out = [];
   for (const entry of readdirSync(directory)) {
@@ -67,7 +85,7 @@ try {
 
 const files = walk(PUBLIC)
   .map((full) => `/${relative(PUBLIC, full).split(sep).join('/')}`)
-  .filter((url) => !NOT_PRECACHED.has(url.slice(1)))
+  .filter((url) => !NOT_PRECACHED.has(url.slice(1)) && !isPagesConfig(url.slice(1)))
   .sort();
 
 // `/` is what a home-screen launch actually requests, and it is not a file.

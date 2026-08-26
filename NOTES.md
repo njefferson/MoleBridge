@@ -2000,6 +2000,77 @@ cannot ship anything, and this sandbox really cannot read `*.pages.dev` — a 40
 on CONNECT — which is why the runner fetches the live page instead. Those were
 right. The conclusion drawn from them was not.
 
+## The offline shell had two files the host never serves
+
+`cache.addAll` is ALL-OR-NOTHING. One 404 rejects the whole call, and the catch
+beneath it in `sw.js` falls back to `['/', '/index.html', '/styles.css']`. So
+the install did not fail loudly; it succeeded with three files out of sixty-nine
+and reported itself ready.
+
+**`/_headers` was on the precache list from the day the list existed.**
+Cloudflare Pages CONSUMES a leading-underscore file at the root — `_headers`,
+`_redirects`, `_routes.json`, `_worker.js` — as configuration, and does not
+deploy it as an asset. Requesting one in production returns 404. Adding
+`_redirects` in this release would have made it two.
+
+**Every local check said offline worked, and every one of them was honest.** The
+walk serves `public/` off disk with a static file server, where `_headers` is an
+ordinary file that resolves with a 200. The bytes are identical in both places.
+The difference is entirely in **what the host chooses to serve**, and the only
+machine where that is true is the host.
+
+**So the check had to move out of the repository.** The deploy job now reads
+`precache.json` off the live site and fetches every path in it, failing on
+anything that does not answer 200. It runs from the runner against the real
+host, which is the same reasoning that already put the header and release checks
+there — a fact about production is not checkable from a sandbox that cannot
+reach production.
+
+**What no gate could have caught, and what that implies.** There was nothing
+wrong with the code, the list, the worker or the host: each was correct about
+its own job. The defect lived in an assumption that spanned two of them — that a
+file present in `public/` is a file served from the origin. **An assumption
+shared by two systems is owned by neither**, which is why it survived every
+gate on both sides.
+
+The user-visible cost is worth stating plainly: anybody who opened MoleBridge
+with no connection got the shell and none of the modules. The app is
+offline-first and that is most of what offline-first is for.
+
+## /teacher was reader-facing copy, and nobody thought of it as copy
+
+1.6.0 made every sentence on that page neutral and left the address alone, so a
+link to it still announced whose app this was before the page had loaded. Nine
+releases of correct prose behind a URL that contradicted it.
+
+`language-check.mjs` now forbids the room in a PATH as well as in a sentence.
+The general form: **anything a reader can see is copy** — an address, a link
+label, a tab title, a filename in a share sheet — and a gate that reads only
+prose is reading half the surface.
+
+The old path redirects permanently rather than being retired, because the
+release that renames it is also the release that starts telling people to
+bookmark it. A bookmark that 404s is worse than the name it was renamed away
+from.
+
+**The walk DECLARES the redirect rather than testing it**, and says so where it
+does it: the local server has no redirect engine, so asserting a 301 there would
+be asserting something the test environment cannot do — the same shape as the
+`_headers` defect one section above, caught this time before it shipped.
+
+## One block, two surfaces, because §7e already solved this
+
+The route to `/codes/` went inside `#orientation`, which the welcome shows and
+which then MOVES into the ⓘ rather than being copied there. Asking for it in
+both places turned out to be one edit, and the walk asserts there is exactly ONE
+such link after the move.
+
+It is worth noticing why that was free: the doctrine rule about moving rather
+than copying was written for a different reason entirely — orientation
+surviving whatever the reader presses to begin — and it paid out here as
+"anything added to that block is automatically in both places, and can never
+disagree with itself."
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

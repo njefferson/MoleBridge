@@ -90,6 +90,12 @@ const FORBIDDEN = [
   ['in class', 'when you sit down to it'],
   ['at school', 'anywhere'],
   ['school machine', 'a shared machine'],
+  // A PATH IS COPY TOO. /teacher was in the address bar and in every link to
+  // that page for nine releases after its contents had been made neutral, so a
+  // reader was told whose app it was before the page had loaded. The word is
+  // forbidden in a path for the same reason it is forbidden in a sentence.
+  ['href="/teacher', 'the page is /codes/ — a path names a room as loudly as a sentence'],
+  ["'/teacher", 'the page is /codes/ — a path names a room as loudly as a sentence'],
 ];
 
 /**
@@ -134,12 +140,12 @@ const GENERATED = join(REPO, 'src', 'ui', 'releases.ts');
 const SURFACES = [
   join(REPO, 'CHANGELOG.md'),
   join(REPO, 'public', 'index.html'),
-  join(REPO, 'public', 'teacher', 'index.html'),
+  join(REPO, 'public', 'codes', 'index.html'),
   join(REPO, 'public', 'changes', 'index.html'),
   ...everyFile(join(REPO, 'src', 'ui'), '.ts'),
   ...everyFile(join(REPO, 'src', 'learn'), '.ts'),
   ...everyFile(join(REPO, 'src', 'report'), '.ts'),
-  ...everyFile(join(REPO, 'src', 'teacher'), '.ts'),
+  ...everyFile(join(REPO, 'src', 'codes'), '.ts'),
   ...everyFile(join(REPO, 'src', 'changes'), '.ts'),
 ].filter((file) => file !== GENERATED && existsSync(file));
 
