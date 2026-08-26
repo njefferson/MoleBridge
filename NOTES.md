@@ -1957,6 +1957,41 @@ after the click races it. **That is the third time in this file** — the other 
 were `dialog.close()` firing as a queued task and the version being recorded in
 its handler.
 
+## A promote that pushed and did not deploy
+
+`main` moved to `ed850b9` and **GitHub created no workflow run for it.** Eight
+runs exist on `main`, the newest still `e2f251b` — the previous promote. The push
+was verified against the true remote with `ls-remote`, exactly as hub LESSONS 143
+requires, and that check passed. It was never the check that mattered here.
+
+**A push is not a release, and this is the shape that proves it.** Everything a
+session normally looks at was green: the merge was clean, the ref moved, the
+remote agreed. What did not happen was the only thing that puts bytes on the
+address a class opens.
+
+**It is not the workflow file.** The identical `gates.yml` ran on `staging`
+minutes earlier, on `dbcb884`, so the YAML parses and Actions is enabled. A
+`workflow_dispatch` cannot rescue it either: the deploy job is gated on
+`github.event_name == 'push'`, so a dispatched run does the gates and skips the
+thing that deploys. Re-running the previous run re-uses the previous SHA. There
+is no button that ships a commit whose push event never existed.
+
+**And the remedies that feel available are the forbidden ones** — an empty commit
+to kick CI, or a close-and-reopen. The rule against them is not decorative: both
+put a lie in the history to work around a symptom, and neither tells anybody what
+actually failed.
+
+So the remedy is a REAL push carrying real content — this entry — and the promote
+that carries it is the same mechanism as any other. If that push also produces no
+run, the cause is not transient and is above a session's reach: Actions
+settings or a spending limit, which is the owner's to look at.
+
+**What no session can check from here:** whether the address a class opens is
+actually serving the release. This sandbox's proxy refuses `*.pages.dev` with a
+403 on CONNECT, which is why the deploy job fetches the live page from the
+RUNNER. With no run, that check did not happen, and nothing in this repository
+knows what production is serving. It is on `1.6.0` unless a run says otherwise.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
