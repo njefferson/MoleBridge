@@ -1625,6 +1625,106 @@ is every screen at once including the hidden ones — and not the whole document
 because the patch notes live in a dialog outside it and say "Lessons. Seven of
 them", which was true in the release it describes.
 
+## The app changed under the reader and never said what for
+
+§7h was built and half of it was missing. The strip told a reader a new version
+was waiting, they pressed **Use it now**, the page reloaded, and the app was
+different with no account of what changed. The notes existed the whole time,
+behind the ⓘ under **What changed** — which is a place somebody opens only if
+they already suspect there is news, and the whole point of an app that updates
+itself is that they have no reason to.
+
+**It has to happen AFTER the switch, and that is forced rather than chosen.**
+The obvious design is a "what's in it" line on the strip itself. It cannot be
+honest: the page showing that strip is the OLD build, and its `RELEASES` array
+was generated from the changelog as it stood when that build was made. The
+running code has never heard of the release it is offering. Anything it said
+about the waiting version would be invented. The first moment anything in the
+app actually knows is after the reload, in the new build.
+
+**Three rules about when it may interrupt**, each of which is a walk assertion:
+
+- A newcomer is never told. There is no news for somebody with no before, and
+  two modals stacked on a first run is the app talking over itself at the one
+  moment a reader is deciding what it is. The version is recorded silently, so
+  their next update is news.
+- Not over work in progress. A warm-up link puts a student in front of a problem
+  within a second of tapping it, and a resumed session has their working still
+  in it. Neither moment is for release notes — and neither loses them, because
+  the version is not recorded, so the offer stands until they open the app with
+  nothing waiting. Same posture as the strip's **Not yet**: dismissed, not
+  resolved.
+- Everything since, not just the last one. A device that sat over a holiday
+  comes back several releases behind, and being told about one of four changes
+  is how an app comes to seem like it changes for no reason.
+
+**The case the feature creates for itself, which would have made the release
+that adds it show nobody anything.** Every existing reader arrives at the first
+build that records a version with nothing recorded — indistinguishable, from
+that key alone, from somebody who has never opened the app. They are not the
+same person and the app already knows which is which: a reader who has been here
+before has read the orientation. So `releasesSince` takes a `returning` flag,
+and a returning reader with no recorded version gets the release in front of
+them — the most that can be said without inventing what they last saw.
+
+**The decision is DOM-free and the dialog is next door**, which is the
+`warmup.ts` split for the same reason. Every case worth getting right here is
+about absence: never run the app, skipped four releases, carrying a version this
+build has never heard of. None of them is convenient to arrange in a browser,
+and a decision that can only be tested by driving Chromium is a decision that
+gets tested once. The node type check found this rather than judgement did —
+importing the panel into a test dragged `dom.ts` into a config with no DOM lib.
+
+**Two things this turned up that nothing was looking for.**
+
+The welcome said nothing was kept after the tab closed and that stopping halfway
+meant starting again. That stopped being true in **1.2.0**, when an unfinished
+set started surviving the tab closing, and nobody went back to the sentence. The
+app was telling a student their work would be lost while it was saving it. It
+now names what is kept — the problem in progress, the place in the lessons, how
+it is set up to read — and that all of it stays on the device.
+
+And the walk's first attempt at the resumed-session case set the news as due
+BEFORE navigating home, which put a modal over the home screen with nothing to
+click through to. That is the panel working exactly as the welcome does; it cost
+a thirty-second timeout to see, and the order is now written down beside it.
+
+**The `close` event is where the version is recorded**, not the button, because
+Escape and the backdrop close a dialog too and a reader who dismissed it that
+way has still been shown it. Recording only on the button would mean the same
+notes on every launch, which is how people learn to dismiss a panel without
+reading it. It is also a queued task rather than a synchronous one — the same
+race that lost one walk run in three on the orientation move — so the walk waits
+for the write rather than reloading straight after the click.
+
+## The release notes were a record, and that was the wrong call
+
+`tools/language-check.mjs` shipped in 1.6.0 exempting `src/ui/releases.ts` and
+CHANGELOG.md, with the reasoning written into its header: the changelog is the
+record of what shipped, and editing old entries so a gate goes green is
+rewriting history to look like it never happened.
+
+**The owner reversed it, and the reversal is right.** The notes are not an
+archive. They are the app talking to whoever is reading it TODAY, in the same
+ⓘ panel as everything else, and twenty-eight entries about a class, a board and
+a gradebook teach a family teaching at home the same wrong thing about who this
+is for as any other screen would. What happened in each release has not changed
+by a word; only the room the sentence puts around the reader. The honest
+distinction is between the FACTS of a release, which are fixed, and the voice
+they are told in, which is the app's and belongs to now.
+
+So CHANGELOG.md is scanned. `src/ui/releases.ts` is still not, and that is
+mechanical rather than principled: it is generated from CHANGELOG.md, so the
+source is where the line holds, and scanning a file that may not exist yet is a
+check that can silently skip.
+
+**The entry describing the fix could not quote what it fixed.** The 1.6.0 note
+listed the exact phrases that had been removed, which the gate then found in the
+changelog — correctly. Rewriting it to describe the room rather than quote the
+sentences is better prose anyway, and it is the general shape: a note about
+language that has to name the language needs a different sentence, not an
+exemption.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

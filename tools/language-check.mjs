@@ -24,10 +24,21 @@
  * BOTH rooms and no less specific in either: whoever set the work, wherever you
  * hand it in, the codes you were handed.
  *
- * `src/ui/releases.ts` is not scanned. It is generated from CHANGELOG.md, which
- * is the record of what shipped and when; editing old entries so a gate goes
- * green is rewriting history to look like it never happened. New entries are
- * written in the neutral voice because they are written now.
+ * ## The release notes are in scope, and that was a correction
+ *
+ * This first shipped scanning everything EXCEPT the patch notes, on the reasoning
+ * that CHANGELOG.md is a record of what shipped and editing old entries is
+ * rewriting history. The owner's instruction settled it the other way, and the
+ * instruction is right: the notes are not an archive, they are the app talking
+ * to whoever is reading it TODAY, and a homeschooling family reading twenty-nine
+ * entries about a class and a gradebook learns the same wrong thing about who
+ * the app is for as they would from any other screen. Nothing about what
+ * happened in each release changed — only the room the sentence puts around it.
+ *
+ * So CHANGELOG.md is scanned, and `src/ui/releases.ts` is not: it is generated
+ * from CHANGELOG.md by `tools/changelog.mjs`, so the source is the honest place
+ * to hold the line, and scanning a file that may not exist yet would be a check
+ * that can silently skip.
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
@@ -97,6 +108,7 @@ function everyFile(directory, ending) {
 const GENERATED = join(REPO, 'src', 'ui', 'releases.ts');
 
 const SURFACES = [
+  join(REPO, 'CHANGELOG.md'),
   join(REPO, 'public', 'index.html'),
   join(REPO, 'public', 'teacher', 'index.html'),
   ...everyFile(join(REPO, 'src', 'ui'), '.ts'),

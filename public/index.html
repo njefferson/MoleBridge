@@ -541,17 +541,50 @@
         <li>At the end you get a short code. Type it in wherever you hand your work in.</li>
       </ol>
 
-      <h2>Nothing is stored and nothing is sent</h2>
+      <h2>Nothing is sent, and what is kept stays here</h2>
       <p>
-        MoleBridge has no account and no server. Nothing you type leaves the
-        device, and nothing is kept after you close the tab — so if you stop
-        halfway, you start again. That is the trade for it working with no
-        connection and holding nothing about you.
+        MoleBridge has no account and no server. Nothing you type ever leaves
+        the device. What it keeps, it keeps on this device only: the problem you
+        are in the middle of, so closing the tab does not cost you your work;
+        your place in the lessons; and how you have set it up to read. None of
+        that is sent anywhere and none of it is in the code you hand in.
       </p>
     </div>
   </div>
   <div class="welcome-actions">
     <button type="button" class="button button-big" id="welcome-begin">Get started</button>
+  </div>
+</dialog>
+
+<!--
+  ============ what changed while you were away ============
+
+  §7h TOLD THE READER A NEW VERSION WAS WAITING AND THEN SAID NOTHING ABOUT IT.
+  The strip offers the switch, the page reloads, and the app is different with
+  no account of what changed — the notes existed, behind the ⓘ, which is a place
+  you only open if you already suspect there is news.
+
+  AFTER THE RELOAD RATHER THAN ON THE STRIP, and that is forced rather than
+  chosen: the page showing the strip is the OLD build, whose release notes were
+  generated before the release it is offering existed. It could not describe the
+  waiting version without inventing it. `whatsnew.ts` has the argument.
+
+  THE WELCOME'S SHAPE, REUSED DELIBERATELY. `welcome-dialog` scrolls the body
+  inside the panel and pins the action bar to the bottom of it, which is the fix
+  for the defect that had "Get started" below the fold on a real device. A
+  second panel of unknown length is the same problem exactly.
+-->
+<dialog class="info welcome-dialog" id="whatsnew-panel" aria-labelledby="whatsnew-title">
+  <div class="info-head">
+    <h2 id="whatsnew-title">What changed</h2>
+  </div>
+  <div class="info-body">
+    <p class="lede" id="whatsnew-lede"></p>
+    <div id="whatsnew-body"></div>
+    <p class="hint">These notes stay behind the ⓘ, under What changed, whenever you want them again.</p>
+  </div>
+  <div class="welcome-actions">
+    <button type="button" class="button button-big" id="whatsnew-done">Got it</button>
   </div>
 </dialog>
 

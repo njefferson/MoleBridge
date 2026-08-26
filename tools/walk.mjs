@@ -30,6 +30,8 @@ import { REFERENCE } from '../src/learn/reference.ts';
 import { ERROR_CLASSES } from '../src/engine/taxonomy.ts';
 import { ELEMENTS } from '../src/chem/elements.ts';
 import { warmupLink, WARMUP_PROBLEMS } from '../src/ui/warmup.ts';
+import { RELEASES } from '../src/ui/releases.ts';
+import { SEEN_VERSION_KEY } from '../src/ui/whatsnew.ts';
 
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 const KEY = 'WALK-A';
@@ -101,6 +103,13 @@ try {
   check(await page.locator('#welcome-panel[open]').isVisible(), 'the orientation opens over the app on a first run');
   check(await page.locator('#orientation').isVisible(), 'the orientation is in it');
   check(await page.locator('#screen-home').isVisible(), 'and the app is behind it, not replaced by it');
+  // AND NOT ALSO THE RELEASE NOTES. There is no news for somebody with no
+  // before, and two modals stacked on a first run would be the app talking
+  // over itself at the one moment a reader is deciding what it is.
+  check(
+    !(await page.locator('#whatsnew-panel[open]').isVisible()),
+    'and a newcomer is NOT also shown what changed',
+  );
 
   // THE BUTTON IS ON SCREEN. This is the defect that made it a dialog: as a
   // full-height screen the content pushed "Get started" below the fold, so the
@@ -795,6 +804,128 @@ try {
     !(await page.locator('#resume-strip').isVisible()),
     'a set left on purpose is not offered back after a reload',
   );
+
+  /* ---- what changed, after the app changed under you ---- */
+  //
+  // §7h TOLD THE READER A NEW VERSION WAS WAITING AND THEN SAID NOTHING ABOUT
+  // IT. The strip offers the switch, the page reloads, the app is different,
+  // and the account of what changed sat behind the ⓘ — which is a place you
+  // only open if you already suspect there is news.
+  //
+  // AFTER THE RELOAD RATHER THAN ON THE STRIP, because the page showing the
+  // strip is the OLD build: its release notes were generated before the release
+  // it is offering existed, so anything it said about the waiting version would
+  // be invented.
+  check(RELEASES.length >= 4, `there are enough releases to walk this (${RELEASES.length})`);
+
+  /** Wait until the device has actually recorded that it was shown `version`. */
+  const readingRecorded = (version) =>
+    page.waitForFunction(
+      ([key, want]) => localStorage.getItem(key) === want,
+      [SEEN_VERSION_KEY, version],
+      { timeout: TIMEOUT_MS },
+    );
+
+  // A RETURNING READER WITH NOTHING RECORDED — which is every existing reader
+  // on the release that starts recording it. They are not a newcomer and must
+  // not be treated as one.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.evaluate((key) => {
+    localStorage.setItem('molebridge.orientation.seen', 'yes');
+    localStorage.removeItem(key);
+  }, SEEN_VERSION_KEY);
+  await page.reload({ waitUntil: 'load' });
+
+  check(await page.locator('#whatsnew-panel[open]').isVisible(), 'a returning reader is shown what changed');
+  check(
+    !(await page.locator('#welcome-panel[open]').isVisible()),
+    'and not the first-run welcome on top of it',
+  );
+  const firstNotes = await page.locator('#whatsnew-body .release').count();
+  check(
+    firstNotes === 1,
+    `one release, which is the most it can say without inventing what they last saw (${firstNotes})`,
+  );
+  const headed = (await page.locator('#whatsnew-body .release h3').first().textContent()) ?? '';
+  check(headed.includes(RELEASES[0].version), `and it is the release they are running (${headed.trim()})`);
+
+  // WAITED FOR, NOT READ IMMEDIATELY — the same race that lost one run in three
+  // on the orientation move. `dialog.close()` fires its `close` event as a
+  // queued task rather than synchronously, and the version is recorded there
+  // (so that Escape and the backdrop count too), which means a reload issued
+  // straight after the click can outrun the write.
+  await page.locator('#whatsnew-done').click();
+  await readingRecorded(RELEASES[0].version);
+  await page.reload({ waitUntil: 'load' });
+  check(
+    !(await page.locator('#whatsnew-panel[open]').isVisible()),
+    'and once read it does not come back on the next launch',
+  );
+
+  // BEHIND BY THREE. A Chromebook that sat over a holiday comes back several
+  // releases behind, and being told only about the most recent one is how a
+  // reader concludes the app changes for no reason.
+  const wayBack = RELEASES[3].version;
+  await page.evaluate(([key, version]) => localStorage.setItem(key, version), [SEEN_VERSION_KEY, wayBack]);
+  await page.reload({ waitUntil: 'load' });
+  const catchUp = await page.locator('#whatsnew-body .release').count();
+  check(catchUp === 3, `three releases behind shows all three (${catchUp})`);
+  const listed = await page.locator('#whatsnew-body .release h3').allTextContents();
+  check(
+    !listed.some((line) => line.includes(wayBack)),
+    `and never the release they already had (${wayBack})`,
+  );
+
+  // ESCAPE COUNTS AS READ. A dialog closes on Escape and on the backdrop, and a
+  // reader who dismissed it that way has still been shown it — recording only
+  // on the button would mean the same notes on every launch, which is how
+  // people learn to dismiss a panel without reading it.
+  await page.keyboard.press('Escape');
+  await readingRecorded(RELEASES[0].version);
+  await page.reload({ waitUntil: 'load' });
+  check(
+    !(await page.locator('#whatsnew-panel[open]').isVisible()),
+    'dismissing with Escape counts as having been shown it',
+  );
+
+  // NOT OVER WORK IN PROGRESS, AND NOT LOST EITHER. A student resuming a saved
+  // session has a problem waiting with their working still in it. Release notes
+  // are not what that moment is for — and nothing is recorded, so the offer
+  // stands until they open the app with nothing in front of them.
+  //
+  // THE SET IS STARTED BEFORE THE NEWS IS OWED, in that order deliberately: the
+  // panel is modal, so making it due first puts it over the home screen and
+  // there is nothing to click through to. That is the panel working — it is the
+  // welcome's behaviour exactly — and it is also how this step was written the
+  // first time, which cost a thirty-second timeout to notice.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-assignment').click();
+  await page.locator('#setup-roster').fill(String(ROSTER));
+  await page.locator('#setup-key').fill(KEY);
+  await page.locator(`#setup-tier button[data-tier="${TIER}"]`).click();
+  await page.locator(`#setup-count button[data-count="${COUNT}"]`).click();
+  await page.locator('#setup-start').click();
+  await page.locator('#screen-work').waitFor({ state: 'visible', timeout: TIMEOUT_MS });
+  await page.evaluate(([key, version]) => localStorage.setItem(key, version), [SEEN_VERSION_KEY, wayBack]);
+  await page.reload({ waitUntil: 'load' });
+
+  check(await page.locator('#resume-strip').isVisible(), 'a resumed session is offered back');
+  check(
+    !(await page.locator('#whatsnew-panel[open]').isVisible()),
+    'and the release notes do NOT open over it',
+  );
+  const stillOwed = await page.evaluate((key) => localStorage.getItem(key), SEEN_VERSION_KEY);
+  check(stillOwed === wayBack, `and the news is still owed rather than swallowed (${stillOwed})`);
+
+  await page.locator('#resume-go').click();
+  await page.locator('#work-leave').click();
+  await page.locator('#work-leave').click();
+  await page.reload({ waitUntil: 'load' });
+  check(
+    await page.locator('#whatsnew-panel[open]').isVisible(),
+    'and it arrives the next time nothing is in front of them',
+  );
+  await page.locator('#whatsnew-done').click();
 
   /* ---- the periodic table ---- */
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });

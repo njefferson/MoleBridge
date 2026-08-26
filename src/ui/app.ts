@@ -28,6 +28,7 @@ import { mountDone } from './done.ts';
 import { mountInfo } from './info.ts';
 import { mountTheme } from './theme.ts';
 import { mountUpdates } from './updates.ts';
+import { mountWhatsNew } from './whatsnew-panel.ts';
 import { VERSION } from '../version.ts';
 import { resumeSession, startSession, type Clock, type Session, type SessionConfig } from '../engine/steps.ts';
 
@@ -165,6 +166,7 @@ function boot(): void {
   });
 
   const updates = mountUpdates();
+  const whatsNew = mountWhatsNew(VERSION);
   const info = mountInfo(() => session, updates);
   mountTheme();
 
@@ -373,10 +375,31 @@ function boot(): void {
   }
 
   go(home);
+
+  /*
+    WHAT CHANGED, WITHOUT HAVING TO GO LOOKING — §7d and the half of §7h that
+    was missing. The strip offers a waiting version and the page reloads into a
+    different app; until now nothing said what for. `whatsnew.ts` carries why it
+    has to happen here, after the switch, rather than on the strip.
+
+    THE ORIENTATION IS WHAT TELLS A NEWCOMER FROM A RETURNING READER. Both
+    arrive at this build with no version recorded — it is the release that
+    starts recording one — and they are owed opposite things: a newcomer has no
+    news, and somebody who was already using MoleBridge should not be shown
+    nothing purely because the app was not keeping track when they left.
+
+    NOT OVER A RESUMED SESSION. `saved` means there is a problem waiting with
+    their working still in it, and release notes are not what that moment is
+    for. Nothing is recorded in that case, so the offer stands until they open
+    the app with nothing in front of them — the same posture as the update
+    strip's Not yet, which dismisses without resolving.
+  */
   if (info.hasBeenSeen()) {
     info.adoptOrientation();
+    if (saved === null) whatsNew.offer(true);
   } else {
     welcomePanel.showModal();
+    whatsNew.offer(false);
   }
 }
 

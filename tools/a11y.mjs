@@ -247,6 +247,26 @@ const STATES = [
     },
   },
   {
+    // WHAT CHANGED, AFTER THE APP CHANGED UNDER THE READER. A modal of unknown
+    // length — three releases behind is three sets of notes — so it is measured
+    // for the same reason the welcome is: the pinned action bar and the
+    // scrolling body are the fix for a button below the fold, and a state that
+    // only measured the prose would not see it.
+    //
+    // Set up rather than waited for. A first-time visitor never sees this, and
+    // a state nobody can reach is a state nobody measures.
+    name: 'what changed while you were away',
+    async reach(page) {
+      await page.goto(`${page.__origin}/`, { waitUntil: 'load' });
+      await page.evaluate(() => {
+        localStorage.setItem('molebridge.orientation.seen', 'yes');
+        localStorage.setItem('molebridge.version.seen', '0.1.0');
+      });
+      await page.reload({ waitUntil: 'load' });
+      await page.locator('#whatsnew-panel[open]').waitFor();
+    },
+  },
+  {
     name: 'the stale-version strip',
     async reach(page) {
       await startSession(page);

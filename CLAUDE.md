@@ -105,8 +105,16 @@ that to the teacher.
   synonym that excludes exactly as much: say *whoever set the work*, *wherever
   you hand your work in*, *the codes you were handed*. It reads with comments
   stripped — a comment may describe the classroom, since that is the reason
-  several features exist — and it skips `src/ui/releases.ts`, which is generated
-  from CHANGELOG.md and is a record rather than a surface.
+  several features exist. **CHANGELOG.md IS IN SCOPE, and that was a
+  correction.** The gate first shipped exempting the patch notes as a record of
+  what shipped; the owner's instruction settled it the other way, and it is
+  right — the notes are the app talking to whoever is reading it today, and
+  twenty-eight entries about a class and a gradebook teach a homeschooling
+  family the same wrong thing as any other screen. What happened in each release
+  never changes; only the room the sentence puts around it. `src/ui/releases.ts`
+  stays out because it is GENERATED from CHANGELOG.md, so the source is where
+  the line holds and scanning a file that may not exist yet is a check that can
+  silently skip.
 - **Speech synthesis is allowed; speech RECOGNITION is not.** They are one
   letter apart in the same corner of the platform, and recognition turns on a
   microphone. `tools/permissions-check.mjs` names the allowance and forbids the
