@@ -1399,6 +1399,47 @@ to revert a plant, it discarded the read-aloud code written minutes earlier,
 which had to be written again. The backup copy taken for exactly this purpose was
 sitting right there; the habit reached for git instead.
 
+## The release check waited for the wrong thing, and 1.3.0's promote went red
+
+The deploy step verifies TWO urls on a promote: the immutable per-deploy address
+and the apex, because on `main` those answer different questions. 1.3.0 passed
+the first and failed the second: **"it answers, but not with molebridge-1.3.0"**.
+
+The bytes were fine. The per-deploy URL served 1.3.0 immediately. What failed is
+one second later, on the apex — because **Cloudflare flips the production alias a
+moment after the per-deploy URL goes live**, and the step's retry loop was
+waiting on the wrong thing:
+
+    for attempt in 1 2 3 4 5 6; do
+      code=$(curl -o /dev/null -w '%{http_code}' "$DEPLOYED_URL/")
+      [ "$code" = "200" ] && break
+      ...
+
+**The apex returns 200 instantly — serving the PREVIOUS release.** So the loop
+was satisfied on the first attempt by the old build, every header check below
+then measured the old build, and the version check at the end was a coin toss on
+whether the alias had flipped yet. It came up heads for three promotes and tails
+on the fourth.
+
+The retry existed and looked like the right shape. It waited for *an answer*
+where the whole point was *this answer*.
+
+**The fix is to wait on the RELEASE**, up to ninety seconds, and to run the
+header checks only after it arrives — so they measure the build being deployed
+rather than whichever one is currently there. It can still fail, and must: a
+version that never appears is a deploy that never landed, which is the thing this
+step exists to catch. Hub LESSONS §53's shape exactly — a push is not a release —
+with the hole this time inside the release check itself.
+
+### And a bash trap that would have been worse than the bug
+
+The first fix wrote the success line as `[ "$attempt" -gt 1 ] && echo ...`. The
+step runs under `set -e`, and an AND-list whose test is FALSE returns non-zero
+outside a condition context — so on the ordinary case, the edge being ready first
+time, the whole check would have aborted. Caught by extracting the loop and
+running all three paths against a fake edge — ready immediately, ready on the
+third try, never ready — before it went anywhere near a promote.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
