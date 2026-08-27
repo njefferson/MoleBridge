@@ -20,15 +20,14 @@
 
 import { el, fill, need } from './dom.ts';
 import { assignmentKeyIdFor } from '../engine/assignment.ts';
+import { TIERS, TIER_NAMES } from '../engine/problem.ts';
 import type { SessionConfig } from '../engine/steps.ts';
 
-/** How hard, and how many. The same choices the assignment screen offers. */
-const TIERS = [1, 2, 3] as const;
-const TIER_NAMES: Record<number, string> = {
-  1: 'Mass to mass',
-  2: 'Particles and volume',
-  3: 'Limiting reagent and yield',
-};
+/**
+ * How many. WHICH SET comes from the engine, along with what each is called —
+ * this file used to declare its own `[1, 2, 3]`, which left percent yield
+ * unreachable in practice while the graded route posed it.
+ */
 const COUNTS = [3, 5, 10] as const;
 const DEFAULT_COUNT = 5;
 

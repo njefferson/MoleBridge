@@ -2174,6 +2174,68 @@ further down navigates by fragment, which is a same-document navigation, so the
 dialog survived it and swallowed a click thirty seconds later. Second time in
 this file, same cause, and the fix is the same: dismiss what you opened.
 
+## Three screens declared three ladders, and one of them was a lie
+
+The tier control existed on three surfaces and each hand-typed its own list.
+The graded route offered four sets. Practice offered `[1, 2, 3]`, so
+**PERCENT_YIELD could be assigned and could not be practised at all** — and
+practice called its third set `Limiting reagent and yield` for a tier that has
+never once posed a yield, so a student choosing it to rehearse the thing she was
+about to be graded on got a set without it. The warm-up builder on the codes
+page had a fourth vocabulary again, four `<option>` rows typed into the markup.
+
+`TIER_NAMES` now lives beside `TIERS` in `src/engine/problem.ts`, because **a
+tier name is a claim about what the generator does**, and the claim belongs
+where the generator is. All three surfaces import it; the codes page's select is
+empty in the markup and filled from the same list.
+
+**The measurement came first, and it is what said not to touch the ladder.**
+`test/tiers.test.ts` measures every tier by the same probes — problem kinds,
+stage count, species count, answer figures, and the base-10 log of the converted
+quantity — and asks whether each rung poses something the one below does not.
+Every step does: `MASS_TO_MASS`, then `MASS_TO_PARTICLES`/`MASS_TO_VOLUME`, then
+`LIMITING_REAGENT`, then `PERCENT_YIELD`. Structure carries all three steps, so
+**no tier was added, renamed for symmetry, or made harder to look like a ladder**
+— the numbers said the ladder was already there and only the naming was wrong.
+
+Uniform probes on purpose: a per-tier measure of difficulty is one somebody can
+tune until the answer comes out right, which is hub LESSONS 141's shape. The log
+is taken of `converted` rather than of each kind's final value, because tier 4
+ends on a percentage and the rest end on a quantity — reading "the answer" would
+compare a percent against grams and call the difference difficulty.
+
+**Two guards, because the modules were only half of it.** The test refuses any
+surface that declares a tier list of its own, structurally rather than by word
+search, and refuses options typed into the `<select>` — which no discipline in
+the TypeScript could have reached. Both were watched going red on a planted
+break before either was believed. The walk then reads the set names off both
+doors and fails unless they are identical, which is the same assertion made
+where a student would actually meet it.
+
+## The setting that showed one step stopped saying which step
+
+`data-focus="on"` hid `.problem-card`, `.rail` and `#work-progress` together.
+The rail and the progress line were **the only two things carrying the step**,
+so one-step-at-a-time — an accommodation — left a chain of six boxes that all
+looked the same, with nothing to distinguish the fourth from the second.
+
+This is the same defect as the one `renderSoFar` was built for, on the other
+half of what the setting took away: that one removed the *values* the next step
+needs, this one removed the *position*. The fix there was to give the numbers a
+second route; the fix here is simpler, because the line was never clutter — it
+now names the step as well as the problem and is no longer hidden.
+
+Two sentences rather than a middot separator: this line is read aloud, and a
+separator that is silent in one screen reader and "middle dot" in another is
+worse than a full stop in every one.
+
+**And it weakened a check on its way past.** The walk asserted the warm-up
+opened the right number of problems with `warmProgress.includes(String(2))`,
+which was exact while the line read `Problem 1 of 2` and stopped being exact the
+moment it also said `Step 1 of 6`. A substring check is only as strong as the
+string it reads, and lengthening the string is a way of loosening every one of
+them without touching the check. Anchored to `Problem 1 of 2.` now.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is

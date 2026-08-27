@@ -4,6 +4,29 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.11.0 — CAPABILITY
+
+**Practice can now give you percent yield problems.** It offered three sets while
+the graded route offered four, so the one kind of problem you were most likely to
+want to rehearse was the one you could not ask for. Worse, practice's third set
+was called "Limiting reagent and yield" and has never once posed a yield — if you
+chose it to prepare for that, you got a set without it in.
+
+The three places that name the sets — practice, the graded route, and the warm-up
+builder for whoever sets the work — had drifted into three different lists. They
+now read one, so a set is called the same thing everywhere and offers the same
+problems.
+
+**And if you have one step at a time turned on, the app now tells you which step
+you are on.** That setting hid the row of steps, which is what it is for, and hid
+the line above it too — leaving a chain of six boxes that all looked the same,
+with no way to tell the fourth from the second. The line stays now, and it names
+the step as well as the problem: *Problem 2 of 5. Step 4 of 6: Mole ratio.*
+
+**Still not fixed:** the sets differ in what kind of problem they pose rather than
+in how hard the arithmetic is, so a longer set is not a harder one in every sense
+of the word. Set 3 asks nine steps against set 1's six; set 4 asks seven.
+
 ## 1.10.1 — ITERATION
 
 The offline copy of the app is complete for the first time.

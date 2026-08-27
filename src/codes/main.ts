@@ -21,6 +21,7 @@ import { clear, el, fill, need } from '../ui/dom.ts';
 import { VERSION } from '../version.ts';
 import { BUILD_SECRET } from '../code/secret.ts';
 import { assignmentKeyIdFor, normaliseAssignmentKey } from '../engine/assignment.ts';
+import { TIERS, TIER_NAMES } from '../engine/problem.ts';
 import { warmupLink } from '../ui/warmup.ts';
 import {
   decodeGradebook,
@@ -62,7 +63,27 @@ function boot(): void {
     `warmup.test.ts`, so what this writes on the board is what the app reads.
   */
   const code = need<HTMLInputElement>('#warmup-code');
+  /*
+    THE SETS COME FROM THE ENGINE. Typed into this page, they were a third list
+    of names — and the one that disagreed with the other two about which set
+    poses percent yield. A warm-up built from a wrong name puts the wrong
+    problems on the board.
+
+    Set 2 is the default because it is the ordinary mass-to-mass-and-units work
+    most warm-ups want; the first set is deliberately narrower.
+  */
   const set = need<HTMLSelectElement>('#warmup-set');
+  const WARMUP_DEFAULT_TIER = 2;
+  fill(
+    set,
+    TIERS.map((value) =>
+      el('option', {
+        text: `${value} — ${(TIER_NAMES[value] ?? `Set ${value}`).toLowerCase()}`,
+        attrs: { value: String(value), selected: value === WARMUP_DEFAULT_TIER },
+      }),
+    ),
+  );
+  set.value = String(WARMUP_DEFAULT_TIER);
   const howMany = need<HTMLSelectElement>('#warmup-count');
   const link = need('#warmup-link');
   const linkStatus = need('#warmup-copy-status');

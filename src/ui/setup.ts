@@ -20,16 +20,8 @@ import {
   isValidRosterId,
   normaliseAssignmentKey,
 } from '../engine/assignment.ts';
-import { TIERS } from '../engine/problem.ts';
+import { TIERS, TIER_NAMES } from '../engine/problem.ts';
 import type { SessionConfig } from '../engine/steps.ts';
-
-/** What each tier is, in a student's words. */
-const TIER_NAMES: Readonly<Record<number, string>> = {
-  1: 'Mass to mass',
-  2: 'Particles and gas volumes',
-  3: 'Limiting reactant',
-  4: 'Percent yield',
-};
 
 /** How many problems a session may be. */
 const COUNTS: readonly number[] = [3, 5, 8];

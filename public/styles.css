@@ -162,13 +162,18 @@
 :root[data-spacing="roomy"] .worked { letter-spacing: normal; word-spacing: normal; }
 
 /*
-  One thing at a time. The step being worked stays; the equation card, the step
-  rail and the progress line go. The app is step-gated already, so this is what
-  it looked like underneath all along.
+  One thing at a time. The step being worked stays; the equation card and the
+  step rail go. The app is step-gated already, so this is what it looked like
+  underneath all along.
+
+  THE PROGRESS LINE USED TO GO WITH THEM, and that was wrong. It and the rail
+  were the only two things saying which step this is, so hiding both left the
+  student who asked for one step at a time with no way to tell the fourth box
+  from the second. It now names the step as well as the problem and stays in
+  both modes.
 */
 :root[data-focus="on"] .problem-card,
-:root[data-focus="on"] .rail,
-:root[data-focus="on"] #work-progress { display: none; }
+:root[data-focus="on"] .rail { display: none; }
 
 * { box-sizing: border-box; }
 

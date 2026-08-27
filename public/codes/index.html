@@ -108,12 +108,13 @@
 
       <div class="field">
         <label for="warmup-set">Which set</label>
-        <select id="warmup-set">
-          <option value="1">1 — one step at a time</option>
-          <option value="2" selected>2 — the usual</option>
-          <option value="3">3 — limiting reactant</option>
-          <option value="4">4 — percent yield</option>
-        </select>
+        <!--
+          EMPTY ON PURPOSE. These options used to be typed here, and they were a
+          third list of set names disagreeing with the two in the app. They are
+          filled from the engine's own TIER_NAMES by codes/main.js, which is the
+          same list the students' screens read.
+        -->
+        <select id="warmup-set"></select>
       </div>
 
       <div class="field">
