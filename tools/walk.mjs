@@ -730,6 +730,17 @@ try {
   // bitten by a modal being shared state between blocks that do not know about
   // each other.
   await page.locator('#welcome-begin').click();
+  // WAIT FOR THE WRITE, NOT THE CLICK — the THIRD time this file has been bitten
+  // by it. `dialog.close()` fires its event as a queued task and the orientation
+  // is marked seen in that handler, so a walk that navigates straight after the
+  // click can outrun the write. It won locally and LOST ON THE RUNNER, where the
+  // welcome then reopened and intercepted a click in the warm-up section thirty
+  // seconds later — a failure whose message named a section that was innocent.
+  await page
+    .waitForFunction(() => localStorage.getItem('molebridge.orientation.seen') === 'yes', undefined, {
+      timeout: TIMEOUT_MS,
+    })
+    .catch(() => {});
   await page.locator('#welcome-panel[open]').waitFor({ state: 'detached', timeout: TIMEOUT_MS }).catch(() => {});
 
   /* ---- no screen states a count the app can contradict ---- */
