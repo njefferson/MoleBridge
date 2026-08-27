@@ -4,6 +4,39 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.10.0 — CAPABILITY
+
+If you are the one setting the work, the app now tells you there is a page for
+you.
+
+**There always was one.** It builds a warm-up link that opens straight into a
+short set, and it decodes the codes handed back to you so you can see which
+steps were hard. The only way to reach it was to already know the address — fine
+where one person owns the projector, and nonsense for a family, a co-op, or
+anyone working with one or two learners, where the same person is both the one
+learning and the one setting it.
+
+It is now named in the welcome, and afterwards it lives behind the ⓘ with the
+rest of that text. **And it says to bookmark it** — both in the app and on the
+page itself — because nothing signs you in, so the address is the only way back.
+
+**The page moved from /teacher/ to /codes/.** The words on it stopped assuming
+one particular kind of room in 1.6.0 and the address did not, so a link to it
+announced whose app this was before the page had loaded. **Any bookmark you already have keeps
+working**, permanently.
+
+**Also, and this one was serving badly:** the list of files the app saves for
+offline use included two that the host never serves — they are settings the host
+reads and keeps. Saving the list is all-or-nothing, so it failed every time, and
+the app fell back to keeping three files instead of sixty-seven. **If you have
+used MoleBridge with no connection and found it half-there, that is why.** The
+list is correct now, and a check runs against the live site after every release
+to confirm every file on it is really being served.
+
+**What is still missing.** Nothing tells you, before you hand the app to
+somebody, what it does and does not do — the welcome is written to whoever is
+learning. That page does not exist yet.
+
 ## 1.9.0 — CAPABILITY
 
 Nothing you work out gets taken away from you.

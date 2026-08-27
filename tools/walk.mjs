@@ -16,6 +16,7 @@
  */
 
 import { chromium } from 'playwright-core';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serve, chromiumPath } from './serve.mjs';
@@ -403,7 +404,7 @@ try {
     `Evans, Tom,15,${'Z'.repeat(24)}`,
   ].join('\n');
 
-  await page.goto(`${server.origin}/teacher/`, { waitUntil: 'load' });
+  await page.goto(`${server.origin}/codes/`, { waitUntil: 'load' });
   check(await page.locator('#decode-form').isVisible(), 'the decoder page loads');
   check(
     ((await page.locator('.why').textContent()) ?? '').includes('discarded'),
@@ -994,6 +995,62 @@ try {
       }`,
     );
   }
+
+  /* ---- whoever sets the work is told there is a page for them ---- */
+  //
+  // IN THE ORIENTATION, which means §7e carries it to both places: it shows in
+  // the welcome, and it MOVES into the ⓘ with the rest of that block rather
+  // than being copied there. In a family, a co-op or a tutor's front room the
+  // same person is reader and setter, and a page nobody is told about is a page
+  // they do not have.
+  // A FIRST RUN, ARRANGED. By this point in the walk the orientation has long
+  // been marked seen, so the welcome no longer opens — and a check for a link
+  // in a dialog that never appears fails for a reason that has nothing to do
+  // with the link.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: 'load' });
+  await page.locator('#welcome-panel[open]').waitFor({ timeout: TIMEOUT_MS });
+  const inWelcome = page.locator('#welcome-panel #orientation-codes');
+  check(await inWelcome.isVisible(), 'the welcome names the page for setting work');
+  const codesHref = await inWelcome.getAttribute('href');
+  check(codesHref === '/codes/', `and points at it (${codesHref})`);
+  const codesBox = await inWelcome.boundingBox();
+  check(
+    codesBox !== null && codesBox.height >= 44,
+    `which a finger can hit (${codesBox === null ? 'not found' : `${Math.round(codesBox.height)}px`})`,
+  );
+  const welcomeText = (await page.locator('#welcome-panel').textContent()) ?? '';
+  check(/bookmark it/i.test(welcomeText), 'and says to bookmark it — nothing signs anybody in');
+
+  await page.locator('#welcome-begin').click();
+  await page
+    .locator('#info-orientation-slot #orientation')
+    .waitFor({ state: 'attached', timeout: TIMEOUT_MS })
+    .catch(() => {});
+  check(
+    (await page.locator('#orientation-codes').count()) === 1,
+    'exactly ONE such link after the move — moved, never copied',
+  );
+  await page.locator('#info-open').click();
+  check(
+    await page.locator('#info-panel #orientation-codes').isVisible(),
+    'and it is behind the information control afterwards',
+  );
+  await page.locator('#info-close').click();
+
+  // The page itself says it too, for whoever arrived by a link rather than
+  // through the app and never saw the welcome.
+  await page.goto(`${server.origin}/codes/`, { waitUntil: 'load' });
+  const codesPage = (await page.locator('#main').textContent()) ?? '';
+  check(/bookmark this page/i.test(codesPage), 'the page itself says to bookmark it');
+
+  // THE OLD PATH IS DECLARED, not tested here: this walk serves `public/` off
+  // disk with no redirect engine, so asserting a 301 would be asserting
+  // something the local server cannot do. What IS checkable is that the rule
+  // exists and names the right destination.
+  const redirects = readFileSync(join(REPO, 'public', '_redirects'), 'utf8');
+  check(/^\/teacher\/\*\s+\/codes\/:splat\s+301$/m.test(redirects), 'the old path redirects, permanently');
 
   /* ---- the whole history is a page in the app, not a link off it ---- */
   //

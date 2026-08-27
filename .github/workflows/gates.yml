@@ -427,6 +427,34 @@ jobs:
             fail=1
           fi
 
+          # EVERY FILE THE OFFLINE SHELL ASKS FOR IS ACTUALLY SERVED HERE.
+          #
+          # `cache.addAll` is all-or-nothing: one 404 rejects the whole call and
+          # the worker falls back to caching three files, so the app installs a
+          # shell with no modules in it and reports itself offline-ready. That
+          # is precisely what shipped, because `/_headers` was on the precache
+          # list — Cloudflare CONSUMES a leading-underscore file at the root as
+          # configuration and does not deploy it, while the walk serves
+          # `public/` off disk where it is an ordinary file that resolves.
+          #
+          # No gate inside the repository can see this. The difference is not in
+          # the bytes, it is in what the host chooses to serve, so it is checked
+          # from the runner against the real host.
+          missing=0
+          for path in $(curl -sS --max-time 20 "$DEPLOYED_URL/precache.json" | tr -d '[]" ' | tr ',' '\n'); do
+            [ -n "$path" ] || continue
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$DEPLOYED_URL$path")
+            if [ "$code" != "200" ]; then
+              echo "  FAIL  the offline shell lists $path and the host answers $code"
+              missing=$((missing + 1))
+            fi
+          done
+          if [ "$missing" -eq 0 ]; then
+            echo "  ok    every file in the offline shell is served"
+          else
+            fail=1
+          fi
+
           # And it is really the app, not a holding page.
           body=$(curl -sS --max-time 20 "$DEPLOYED_URL/")
           printf '%s' "$body" | grep -q '/app/ui/app.js' \

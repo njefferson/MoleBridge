@@ -509,7 +509,7 @@ const STATES = [
   {
     name: 'the decoder, before anything is pasted',
     async reach(page) {
-      await page.goto(`${page.__origin}/teacher/`, { waitUntil: 'load' });
+      await page.goto(`${page.__origin}/codes/`, { waitUntil: 'load' });
     },
   },
   {
@@ -594,7 +594,7 @@ const CLASS_PASTE = [
 
 /** Drive the decoder to a decoded class. */
 async function decodeAClass(page) {
-  await page.goto(`${page.__origin}/teacher/`, { waitUntil: 'load' });
+  await page.goto(`${page.__origin}/codes/`, { waitUntil: 'load' });
   await page.locator('#teacher-key').fill(TEACHER_KEY);
   await page.locator('#teacher-paste').fill(CLASS_PASTE);
   await page.locator('#decode-run').click();

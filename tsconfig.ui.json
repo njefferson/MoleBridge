@@ -10,7 +10,7 @@
   },
   "include": [
     "src/ui/**/*.ts",
-    "src/teacher/**/*.ts",
+    "src/codes/**/*.ts",
     "src/changes/**/*.ts"
   ]
 }

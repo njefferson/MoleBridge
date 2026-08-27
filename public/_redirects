@@ -1,0 +1,8 @@
+# The page for whoever sets the work moved from /teacher/ to /codes/ in 1.10.0.
+#
+# THE OLD PATH KEEPS WORKING, PERMANENTLY. Somebody bookmarked it — that is the
+# whole point of telling people they can — and a bookmark that 404s is worse
+# than the name it was renamed away from. 301 rather than 302 so a browser and a
+# search engine both learn the new one.
+/teacher/* /codes/:splat 301
+/teacher /codes/ 301
