@@ -2107,6 +2107,33 @@ things late.
 worth keeping: 1.10.0 is serving in production. What was broken was the offline
 copy, and nothing about a successful deploy would ever have said so.
 
+## Wait for the write, not the click — and the third time it cost a deploy
+
+The 1.10.1 promote failed on the runner at step 23, the walk, and the message
+named a section that was innocent: *without a first-run modal in front of
+twenty-eight students*. The warm-up section was fine. The welcome was open when
+it got there, because the block sixty lines earlier had cleared `localStorage`
+for a genuine first run, dismissed the welcome, and moved on.
+
+**Dismissing is not the same as having been recorded as dismissed.**
+`dialog.close()` fires its event as a queued task, and the orientation is marked
+seen in that handler. Navigating straight after the click races the write. It
+WON on this machine, twice in a row, and LOST on the runner — which is the only
+verdict that matters, and it arrived as a skipped deploy.
+
+**Three times in this file now**, each with a different victim: the version key
+after the what's-new dialog, the report repainting through a promise, and this.
+The rule that would have caught all three: **after any action whose effect is
+persisted, wait for the PERSISTED STATE, never for the control.** A click that
+has visibly happened and a write that has landed are different facts, and only
+the second is what the next block depends on.
+
+And the diagnostic lesson: **a failure names where it surfaced, not where it was
+caused.** The check that went red had nothing wrong with it — it was the first
+one to touch a modal that a distant block had left in the wrong state. Reading
+the message as an accusation of the section it names sends you sixty lines past
+the problem.
+
 ## The welcome described one door and called it a session
 
 `How a session goes` was three steps, and all three were the graded route —
