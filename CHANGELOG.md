@@ -4,6 +4,25 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.10.1 — ITERATION
+
+The offline copy of the app is complete for the first time.
+
+1.10.0 fixed one reason it was not: two files on the list were settings the host
+reads rather than pages it serves. The check added in that same release then ran
+against the live site and found the rest — three more entries named for what the
+file is called on disk rather than what the address actually is, so the host
+answered each of them with a redirect.
+
+**Saving that list is all-or-nothing**, so any one bad entry meant the app kept a
+handful of files instead of all of them. If you have opened MoleBridge with no
+connection and found it half-there, this is the release where that stops.
+
+**Also in the welcome:** it described how one of the three doors works and called
+it a session, which is a word the app never uses anywhere else. It now says what
+is actually in the app — Learn, Practice and the graded route — and makes plain
+that only the last of those asks you for anything.
+
 ## 1.10.0 — CAPABILITY
 
 If you are the one setting the work, the app now tells you there is a page for

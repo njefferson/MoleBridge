@@ -89,6 +89,26 @@ const files = walk(PUBLIC)
   .sort();
 
 // `/` is what a home-screen launch actually requests, and it is not a file.
-const precache = ['/', ...files];
+/**
+ * The URL the HOST will answer with 200, which is not always the file's path.
+ *
+ * Cloudflare Pages answers `/index.html` with a **308** to `/`, and the same for
+ * every directory index — `/codes/index.html`, `/changes/index.html`. Those three
+ * were on the precache list because that is what the files are called on disk,
+ * and the list is a list of things to FETCH, where what matters is what the host
+ * will do when asked.
+ *
+ * Found by the release check added one release earlier, on its first real run
+ * against the live host — the same check, and the same reason, as `_headers`:
+ * a fact about production that no gate inside the repository can establish,
+ * because on disk all three are perfectly ordinary files.
+ *
+ * Rewriting rather than dropping, because the document still has to be cached;
+ * it is the NAME that was wrong. `/` was already in the list separately, so this
+ * also removes a duplicate that had been fetched twice since the list existed.
+ */
+const served = (url) => url.replace(/(^|\/)index\.html$/, '$1');
+
+const precache = [...new Set(['/', ...files.map(served)])].sort();
 writeFileSync(join(PUBLIC, 'precache.json'), `${JSON.stringify(precache, null, 2)}\n`);
 console.log(`  cache ${precache.length} files listed for the offline shell`);

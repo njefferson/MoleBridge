@@ -2078,6 +2078,61 @@ surviving whatever the reader presses to begin — and it paid out here as
 "anything added to that block is automatically in both places, and can never
 disagree with itself."
 
+## The check found the rest of its own family on its first live run
+
+1.10.0 removed `_headers` and `_redirects` from the precache and added a release
+check that fetches every path on the list from the RUNNER against the real host.
+That check went red on the promote, and it was right: `/index.html`,
+`/codes/index.html` and `/changes/index.html` each answer **308**. Cloudflare
+redirects a directory index to its directory.
+
+**The list was a list of FILENAMES and it needed to be a list of URLS.** On disk
+`/codes/index.html` is exactly what the file is called; over HTTP it is a
+redirect to `/codes/`. Same shape as `_headers` — the bytes are identical and
+the host's behaviour is not — and the same conclusion: nothing inside the
+repository can see it, because this walk's own server hands the file straight
+back with a 200.
+
+`/` was already on the list separately, so `/index.html` had also been a
+duplicate fetch for as long as the list existed.
+
+**Two checks now, and each catches what the other cannot.** The runner asks the
+live host, which is the only place the redirect is real. The walk asserts the
+SHAPE — no entry names an index file, nothing is listed twice, and the three
+directory URLs are present — which fails in a second, locally, before a release
+is ever built. A gate that can only run after deploying is a gate that finds
+things late.
+
+**And the deploy SUCCEEDED while the check failed**, which is the distinction
+worth keeping: 1.10.0 is serving in production. What was broken was the offline
+copy, and nothing about a successful deploy would ever have said so.
+
+## The welcome described one door and called it a session
+
+`How a session goes` was three steps, and all three were the graded route —
+step one being to type in a number and a key. Most people arriving have not
+been handed either, so the screen whose entire job is to say what MoleBridge is
+opened by telling them it was not for them. Learn and Practice ask for nothing
+at all.
+
+**"Session" also appeared nowhere else in the app.** Its own vocabulary is
+Learn, Practice, Assignment, problem, step, set. The orientation taught a term
+the reader would never meet again, on the one screen they read before they know
+anything.
+
+The replacement names what is actually in the app and says which single door
+asks for anything. **The walk reads the door names off the menu** and fails if
+the orientation does not name every one of them, so a fourth door cannot arrive
+without this paragraph noticing — hub LESSONS 141's shape done deliberately:
+the population is the doors the app HAS, which is independent of the prose being
+checked, so it can go red on something nobody has looked at.
+
+**And a modal was shared state between walk blocks again.** The new check clears
+storage to get a real first run, and left the welcome open; the warm-up section
+further down navigates by fragment, which is a same-document navigation, so the
+dialog survived it and swallowed a click thirty seconds later. Second time in
+this file, same cause, and the fix is the same: dismiss what you opened.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
