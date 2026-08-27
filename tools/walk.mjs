@@ -428,6 +428,22 @@ try {
     'with the ordinary set chosen to start with',
   );
 
+  /*
+    AND THE DEFAULT IN THE KEY FIELD IS COPY.
+
+    It was `MONDAY`, under the label "A word for today", with `MONDAY7` as the
+    first example — a school timetable pre-filled into the field, which is the
+    strongest teaching signal there is: it is the example somebody reads before
+    deciding what belongs there. Nothing checked it, because a value attribute
+    does not look like a sentence.
+  */
+  const defaultKey = await page.locator('#warmup-code').inputValue();
+  check(
+    !/monday|tuesday|wednesday|thursday|friday|saturday|sunday/i.test(defaultKey),
+    `the key field starts on a word that names no day of the week (${defaultKey})`,
+  );
+  check(defaultKey.trim() !== '', 'and starts on something rather than empty');
+
   await page.locator('#teacher-key').fill(teacherKey);
   await page.locator('#teacher-paste').fill(pasted);
   await page.locator('#decode-run').click();
@@ -790,7 +806,7 @@ try {
   // so a period spent on practice is a period not spent on chemistry — but five
   // minutes at the start of a Monday is real. That has to cost a student ZERO
   // taps, which is why it is a link rather than a screen.
-  const boardLink = warmupLink(server.origin, 'MONDAY7', 2, WARMUP_PROBLEMS);
+  const boardLink = warmupLink(server.origin, 'GASLAWS7', 2, WARMUP_PROBLEMS);
 
   // FROM A PAGE THAT IS ALREADY OPEN, first, because that is the case that
   // broke. A URL differing only by its fragment is a same-document navigation:

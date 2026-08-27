@@ -4,6 +4,23 @@ Written for the person using MoleBridge, not for whoever built it. Newest first.
 This file is the one source: the app renders its own patch notes from it, and
 `tools/version-check.mjs` fails the build if the two disagree.
 
+## 1.11.1 — ITERATION
+
+The warm-up builder used to arrive with a day of the school week already typed
+into the box, and its first example was the same word with a number after it.
+
+A pre-filled default is the strongest wording in a field — it is the example you
+read before you have decided what belongs there — and that one said the work runs
+on a timetable. If you are working through this at home, or across three
+evenings, it was quietly telling you the tool belongs to somebody else. The box
+now starts on GASLAWS, and the examples name the chemistry or where you are in
+it. No day of the week can get back into that field: the check that reads these
+screens now forbids all seven by name.
+
+**Still not fixed:** the sets differ in what kind of problem they pose rather
+than in how hard the arithmetic is, so a longer set is not a harder one in every
+sense of the word. Set 3 asks nine steps against set 1's six; set 4 asks seven.
+
 ## 1.11.0 — CAPABILITY
 
 **Practice can now give you percent yield problems.** It offered three sets while
