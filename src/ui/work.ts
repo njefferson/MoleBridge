@@ -148,8 +148,26 @@ export function mountWork(clock: Clock, host: WorkHost): WorkScreen {
     const stage = currentStage(session);
     const stages = stagesFor(problem);
 
+    /*
+      WHERE YOU ARE, IN ONE LINE, AND IT SURVIVES ONE-STEP-AT-A-TIME.
+
+      This said `Problem 2 of 5` and nothing else, and one-step-at-a-time hid it
+      along with the rail — so the setting that shows a student one step at a
+      time was the setting that stopped telling her which step it was. The rail
+      is the only other thing that carries the step, and it is hidden too. That
+      left the accommodation with no position information at all: a chain of six
+      unnamed boxes, each looking exactly like the last.
+
+      SAME ARGUMENT AS `renderSoFar`, applied to the other half of what focus
+      mode took away — less on the screen must not mean less within reach. So
+      the line now carries the step as well as the problem, and it stays.
+
+      TWO SENTENCES, not a middot: this is read aloud, and a separator that is
+      silent in one screen reader and "middle dot" in another is worse than a
+      full stop in every one.*/
     nodes.progress.textContent =
-      `Problem ${session.problemIndex + 1} of ${session.config.problemCount}`;
+      `Problem ${session.problemIndex + 1} of ${session.config.problemCount}. ` +
+      `Step ${session.stageIndex + 1} of ${stages.length}: ${RAIL_NAMES[stage.id] ?? stage.id}.`;
     // The equation is STORED with an ASCII arrow because that is what a parser
     // reads; it is SHOWN with a real one, because that is what a chemist reads.
     nodes.equation.textContent = problem.equation.replace(/\s*->\s*/, ' → ');

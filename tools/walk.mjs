@@ -411,6 +411,23 @@ try {
     'and says what it does with names BEFORE anything is pasted',
   );
 
+  /*
+    THE SET LIST IS BUILT, NOT TYPED. Its four options used to be written into
+    the page and were a third disagreeing list of set names. They now come from
+    the engine's TIER_NAMES — which means an empty select is a live failure of
+    this page rather than a stale name, and nothing in the markup would show it.
+  */
+  const sets = await page.locator('#warmup-set option').allTextContents();
+  check(sets.length >= 4, `the warm-up set list is filled from the engine (${sets.length} option(s))`);
+  check(
+    sets.some((text) => text.toLowerCase().includes('percent yield')),
+    `including the set that poses percent yield (${sets.join(' | ')})`,
+  );
+  check(
+    (await page.locator('#warmup-set').inputValue()) === '2',
+    'with the ordinary set chosen to start with',
+  );
+
   await page.locator('#teacher-key').fill(teacherKey);
   await page.locator('#teacher-paste').fill(pasted);
   await page.locator('#decode-run').click();
@@ -788,8 +805,12 @@ try {
   await page.goto(boardLink, { waitUntil: 'load' });
   check(await page.locator('#screen-work').isVisible(), 'a warm-up link opens straight into a problem');
   const warmProgress = (await page.locator('#work-progress').textContent()) ?? '';
+  // ANCHORED. This read `includes(String(WARMUP_PROBLEMS))`, which was exact
+  // enough when the line said only `Problem 1 of 2`. The line now names the step
+  // as well, so a bare "2" could be matched by the step count instead and the
+  // check would pass on a warm-up of any length.
   check(
-    warmProgress.includes(String(WARMUP_PROBLEMS)),
+    warmProgress.includes(`Problem 1 of ${WARMUP_PROBLEMS}.`),
     `and it is ${WARMUP_PROBLEMS} problems, not a lesson (${warmProgress.trim()})`,
   );
 
@@ -1151,6 +1172,31 @@ try {
   // a number that is gone.
   await page.goto(`${server.origin}/`, { waitUntil: 'load' });
   await page.locator('#door-practice').click();
+
+  /*
+    THE SAME SETS ON BOTH DOORS, AND THE SAME NAMES.
+
+    Practice declared its own list of three while the assignment screen offered
+    four, so the set that poses percent yield could be assigned and could not be
+    practised — and practice's third rung was named for a yield the tier does
+    not pose. Both now read the engine's list, which is what makes them equal;
+    this checks the equality on the screen, where a student would meet it.
+  */
+  const practiceSets = await page.locator('#practice-tier button[data-value]').allTextContents();
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-assignment').click();
+  const assignedSets = await page.locator('#setup-tier button[data-tier]').allTextContents();
+  check(
+    JSON.stringify(practiceSets) === JSON.stringify(assignedSets),
+    `practice offers the same sets, named the same way, as the graded route (${practiceSets.join(' | ')})`,
+  );
+  check(
+    practiceSets.some((text) => text.toLowerCase().includes('percent yield')),
+    'including percent yield, which practice could not reach at all',
+  );
+
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.locator('#door-practice').click();
   await page.locator('#practice-seed').fill('CARRY-WALK');
   await page.locator(`#practice-tier button[data-value="2"]`).click();
   await page.locator(`#practice-count button[data-value="3"]`).click();
@@ -1250,6 +1296,23 @@ try {
       !(await page.locator('#work-so-far-list').isVisible()),
       'folded away, so the setting still puts less on screen',
     );
+    /*
+      AND IT STILL SAYS WHERE YOU ARE. The progress line used to be hidden by
+      this setting alongside the rail, and those two were the only things
+      carrying the step — so one-step-at-a-time meant working a chain of six
+      identical-looking boxes with nothing to tell the fourth from the second.
+      The values were within reach and the position was not.
+    */
+    const place = (await page.locator('#work-progress').textContent()) ?? '';
+    check(
+      await page.locator('#work-progress').isVisible(),
+      'and the line saying where you are stays, which it did not used to',
+    );
+    check(
+      /Step \d+ of \d+: \S/.test(place),
+      `naming the step and how many there are (${place.trim()})`,
+    );
+
     const summaryBox = await soFar.locator('summary').boundingBox();
     check(
       summaryBox !== null && summaryBox.height >= 44,

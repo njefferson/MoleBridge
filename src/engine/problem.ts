@@ -752,6 +752,27 @@ function drawReaction(rng: Rng, pool: readonly Reaction[]): Draw {
 /** The tiers this build generates, and what each draws from. */
 export const TIERS: readonly number[] = [1, 2, 3, 4];
 
+/**
+ * What each tier is, in the words a student sees.
+ *
+ * HERE, BESIDE THE TIERS, BECAUSE THREE SCREENS HAD THREE ANSWERS. The
+ * assignment screen, the practice screen and the warm-up builder each declared
+ * their own list. Practice's said `[1, 2, 3]`, so the tier that poses percent
+ * yield could not be practised at all, and its third name promised yield in a
+ * tier that never poses it — a student who chose it to practise the thing she
+ * was about to be graded on got a set without it.
+ *
+ * A NAME IS A CLAIM ABOUT WHAT THE GENERATOR DOES, so it belongs where the
+ * generator does. `tiers.test.ts` measures the kinds each tier actually poses
+ * and holds every surface to this list.
+ */
+export const TIER_NAMES: Readonly<Record<number, string>> = {
+  1: 'Mass to mass',
+  2: 'Particles and gas volumes',
+  3: 'Limiting reactant',
+  4: 'Percent yield',
+};
+
 function poolForTier(tier: number): readonly Reaction[] {
   if (tier === 2) return REACTIONS;
   if (tier === 3) return TWO_REACTANT_REACTIONS;
