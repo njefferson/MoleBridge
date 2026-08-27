@@ -686,6 +686,52 @@ try {
   const steps = await page.locator('#drill-list [data-drill]').count();
   check(steps >= 6, `every step can be chosen deliberately (${steps})`);
 
+  /* ---- the orientation describes the whole app, not one door of it ---- */
+  //
+  // IT SAID "How a session goes" AND WALKED THE GRADED ROUTE. Step one was
+  // typing in a number and a key, which most arrivals have not been handed — so
+  // the screen built to say what MoleBridge is opened by telling them it was
+  // not for them. Learn and Practice ask for nothing.
+  //
+  // DERIVED FROM THE MENU, NEVER HAND-LISTED. The door names are read off the
+  // home screen, so this cannot pass by agreeing with a list somebody typed
+  // here: a fourth door goes red on the day it is added. Hub LESSONS 141 is the
+  // trap being avoided — a check that finds its subjects by looking for the fix
+  // can only ever confirm what is already fixed, and the population here (the
+  // doors the app HAS) is independent of the prose being checked.
+  await page.goto(`${server.origin}/`, { waitUntil: 'load' });
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: 'load' });
+  await page.locator('#welcome-panel[open]').waitFor({ timeout: TIMEOUT_MS });
+
+  const doorNames = await page.evaluate(() =>
+    [...document.querySelectorAll('.door-name')].map((node) => (node.textContent ?? '').trim()));
+  check(doorNames.length >= 3, `the menu has doors to describe (${doorNames.join(', ')})`);
+
+  const orientation = (await page.locator('#orientation').textContent()) ?? '';
+  for (const door of doorNames) {
+    check(orientation.includes(door), `the orientation names "${door}"`);
+  }
+
+  // AND IT DOES NOT TEACH A WORD THE APP NEVER USES AGAIN. "Session" appeared
+  // here and nowhere a reader could ever meet it — not on a screen, not on a
+  // button, not in a verdict.
+  const appVocabulary = (await page.locator('#main').textContent()) ?? '';
+  const jargon = /\bsessions?\b/i;
+  check(
+    !jargon.test(orientation) || jargon.test(appVocabulary.replace(orientation, '')),
+    'and uses no word the rest of the app never says',
+  );
+
+  // DISMISSED, AND THE STORAGE PUT BACK. Leaving this modal open cost a
+  // thirty-second timeout in the warm-up section further down: a link that
+  // differs only by its fragment is a SAME-DOCUMENT navigation, so an open
+  // dialog survives it and swallows the click. Second time this file has been
+  // bitten by a modal being shared state between blocks that do not know about
+  // each other.
+  await page.locator('#welcome-begin').click();
+  await page.locator('#welcome-panel[open]').waitFor({ state: 'detached', timeout: TIMEOUT_MS }).catch(() => {});
+
   /* ---- no screen states a count the app can contradict ---- */
   //
   // THE HOME SCREEN SAID "Seven short lessons" WITH EIGHT IN THE APP. Nothing
@@ -1051,6 +1097,25 @@ try {
   // exists and names the right destination.
   const redirects = readFileSync(join(REPO, 'public', '_redirects'), 'utf8');
   check(/^\/teacher\/\*\s+\/codes\/:splat\s+301$/m.test(redirects), 'the old path redirects, permanently');
+
+  // THE OFFLINE SHELL ASKS FOR URLS THE HOST ANSWERS, NOT FILENAMES.
+  //
+  // Cloudflare answers `/index.html` with a 308 to `/`, and the same for every
+  // directory index. Whether the host redirects is not checkable from here —
+  // this server hands the file straight back — but the SHAPE is: a list that
+  // still names an index file is a list that has not been through `served()`.
+  // The live check runs from the runner; this one fails in a second, locally,
+  // on the way in.
+  const shell = JSON.parse(readFileSync(join(REPO, 'public', 'precache.json'), 'utf8'));
+  const named = shell.filter((url) => /index\.html$/.test(url));
+  check(named.length === 0, `nothing in the offline shell names an index file (${named.join(', ')})`);
+  check(
+    new Set(shell).size === shell.length,
+    'and nothing in it is listed twice',
+  );
+  for (const owed of ['/', '/codes/', '/changes/']) {
+    check(shell.includes(owed), `the offline shell carries ${owed}`);
+  }
 
   /* ---- the whole history is a page in the app, not a link off it ---- */
   //
