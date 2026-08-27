@@ -90,6 +90,35 @@ const FORBIDDEN = [
   ['in class', 'when you sit down to it'],
   ['at school', 'anywhere'],
   ['school machine', 'a shared machine'],
+  /*
+    A DAY OF THE WEEK IS A TIMETABLE, and a timetable is a room.
+
+    The warm-up builder's key field was pre-filled `MONDAY` and its first example
+    was `MONDAY7`. Nobody chose that as copy — the feature was built around a real
+    Monday warm-up, and the placeholder is where that room came out.
+
+    A PRE-FILLED DEFAULT IS THE STRONGEST COPY IN A FIELD. It is the example
+    somebody reads before they have decided what belongs there, so it teaches the
+    shape of the answer more forcefully than the hint above it does. `MONDAY` told
+    a family learning at home, or an adult going back over this across three
+    evenings, that the work happens on a school week.
+
+    All seven, because the way around a gate is a synonym that excludes exactly as
+    much, and `TUESDAY` excludes precisely what `MONDAY` does. Every other day-name
+    in this repository is inside a comment describing why the warm-up exists, which
+    this gate reads past — the room may be explained, it may not be addressed.
+
+    `today` is deliberately NOT here. The label says "A word for today", and that
+    is true for anybody doing a warm-up now, whatever day it is. A day of the week
+    presumes a timetable; today presumes only that somebody is sitting down to it.
+  */
+  ['monday', 'name the chemistry or where you are in it — GASLAWS, UNIT3, REVIEW2'],
+  ['tuesday', 'name the chemistry or where you are in it — GASLAWS, UNIT3, REVIEW2'],
+  ['wednesday', 'name the chemistry or where you are in it — GASLAWS, UNIT3, REVIEW2'],
+  ['thursday', 'name the chemistry or where you are in it — GASLAWS, UNIT3, REVIEW2'],
+  ['friday', 'name the chemistry or where you are in it — GASLAWS, UNIT3, REVIEW2'],
+  ['saturday', 'name the chemistry or where you are in it — GASLAWS, UNIT3, REVIEW2'],
+  ['sunday', 'name the chemistry or where you are in it — GASLAWS, UNIT3, REVIEW2'],
   // A PATH IS COPY TOO. /teacher was in the address bar and in every link to
   // that page for nine releases after its contents had been made neutral, so a
   // reader was told whose app it was before the page had loaded. The word is

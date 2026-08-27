@@ -2236,6 +2236,41 @@ moment it also said `Step 1 of 6`. A substring check is only as strong as the
 string it reads, and lengthening the string is a way of loosening every one of
 them without touching the check. Anchored to `Problem 1 of 2.` now.
 
+## A pre-filled default is the strongest copy in a field
+
+The warm-up builder's key field carried `value="MONDAY"`, and the hint's first
+example was `MONDAY7`. Both were reader-facing, both had been there since the
+feature shipped, and the language gate had never had a name for either.
+
+**Nothing about it was a decision.** The warm-up exists because of a real Monday
+warm-up, which the comment above the block says plainly and correctly — the gate
+reads past comments for exactly that reason. The room came out in the
+placeholder, which is where it is least likely to be read as copy at all: a
+`value` attribute does not look like a sentence, so nothing reviewed it as one.
+
+**And a default teaches harder than the hint above it.** It is the example
+somebody sees before they have decided what kind of thing goes in the field, so
+it sets the shape of the answer more forcefully than the sentence explaining the
+field does. `MONDAY` told a family learning at home that the work runs on a
+school week; `UNIT3` and `GASLAWS`, in the very next sentence, named the
+chemistry instead and did not.
+
+**All seven days are forbidden, not just the one.** The way around this gate is
+a synonym that excludes exactly as much, and `TUESDAY` excludes precisely what
+`MONDAY` does — planted red on `TUESDAY` before it was believed. Every other
+day-name in the repository is inside a comment describing why the feature exists:
+the room may be explained, it may not be addressed.
+
+**`today` is deliberately NOT forbidden.** The label reads *A word for today*,
+and that is true for anybody sitting down to a warm-up, whatever day it is. A day
+of the week presumes a timetable; today presumes only that somebody is doing it
+now. Forbidding it would make the label vaguer without making it truer, which is
+the false positive this gate's own header warns teaches sessions to route around
+it.
+
+**The walk now reads the default back out of the field**, because a value
+attribute is the one piece of copy that no proofread of the prose would catch.
+
 ## Repository obligations still open
 
 These are the things standing between MoleBridge and a class using it. None is
