@@ -240,11 +240,25 @@ reasons the screen avoids one apply. The print stylesheet is measured by the
 accessibility gate as its own state, because a shipped surface nobody looks at
 is how an unreadable one survives.
 
-## Waiting on the owner — a candidate is deployed
+## Where it is deployed
 
-**Version 0.2.0 is live on a preview URL**, from commit `ae86390` on `staging`:
+**Version 1.10.1 is in production**, from `5f04273` on `main`:
 
-    https://45f826d7.molebridge.pages.dev
+    https://molebridge.pages.dev
+
+Verified from the runner rather than inferred: run `33031489448`, Deploy job
+conclusion `success`, its log reading `it is serving molebridge-1.10.1` and
+`every file in the offline shell is served` off that address.
+
+The per-deploy host for that build was `https://737d2df9.molebridge.pages.dev`,
+quoted from the same log. It is immutable and still answers; the production
+address above is the one to hand anybody.
+
+**This section used to head "Waiting on the owner — a candidate is deployed" and
+name 0.2.0 on a preview URL** — accurate when written, and forty-odd releases
+stale by the time the handoff gate read it back. A record that is only correct
+on the day it is written is a record that will mislead somebody later with more
+authority than a guess, because it looks like it was checked.
 
 That is the immutable per-deploy URL for this exact build, read out of the
 deploy log rather than assembled from a branch name. Cloudflare also serves a
