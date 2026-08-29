@@ -1,0 +1,26 @@
+# Third-person references that are NOT about the owner, declared for
+# `noahjefferson:third-person-check.mjs`. Format:
+#
+#   file | reason | the matched word
+#
+# A reference to the OWNER is never declarable and never becomes declarable.
+# Rewrite it: say the ROLE for a governance fact, and for anything else say what
+# was wrong and what it measured.
+#
+# Checked BOTH WAYS — a declaration matching nothing any more is a failure, so a
+# scrub cannot quietly un-cover a file by leaving a stale line here.
+#
+# EVERY LINE HERE IS HELIUM. `He` is element 2, and this is a chemistry app, so
+# the one pronoun the gate matches on is also a symbol the app prints, tests,
+# and writes about. The gate is deliberately blunt — a bare `he|his|him` — and
+# a list is what makes a blunt pattern usable, so this is the intended way past
+# it rather than a hole in it. The word is declared PER FILE: a `his` or a `him`
+# appearing in any of these files is still a failure, because only `He` is an
+# element.
+src/chem/elements.ts | chemistry-symbol, element 2 | He
+test/elements.test.ts | chemistry-symbol, element 2 | He
+test/table.test.ts | chemistry-symbol, element 2 | He
+public/index.html | chemistry-symbol — the four single-character controls | He
+tools/a11y.mjs | chemistry-symbol — the "He = !" control-row defect | He
+NOTES.md | chemistry-symbol — the "He = !" control-row defect | He
+CHANGELOG.md | chemistry-symbol — the "He = !" control-row defect | He

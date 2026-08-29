@@ -28,36 +28,29 @@ concurrency:
   group: gates-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  # The hub commit this repository has reconciled with. Moved by
-  # `doctrine-sync.mjs --adopt`, and this pin moves with it.
-  #
-  # MOVED WITH 0.12.1, AND IT HAD TO BE. That release's whole argument — that a
-  # colour set clears every screen once the palette gate clears it — depends on
-  # `onAccent` and `_renders` being IN the palette gate, and CI runs the hub's
-  # canonical copy at this pin. Left at the old SHA, every gate would have gone
-  # green while running a palette check that had never heard of either, which is
-  # the stale-mirror shape in hub LESSONS 53: not a smaller gate, a different
-  # one.
-  HUB_SHA: a75d92d55081c82b4f67c757a7db670f079c85cf
-
 jobs:
+  # EVERY HUB GATE, CALLED RATHER THAN COPIED.
+  #
+  # This used to be eleven steps and a second checkout inside the job below,
+  # pinned by a HUB_SHA of its own — so this repo carried TWO references to the
+  # hub that were free to drift apart, and "which gates does MoleBridge run"
+  # could only be answered by reading the file. It is now one pin, in the line
+  # under this comment, and adding a gate in the hub adds it here on the next
+  # bump. `pwa: true` is new: this app has a service worker and had never once
+  # run pwa-check.
+  hub-gates:
+    uses: njefferson/noahjefferson/.github/workflows/hub-gates.yml@1de7828224ca881480deb5980e362bfb949eb682
+    with:
+      pwa: true
+      zizmor: true
+      palette-path: palettes/molebridge.json
+
   gates:
     name: Gates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
-
-      # The hub, at an untracked path, pinned by SHA. `.hub` is the name the
-      # hub's own gates know to skip when they walk a sibling's tree.
-      - name: Check the hub out for the shared gates
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: njefferson/noahjefferson
-          ref: ${{ env.HUB_SHA }}
-          path: .hub
           persist-credentials: false
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -105,54 +98,6 @@ jobs:
       # this step was believed.
       - name: The three files that declare the palette agree
         run: npm run tokens
-
-      # ---- the doctrine gates ----
-      #
-      # AHEAD OF THE BROWSER WORK, deliberately. A step that fails stops the job,
-      # so anything after it is skipped — and the first version of this file put
-      # the privacy gate last, behind a browser install and two browser-driven
-      # gates. A Chromium that would not download meant §9b's HARD gate silently
-      # did not run. The order is now cheapest-and-most-important first.
-
-      - name: The owner's person is not repo material
-        run: node .hub/privacy-check.mjs --repo .
-
-      - name: Every set-apart quotation says whose words it is
-        run: node .hub/quote-check.mjs --repo .
-
-      - name: No grids in anything the owner reads
-        run: node .hub/docs-check.mjs .
-
-      - name: npm hygiene
-        run: node .hub/pin-check.mjs --repo .
-
-      # --artefact, NOT the plain check. The plain check also asserts that
-      # `.git/hooks/pre-commit` is installed, which is a fact about ONE CLONE,
-      # and `actions/checkout` leaves `.git/hooks` empty by definition — so a
-      # runner can never satisfy it and the step would fail on every push. What
-      # a runner CAN check is that the tracked hook still matches what
-      # `.branch-guard` declares, which is the drift that matters. Never
-      # `--install` here instead: that WRITES the tracked file and repairs the
-      # one defect the step exists to find. (Hub LESSONS 107.)
-      - name: The branch guard has not drifted from what it declares
-        run: node .hub/branch-guard.mjs --repo . --artefact
-
-      - name: Every colour theme clears every hard floor, in both modes
-        run: node .hub/palette-check.mjs palettes/molebridge.json
-
-      - name: Install zizmor (version- and hash-pinned by the hub)
-        run: |
-          python3 -m venv "$RUNNER_TEMP/zizmor"
-          "$RUNNER_TEMP/zizmor/bin/pip" install --quiet --only-binary=:all: \
-            --require-hashes -r .hub/.github/requirements-ci.txt
-
-      # --strict-collection is not optional. Without it an unparseable workflow
-      # is logged, skipped, and the audit still exits 0 with "No findings" — the
-      # file most likely to be wrong is the one excused.
-      - name: Workflow security audit
-        run: |
-          "$RUNNER_TEMP/zizmor/bin/zizmor" --offline --strict-collection \
-            .github/workflows/
 
       # ---- the browser gates ----
       #
@@ -216,7 +161,11 @@ jobs:
     name: Deploy
     # Only after every gate above has passed. A step that fails stops its job,
     # so `needs` here means the build being deployed cleared all of them.
-    needs: gates
+    # BOTH, and this is the reason the swap is not just a deletion: moving the
+    # hub gates into their own job means a `needs: gates` that used to cover
+    # them silently stops covering them, and the deploy would go out with the
+    # doctrine gates red.
+    needs: [gates, hub-gates]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     # A DEDICATED ENVIRONMENT, and two of them, which is Doctrine §16.5:
